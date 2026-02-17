@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тайна мягкого знака | Русский язык 2 класс</title>
+    <style>
+        /* --- Стили оформления (Дизайн для детей) --- */
+        body {
+            font-family: 'Comic Sans MS', 'Arial', sans-serif;
+            background-color: #e0f7fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        h1 {
+            color: #0277bd;
+            text-align: center;
+            text-shadow: 1px 1px 0px #fff;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            padding: 20px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            border: 3px solid #4fc3f7;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #0288d1;
+        }
+
+        .progress-bar {
+            width: 100%;
+            background-color: #ddd;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #4caf50;
+            border-radius: 5px;
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .game-area {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .word-display {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+            letter-spacing: 2px;
+            color: #37474f;
+        }
+
+        .hint-img {
+            font-size: 4em; /* Эмодзи вместо картинок для простоты */
+            margin-bottom: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            font-family: inherit;
+            font-weight: bold;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background-color: #4fc3f7;
+            color: white;
+            box-shadow: 0 4px 0 #0288d1;
+        }
+
+        .btn-success {
+            background-color: #81c784;
+            color: white;
+            box-shadow: 0 4px 0 #388e3c;
+        }
+
+        .btn-danger {
+            background-color: #e57373;
+            color: white;
+            box-shadow: 0 4px 0 #c62828;
+        }
+
+        .btn-choice {
+            background-color: #fff;
+            border: 2px solid #4fc3f7;
+            color: #0277bd;
+            font-size: 1.5em;
+            padding: 10px 20px;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+            min-height: 2em;
+        }
+
+        .correct { color: #2e7d32; }
+        .wrong { color: #c62828; }
+
+        /* Анимации */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>🎓 Игра «Тайна мягкого знака»</h1>
+    
+    <div class="container">
+        <div class="header-info">
+            <span>⭐ Очки: <span id="score">0</span></span>
+            <span>🏆 Уровень: <span id="level-display">1</span></span>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+
+        <div class="game-area" id="game-content">
+            <!-- Контент генерируется JS -->
+        </div>
+
+        <div class="message" id="message-box"></div>
+    </div>
+
+    <script>
+        // --- Логика игры (Методическая часть) ---
+
+        // База данных заданий
+        const levels = [
+            // Уровень 1: "Магический мостик" (Вставить ь или нет)
+            {
+                type: 'insert',
+                questions: [
+                    { text: "ПОЛ...Ю", hint: "🚿", answer: true, tip: "Буду поливать цветы" },
+                    { text: "СТУЛ...Я", hint: "🪑", answer: true, tip: "Много стульев" },
+                    { text: "ШАП...КА", hint: "🧢", answer: false, tip: "Головной убор" },
+                    { text: "ЛИС...Я", hint: "🦊", answer: true, tip: "Нора лисы" },
+                    { text: "ОБЕЗ...ЯНА", hint: "🐒", answer: true, tip: "Животное в джунглях" },
+                ]
+            },
+            // Уровень 2: "Лесные загадки" (Выбор правильного слова)
+            {
+                type: 'choice',
+                questions: [
+                    { hint: "🐿️", options: ["БЕЛЬЧАТА", "БЕЛЧАТА"], correct: "БЕЛЬЧАТА" },
+                    { hint: "🦅", options: ["ОРЛЯТА", "ОРЬЯТА"], correct: "ОРЛЯТА" },
+                    { hint: "🌲", options: ["ДЕРЕВЬЯ", "ДЕРЕВЯ"], correct: "ДЕРЕВЬЯ" },
+                    { hint: "🪶", options: ["ПЕРЬЯ", "ПЕРЯ"], correct: "ПЕРЬЯ" },
+                ]
+            },
+            // Уровень 3: "Битва с Ошибкоедом" (Верно ли написано?)
+            {
+                type: 'truth',
+                questions: [
+                    { word: "ВЬЮГА", isCorrect: true },
+                    { word: "ПОДЪЕЗД", isCorrect: false, comment: "Это твердый знак!" },
+                    { word: "КОНЬКИ", isCorrect: false, comment: "Здесь ь - мягкий, не разделительный!" },
+                    { word: "РУЧЬИ", isCorrect: true },
+                    { word: "САЛАТЫ", isCorrect: true },
+                ]
+            }
+        ];
+
+        // Состояние игры
+        let currentLevelIndex = 0;
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let totalQuestions = levels.reduce((acc, lvl) => acc + lvl.questions.length, 0);
+        let answeredCount = 0;
+
+        // Элементы DOM
+        const gameContent = document.getElementById('game-content');
+        const scoreDisplay = document.getElementById('score');
+        const levelDisplay = document.getElementById('level-display');
+        const messageBox = document.getElementById('message-box');
+        const progressBar = document.getElementById('progress');
+
+        // Инициализация игры
+        function startGame() {
+            currentLevelIndex = 0;
+            currentQuestionIndex = 0;
+            score = 0;
+            answeredCount = 0;
+            scoreDisplay.innerText = score;
+            progressBar.style.width = '0%';
+            renderIntro();
+        }
+
+        // Экран приветствия
+        function renderIntro() {
+            gameContent.innerHTML = `
+                <div class="hint-img">🧙‍♂️</div>
+                <p>Привет, друг! Я — Мягкий Знак. Помоги мне разделить согласные и гласные в словах!</p>
+                <p>Помни: я ставлюсь после согласных перед Е, Ё, Ю, Я, И.</p>
+                <button class="btn-primary" onclick="nextLevel()">Начать игру ▶</button>
+            `;
+            levelDisplay.innerText = "Вступление";
+        }
+
+        // Переход к следующему уровню
+        function nextLevel() {
+            currentQuestionIndex = 0;
+            if (currentLevelIndex < levels.length) {
+                levelDisplay.innerText = currentLevelIndex + 1;
+                renderQuestion();
+            } else {
+                renderWinScreen();
+            }
+        }
+
+        // Отрисовка текущего вопроса
+        function renderQuestion() {
+            messageBox.innerText = "";
+            const level = levels[currentLevelIndex];
+            
+            if (currentQuestionIndex >= level.questions.length) {
+                currentLevelIndex++;
+                // Анимация перехода
+                gameContent.innerHTML = `
+                    <div class="hint-img">🎉</div>
+                    <h2 class="correct">Уровень пройден!</h2>
+                    <button class="btn-success" onclick="nextLevel()">Следующий уровень ➡</button>
+                `;
+                return;
+            }
+
+            const q = level.questions[currentQuestionIndex];
+
+            if (level.type === 'insert') {
+                renderInsertQuestion(q);
+            } else if (level.type === 'choice') {
+                renderChoiceQuestion(q);
+            } else if (level.type === 'truth') {
+                renderTruthQuestion(q);
+            }
+        }
+
+        // --- Типы заданий ---
+
+        // 1. Вставить Ь
+        function renderInsertQuestion(q) {
+            gameContent.innerHTML = `
+                <div class="hint-img">${q.hint}</div>
+                <div class="word-display">${q.text}</div>
+                <p style="color: #666; font-size: 0.9em">${q.tip}</p>
+                <div class="btn-group">
+                    <button class="btn-choice" onclick="checkInsert(true, ${q.answer})">Напишу Ь</button>
+                    <button class="btn-choice" onclick="checkInsert(false, ${q.answer})">Без Ь</button>
+                </div>
+            `;
+        }
+
+        function checkInsert(userChoice, correctChoice) {
+            if (userChoice === correctChoice) {
+                handleCorrect();
+            } else {
+                handleWrong();
+            }
+        }
+
+        // 2. Выбор слова
+        function renderChoiceQuestion(q) {
+            let buttons = q.options.map(opt => 
+                `<button class="btn-choice" onclick="checkChoice('${opt}', '${q.correct}')">${opt}</button>`
+            ).join('');
+
+            gameContent.innerHTML = `
+                <div class="hint-img">${q.hint}</div>
+                <p>Выбери правильное слово:</p>
+                <div class="btn-group">${buttons}</div>
+            `;
+        }
+
+        function checkChoice(selected, correct) {
+            if (selected === correct) {
+                handleCorrect();
+            } else {
+                handleWrong();
+            }
+        }
+
+        // 3. Верно/Неверно
+        function renderTruthQuestion(q) {
+            gameContent.innerHTML = `
+                <div class="hint-img">🤔</div>
+                <p>Верно ли написано слово?</p>
+                <div class="word-display">${q.word}</div>
+                <div class="btn-group">
+                    <button class="btn-success" onclick="checkTruth(true, ${q.isCorrect})">Верно ✅</button>
+                    <button class="btn-danger" onclick="checkTruth(false, ${q.isCorrect})">Ошибка ❌</button>
+                </div>
+            `;
+        }
+
+        function checkTruth(userSaidCorrect, isActuallyCorrect) {
+            if (userSaidCorrect === isActuallyCorrect) {
+                handleCorrect();
+            } else {
+                // Специфический фидбек для этого уровня (например, про твердый знак)
+                const q = levels[currentLevelIndex].questions[currentQuestionIndex];
+                let extraMsg = "";
+                if (q.comment) extraMsg = `<br><small style="color: #555">(${q.comment})</small>`;
+                handleWrong(extraMsg);
+            }
+        }
+
+        // --- Обработка результатов ---
+
+        function handleCorrect() {
+            score += 10;
+            answeredCount++;
+            scoreDisplay.innerText = score;
+            updateProgress();
+            
+            gameContent.querySelector('.word-display')?.classList.add('correct');
+            messageBox.innerHTML = "<span class='correct'>Молодец! Правильно! ⭐</span>";
+            
+            setTimeout(() => {
+                currentQuestionIndex++;
+                renderQuestion();
+            }, 1000);
+        }
+
+        function handleWrong(extraMsg = "") {
+            messageBox.innerHTML = `<span class='wrong'>Попробуй еще раз! ❌ ${extraMsg}</span>`;
+            gameContent.querySelector('.word-display')?.classList.add('shake');
+            
+            // Простая вибрация на планшете/телефоне для обратной связи
+            if (navigator.vibrate) navigator.vibrate(200);
+
+            // Штраф можно добавить здесь, но для 2 класса мы просто оставляем задачу на экране
+            // setTimeout(() => renderQuestion(), 1500); // Автопереход при ошибке (раскомментировать, если нужно принудительно двигаться)
+        }
+
+        function updateProgress() {
+            let percent = (answeredCount / totalQuestions) * 100;
+            progressBar.style.width = percent + '%';
+        }
+
+        function renderWinScreen() {
+            levelDisplay.innerText = "Финиш";
+            gameContent.innerHTML = `
+                <div class="hint-img">🏆</div>
+                <h2 class='correct'>Поздравляем!</h2>
+                <p>Ты отличный знаток русского языка!</p>
+                <h3>Твой счет: ${score}</h3>
+                <button class="btn-primary" onclick="startGame()">Играть снова 🔄</button>
+            `;
+        }
+
+        // Запуск
+        startGame();
+
+    </script>
+</body>
+</html>

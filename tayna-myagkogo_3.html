@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Разделительный Ь знак — 2 класс</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Comfortaa:wght@400;700&display=swap');
+
+  :root {
+    --sky: #e0f7ff;
+    --cloud: #ffffff;
+    --blue: #3a8fe8;
+    --deepblue: #1d5cb8;
+    --yellow: #ffd54f;
+    --orange: #ff8f00;
+    --green: #43c98c;
+    --red: #ff5c6c;
+    --purple: #8b5cf6;
+    --text: #1a2340;
+    --soft: #f0f9ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(160deg, #c9eeff 0%, #e8f7ff 40%, #fff9e6 100%);
+    min-height: 100vh;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* Floating clouds background */
+  .clouds {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.6;
+    animation: floatCloud linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+  }
+  .cloud::before { width: 60%; height: 150%; top: -40%; left: 15%; }
+  .cloud::after  { width: 40%; height: 120%; top: -30%; right: 15%; }
+  .c1 { width:120px;height:40px; top:8%;  animation-duration:28s; animation-delay:-5s;  }
+  .c2 { width:80px; height:28px; top:20%; animation-duration:22s; animation-delay:-12s; }
+  .c3 { width:160px;height:50px; top:5%;  animation-duration:35s; animation-delay:-20s; }
+  .c4 { width:90px; height:32px; top:35%; animation-duration:26s; animation-delay:-8s;  }
+  @keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
+
+  /* ===== SCREENS ===== */
+  .screen { display: none; position: relative; z-index: 1; }
+  .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+
+  /* ===== TITLE SCREEN ===== */
+  .title-card {
+    background: white;
+    border-radius: 32px;
+    padding: 50px 60px;
+    max-width: 680px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 12px 60px rgba(58,143,232,0.2), 0 0 0 4px rgba(255,213,79,0.6);
+    animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  .sign-big {
+    font-size: 110px;
+    font-weight: 900;
+    color: var(--deepblue);
+    line-height: 1;
+    text-shadow: 6px 6px 0 var(--yellow);
+    display: block;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+
+  .title-text { font-size: 28px; font-weight: 900; color: var(--deepblue); margin: 12px 0 6px; }
+  .title-sub  { font-size: 16px; color: #6b7a99; margin-bottom: 30px; }
+
+  .rule-box {
+    background: linear-gradient(135deg, #e8f4ff, #f0fff8);
+    border-radius: 18px;
+    padding: 22px 26px;
+    text-align: left;
+    border-left: 6px solid var(--blue);
+    margin-bottom: 28px;
+  }
+  .rule-box h3 { font-size: 16px; font-weight: 800; color: var(--deepblue); margin-bottom: 12px; }
+  .rule-box p  { font-size: 15px; line-height: 1.7; color: #3a4a6b; }
+  .rule-box .highlight { color: var(--deepblue); font-weight: 800; font-size: 18px; }
+
+  .examples-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px; }
+  .ex-chip {
+    background: var(--yellow);
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-weight: 800;
+    font-size: 17px;
+    color: #5a3700;
+    box-shadow: 0 3px 0 #c8941a;
+    transition: transform 0.2s;
+  }
+  .ex-chip:hover { transform: translateY(-2px); }
+  .ex-chip .soft { color: var(--deepblue); }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--blue), var(--deepblue));
+    color: white;
+    border: none;
+    padding: 18px 50px;
+    border-radius: 50px;
+    font-size: 20px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #0d3a8a;
+    transition: all 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .btn-start:hover  { transform: translateY(-3px); box-shadow: 0 9px 0 #0d3a8a; }
+  .btn-start:active { transform: translateY(3px);  box-shadow: 0 3px 0 #0d3a8a; }
+
+  /* ===== GAME SCREEN ===== */
+  #gameScreen {
+    padding: 20px;
+    gap: 0;
+  }
+
+  .hud {
+    display: flex; align-items: center; gap: 16px;
+    background: white; border-radius: 20px;
+    padding: 12px 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    margin-bottom: 24px;
+    width: 100%; max-width: 700px;
+  }
+  .hud-item { display: flex; align-items: center; gap: 8px; font-weight: 800; font-size: 16px; }
+  .hud-icon { font-size: 22px; }
+  .score-val { color: var(--deepblue); }
+  .lives { margin-left: auto; }
+  .heart { font-size: 22px; display: inline-block; transition: transform 0.2s; }
+  .heart.lost { opacity: 0.3; transform: scale(0.8); }
+
+  .progress-wrap {
+    width: 100%; max-width: 700px;
+    height: 10px; background: #e0eaf5;
+    border-radius: 10px; margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--green), var(--blue));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  .question-card {
+    background: white;
+    border-radius: 28px;
+    padding: 36px 44px;
+    max-width: 700px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(58,143,232,0.15);
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+  }
+
+  .q-type-badge {
+    display: inline-block;
+    background: var(--blue); color: white;
+    font-size: 12px; font-weight: 800;
+    padding: 4px 14px; border-radius: 20px;
+    margin-bottom: 18px; letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .q-word {
+    font-size: 52px;
+    font-weight: 900;
+    color: var(--text);
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    display: flex; justify-content: center; align-items: center; gap: 2px;
+    flex-wrap: wrap;
+  }
+  .q-word .gap-slot {
+    display: inline-block;
+    width: 44px; height: 56px;
+    border-bottom: 5px solid var(--blue);
+    vertical-align: middle;
+    position: relative;
+    transition: all 0.2s;
+  }
+  .q-word .gap-slot.correct { border-color: var(--green); }
+  .q-word .gap-slot.wrong   { border-color: var(--red); }
+
+  .q-question { font-size: 18px; color: #5a6a8a; font-weight: 600; margin-bottom: 8px; }
+
+  /* answers grid */
+  .answers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    max-width: 700px; width: 100%;
+  }
+
+  .ans-btn {
+    background: white;
+    border: 3px solid #d4e5f8;
+    border-radius: 18px;
+    padding: 18px 20px;
+    font-size: 22px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 #d4e5f8;
+    position: relative;
+    overflow: hidden;
+  }
+  .ans-btn:hover:not(:disabled) {
+    border-color: var(--blue); color: var(--deepblue);
+    transform: translateY(-3px); box-shadow: 0 7px 0 var(--blue);
+  }
+  .ans-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #d4e5f8; }
+  .ans-btn.correct-ans {
+    background: #e8fff3; border-color: var(--green); color: #1a6641;
+    box-shadow: 0 4px 0 #2a9e65;
+    animation: correctPulse 0.4s ease;
+  }
+  .ans-btn.wrong-ans {
+    background: #fff0f2; border-color: var(--red); color: #9b1a2a;
+    box-shadow: 0 4px 0 #cc3040;
+    animation: shake 0.4s ease;
+  }
+  @keyframes correctPulse { 0%{transform:scale(1)} 50%{transform:scale(1.06)} 100%{transform:scale(1)} }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+  /* single column for some q types */
+  .answers-grid.single-col { grid-template-columns: 1fr; max-width: 450px; }
+
+  /* feedback bubble */
+  .feedback-bubble {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%) scale(0);
+    background: white; border-radius: 24px; padding: 24px 40px;
+    font-size: 28px; font-weight: 900;
+    box-shadow: 0 16px 60px rgba(0,0,0,0.2);
+    z-index: 100; pointer-events: none;
+    text-align: center;
+    transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .feedback-bubble.show { transform: translate(-50%,-50%) scale(1); }
+  .feedback-bubble.correct-fb { border-top: 8px solid var(--green); }
+  .feedback-bubble.wrong-fb   { border-top: 8px solid var(--red); }
+  .feedback-bubble .fb-emoji { font-size: 50px; display: block; }
+
+  /* ===== RESULT SCREEN ===== */
+  .result-card {
+    background: white;
+    border-radius: 32px;
+    padding: 50px 60px;
+    max-width: 620px; width: 100%;
+    text-align: center;
+    box-shadow: 0 12px 60px rgba(58,143,232,0.2);
+    animation: popIn 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .trophy { font-size: 80px; animation: bounce 1.5s ease-in-out infinite; display: block; margin-bottom: 10px; }
+  .result-title { font-size: 32px; font-weight: 900; color: var(--deepblue); margin-bottom: 8px; }
+  .result-score { font-size: 20px; color: #6b7a99; margin-bottom: 30px; }
+  .result-score span { font-size: 36px; font-weight: 900; color: var(--green); }
+  .stars-row { display: flex; justify-content: center; gap: 10px; font-size: 52px; margin-bottom: 30px; }
+  .star { display: inline-block; animation: starPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both; }
+  .star.empty { filter: grayscale(1) opacity(0.3); }
+  @keyframes starPop { from{transform:scale(0)rotate(-30deg)} to{transform:scale(1)rotate(0)} }
+
+  .result-message { font-size: 18px; color: #3a4a6b; margin-bottom: 32px; line-height: 1.6; }
+  .btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .btn-play-again {
+    background: linear-gradient(135deg, var(--green), #1e9e6a);
+    color: white; border: none; padding: 16px 40px;
+    border-radius: 50px; font-size: 18px; font-weight: 800;
+    font-family: 'Nunito', sans-serif; cursor: pointer;
+    box-shadow: 0 6px 0 #0d6b44;
+    transition: all 0.15s;
+  }
+  .btn-play-again:hover { transform: translateY(-3px); box-shadow: 0 9px 0 #0d6b44; }
+  .btn-menu {
+    background: #f0f4ff; color: var(--deepblue); border: none;
+    padding: 16px 40px; border-radius: 50px; font-size: 18px; font-weight: 800;
+    font-family: 'Nunito', sans-serif; cursor: pointer;
+    box-shadow: 0 6px 0 #d0d8f0; transition: all 0.15s;
+  }
+  .btn-menu:hover { transform: translateY(-3px); box-shadow: 0 9px 0 #d0d8f0; }
+
+  /* Confetti */
+  .confetti-piece {
+    position: fixed; width: 10px; height: 10px; border-radius: 2px;
+    animation: confettiFall linear both;
+    pointer-events: none; z-index: 200;
+  }
+  @keyframes confettiFall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  /* Next btn */
+  .btn-next {
+    background: linear-gradient(135deg, var(--orange), #e65100);
+    color: white; border: none; padding: 14px 36px;
+    border-radius: 50px; font-size: 17px; font-weight: 800;
+    font-family: 'Nunito', sans-serif; cursor: pointer;
+    box-shadow: 0 5px 0 #a33900; transition: all 0.15s;
+    margin-top: 16px; display: none;
+  }
+  .btn-next.show { display: inline-block; animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  .btn-next:hover { transform: translateY(-3px); box-shadow: 0 8px 0 #a33900; }
+
+  /* Tip below question */
+  .tip-text {
+    font-size: 15px; color: #7a8aaa; margin-top: 10px; font-style: italic; display: none;
+    max-width: 600px; text-align: center;
+  }
+  .tip-text.show { display: block; }
+
+  @media (max-width: 600px) {
+    .title-card, .question-card, .result-card { padding: 28px 20px; }
+    .q-word { font-size: 38px; }
+    .answers-grid { grid-template-columns: 1fr; }
+    .sign-big { font-size: 80px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background clouds -->
+<div class="clouds">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+  <div class="cloud c4"></div>
+</div>
+
+<!-- SCREEN 1: TITLE -->
+<div class="screen active" id="titleScreen">
+  <div class="title-card">
+    <span class="sign-big">Ь</span>
+    <div class="title-text">Разделительный мягкий знак</div>
+    <div class="title-sub">Русский язык · 2 класс</div>
+
+    <div class="rule-box">
+      <h3>📖 Правило</h3>
+      <p>
+        Разделительный <span class="highlight">Ь</span> пишется <strong>перед буквами Е, Ё, Ю, Я, И</strong>
+        внутри слова (не после приставок).<br>
+        Он показывает, что согласный не сливается с гласным.
+      </p>
+    </div>
+
+    <div class="examples-row">
+      <div class="ex-chip">вороб<span class="soft">ь</span>и</div>
+      <div class="ex-chip">ул<span class="soft">ь</span>и</div>
+      <div class="ex-chip">сем<span class="soft">ь</span>я</div>
+      <div class="ex-chip">вез<span class="soft">ь</span>ё</div>
+      <div class="ex-chip">листь<span class="soft">я</span></div>
+    </div>
+
+    <button class="btn-start" onclick="startGame()">🎮 Играть!</button>
+  </div>
+</div>
+
+<!-- SCREEN 2: GAME -->
+<div class="screen" id="gameScreen">
+  <div class="hud">
+    <div class="hud-item"><span class="hud-icon">⭐</span> <span class="score-val" id="scoreDisplay">0</span></div>
+    <div class="hud-item"><span class="hud-icon">📝</span> <span id="qNumDisplay">1</span> / <span id="qTotalDisplay">10</span></div>
+    <div class="hud-item lives" id="livesDisplay">
+      <span class="heart" id="h1">❤️</span>
+      <span class="heart" id="h2">❤️</span>
+      <span class="heart" id="h3">❤️</span>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar" style="width:0%"></div>
+  </div>
+
+  <div class="question-card" id="questionCard">
+    <div class="q-type-badge" id="qTypeBadge">Задание</div>
+    <div class="q-word" id="qWordDisplay"></div>
+    <div class="q-question" id="qQuestionText"></div>
+  </div>
+
+  <div class="answers-grid" id="answersGrid"></div>
+  <button class="btn-next" id="btnNext" onclick="nextQuestion()">Далее →</button>
+  <div class="tip-text" id="tipText"></div>
+</div>
+
+<!-- SCREEN 3: RESULT -->
+<div class="screen" id="resultScreen">
+  <div class="result-card">
+    <span class="trophy" id="trophyEmoji">🏆</span>
+    <div class="result-title" id="resultTitle">Молодец!</div>
+    <div class="result-score">Ты набрал(а) <span id="finalScore">0</span> очков из <span id="maxScore">0</span></div>
+    <div class="stars-row" id="starsRow"></div>
+    <div class="result-message" id="resultMessage"></div>
+    <div class="btn-row">
+      <button class="btn-play-again" onclick="startGame()">🔄 Ещё раз</button>
+      <button class="btn-menu" onclick="showTitle()">🏠 В меню</button>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback bubble -->
+<div class="feedback-bubble" id="feedbackBubble">
+  <span class="fb-emoji" id="fbEmoji">✅</span>
+  <span id="fbText">Правильно!</span>
+</div>
+
+<script>
+// ===== QUESTION BANK =====
+const allQuestions = [
+  // Type A: Нужен ли разделительный Ь? (Да/Нет)
+  { type:'yn', word:'воробей', display:'воробей', answer:false, tip:'Буква «е» звучит как [й+э], но здесь нет разделения — пишем без Ь.' },
+  { type:'yn', word:'листья',  display:'листья',  answer:true,  tip:'«Листья» — Ь разделяет согласный Т и гласную Я.' },
+  { type:'yn', word:'семья',   display:'семья',   answer:true,  tip:'«Семья» — Ь пишется перед Я.' },
+  { type:'yn', word:'ульи',    display:'ульи',    answer:true,  tip:'«Ульи» — Ь пишется перед И.' },
+  { type:'yn', word:'пальто',  display:'пальто',  answer:false, tip:'«Пальто» — Ь смягчает Л, но не является разделительным, т.к. не стоит перед Е, Ё, Ю, Я, И.' },
+  { type:'yn', word:'вьюга',   display:'вьюга',   answer:true,  tip:'«Вьюга» — Ь пишется перед Ю.' },
+  { type:'yn', word:'обезьяна',display:'обезьяна',answer:true,  tip:'«Обезьяна» — Ь перед Я.' },
+  { type:'yn', word:'деревья', display:'деревья', answer:true,  tip:'«Деревья» — Ь перед Я.' },
+  { type:'yn', word:'конь',    display:'конь',    answer:false, tip:'«Конь» — Ь в конце слова смягчает согласный, но это не разделительный Ь.' },
+  { type:'yn', word:'сырьё',   display:'сырьё',   answer:true,  tip:'«Сырьё» — Ь перед Ё.' },
+
+  // Type B: Вставь букву в пробел (Ь или ничего)
+  { type:'fill', display:'вороб_и',   before:'вороб', after:'и', answer:'ь', tip:'«Воробьи» — Ь перед И.' },
+  { type:'fill', display:'пал_то',    before:'пал',   after:'то', answer:'', tip:'«Пальто» — здесь нет разделительного Ь, ведь «Т» — не буква Е/Ё/Ю/Я/И.' },
+  { type:'fill', display:'ул_и',      before:'ул',    after:'и', answer:'ь', tip:'«Ульи» — Ь перед И.' },
+  { type:'fill', display:'лис_я',     before:'лис',   after:'я', answer:'т', tip:'«Листья» содержит сочетание «стья» — правильно: «листья».' },
+  { type:'fill', display:'в_юга',     before:'в',     after:'юга', answer:'ь', tip:'«Вьюга» — Ь перед Ю.' },
+  { type:'fill', display:'обез_яна',  before:'обез',  after:'яна', answer:'ь', tip:'«Обезьяна» — Ь перед Я.' },
+  { type:'fill', display:'соловей',   before:'солов', after:'ей',  answer:'', tip:'«Соловей» — разделительного Ь нет.' },
+  { type:'fill', display:'сем_я',     before:'сем',   after:'я',   answer:'ь', tip:'«Семья» — Ь перед Я.' },
+  { type:'fill', display:'сыр_ё',     before:'сыр',   after:'ё',   answer:'ь', tip:'«Сырьё» — Ь перед Ё.' },
+  { type:'fill', display:'кон_',      before:'кон',   after:'',    answer:'ь', tip:'«Конь» — Ь в конце, смягчает согласный (не разделительный, но пишется!)', isEnd: true },
+
+  // Type C: Найди слово с разделительным Ь
+  { type:'pick', question:'В каком слове пишется разделительный Ь?', options:['польза','вьюга','банька','мальчик'], answer:'вьюга', tip:'«Вьюга» — Ь перед Ю (разделительный).' },
+  { type:'pick', question:'В каком слове пишется разделительный Ь?', options:['конь','пальто','листья','банька'], answer:'листья', tip:'«Листья» — Ь перед Я (разделительный).' },
+  { type:'pick', question:'Выбери слово с разделительным Ь:', options:['карась','семья','огонь','уголь'], answer:'семья', tip:'«Семья» — Ь перед Я (разделительный).' },
+  { type:'pick', question:'В каком слове НЕТ разделительного Ь?', options:['обезьяна','ульи','конь','воробьи'], answer:'конь', tip:'«Конь» — Ь смягчает согласный, но не разделяет его от Е/Ё/Ю/Я/И.' },
+  { type:'pick', question:'Выбери слово с разделительным Ь:', options:['колья','конь','огонь','медаль'], answer:'колья', tip:'«Колья» — Ь перед Я (разделительный).' },
+  { type:'pick', question:'В каком слове пишется разделительный Ь?', options:['день','тетрадь','деревья','медведь'], answer:'деревья', tip:'«Деревья» — Ь перед Я (разделительный).' },
+];
+
+// ===== GAME STATE =====
+let questions = [];
+let currentQ = 0;
+let score = 0;
+let lives = 3;
+let answered = false;
+const TOTAL = 10;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function startGame() {
+  questions = shuffle(allQuestions).slice(0, TOTAL);
+  currentQ = 0; score = 0; lives = 3; answered = false;
+  updateHUD();
+  showScreen('gameScreen');
+  renderQuestion();
+}
+
+function showTitle() { showScreen('titleScreen'); }
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function updateHUD() {
+  document.getElementById('scoreDisplay').textContent = score;
+  document.getElementById('qNumDisplay').textContent = currentQ + 1;
+  document.getElementById('qTotalDisplay').textContent = TOTAL;
+  ['h1','h2','h3'].forEach((id,i) => {
+    document.getElementById(id).classList.toggle('lost', i >= lives);
+  });
+  const pct = (currentQ / TOTAL) * 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function renderQuestion() {
+  answered = false;
+  document.getElementById('btnNext').classList.remove('show');
+  document.getElementById('tipText').classList.remove('show');
+  document.getElementById('tipText').textContent = '';
+
+  const q = questions[currentQ];
+  updateHUD();
+
+  const wordEl = document.getElementById('qWordDisplay');
+  const grid   = document.getElementById('answersGrid');
+  const badge  = document.getElementById('qTypeBadge');
+  const qtext  = document.getElementById('qQuestionText');
+
+  grid.className = 'answers-grid';
+  grid.innerHTML = '';
+
+  if (q.type === 'yn') {
+    badge.textContent = 'Нужен ли Ь?';
+    wordEl.innerHTML = `<span>${q.display}</span>`;
+    qtext.textContent = 'Нужен ли здесь разделительный Ь?';
+    const opts = [{label:'✅ Да', val:true}, {label:'❌ Нет', val:false}];
+    opts.forEach(o => {
+      const btn = makeBtn(o.label, () => checkYN(o.val, q));
+      grid.appendChild(btn);
+    });
+
+  } else if (q.type === 'fill') {
+    badge.textContent = 'Вставь букву';
+    const gapHTML = `<span>${q.before}</span><span class="gap-slot" id="gapSlot"></span><span>${q.after}</span>`;
+    wordEl.innerHTML = gapHTML;
+    qtext.textContent = 'Какая буква пропущена? (Ь или ничего)';
+    const opts = ['ь', ''].map(v => ({label: v === '' ? '— (ничего)' : 'Ь', val: v}));
+    opts.forEach(o => {
+      const btn = makeBtn(o.label, () => checkFill(o.val, q));
+      grid.appendChild(btn);
+    });
+
+  } else if (q.type === 'pick') {
+    badge.textContent = 'Найди слово';
+    wordEl.innerHTML = '🔍';
+    wordEl.style.fontSize = '44px';
+    qtext.textContent = q.question;
+    grid.classList.add('single-col');
+    shuffle(q.options).forEach(opt => {
+      const btn = makeBtn(opt, () => checkPick(opt, q));
+      grid.appendChild(btn);
+    });
+  }
+}
+
+function makeBtn(label, onClick) {
+  const btn = document.createElement('button');
+  btn.className = 'ans-btn';
+  btn.textContent = label;
+  btn.addEventListener('click', onClick);
+  return btn;
+}
+
+function checkYN(val, q) {
+  if (answered) return;
+  answered = true;
+  const correct = (val === q.answer);
+  handleAnswer(correct, q, val === true ? '✅ Да' : '❌ Нет', q.answer === true ? '✅ Да' : '❌ Нет');
+}
+
+function checkFill(val, q) {
+  if (answered) return;
+  answered = true;
+  const correct = (val.toLowerCase() === q.answer.toLowerCase());
+  handleAnswer(correct, q, val === '' ? '— (ничего)' : 'Ь', q.answer === '' ? '— (ничего)' : 'Ь');
+  // Show in gap
+  const slot = document.getElementById('gapSlot');
+  if (slot) {
+    slot.textContent = q.answer;
+    slot.classList.add(correct ? 'correct' : 'wrong');
+  }
+}
+
+function checkPick(val, q) {
+  if (answered) return;
+  answered = true;
+  handleAnswer(val === q.answer, q, val, q.answer);
+}
+
+function handleAnswer(correct, q, chosen, correctLabel) {
+  if (correct) {
+    score += 10;
+    showFeedback(true);
+  } else {
+    lives--;
+    showFeedback(false, correctLabel);
+  }
+  updateHUD();
+
+  // Highlight buttons
+  const btns = document.querySelectorAll('.ans-btn');
+  btns.forEach(btn => {
+    btn.disabled = true;
+    const btnText = btn.textContent;
+    if (btnText === correctLabel || btnText === chosen && correct) {
+      btn.classList.add('correct-ans');
+    } else if (btnText === chosen && !correct) {
+      btn.classList.add('wrong-ans');
+    }
+  });
+
+  // Show tip
+  if (q.tip) {
+    const tipEl = document.getElementById('tipText');
+    tipEl.textContent = '💡 ' + q.tip;
+    tipEl.classList.add('show');
+  }
+
+  setTimeout(() => {
+    hideFeedback();
+    if (lives <= 0 || currentQ >= TOTAL - 1) {
+      setTimeout(showResult, 400);
+    } else {
+      document.getElementById('btnNext').classList.add('show');
+    }
+  }, 1400);
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= TOTAL || lives <= 0) { showResult(); return; }
+  renderQuestion();
+  document.getElementById('questionCard').style.transform = 'scale(0.95)';
+  setTimeout(() => document.getElementById('questionCard').style.transform = '', 200);
+}
+
+function showFeedback(correct, wrongLabel) {
+  const bubble = document.getElementById('feedbackBubble');
+  const emoji  = document.getElementById('fbEmoji');
+  const text   = document.getElementById('fbText');
+  bubble.className = 'feedback-bubble ' + (correct ? 'correct-fb' : 'wrong-fb');
+  emoji.textContent = correct ? ['🌟','🎉','👏','✅','🥳'][Math.floor(Math.random()*5)] : '😕';
+  text.textContent  = correct
+    ? ['Правильно!', 'Отлично!', 'Молодец!', 'Верно!', 'Умница!'][Math.floor(Math.random()*5)]
+    : 'Не совсем так…';
+  bubble.classList.add('show');
+}
+function hideFeedback() {
+  document.getElementById('feedbackBubble').classList.remove('show');
+}
+
+function showResult() {
+  showScreen('resultScreen');
+  const max = TOTAL * 10;
+  const pct = score / max;
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('maxScore').textContent   = max;
+
+  let stars = 1, trophy = '🎖️', title = 'Неплохо!', msg = 'Ещё немного практики, и ты станешь мастером!';
+  if (pct >= 0.9) { stars=3; trophy='🏆'; title='Отлично!';  msg='Ты настоящий знаток разделительного Ь! Все правила освоены на 100%!'; }
+  else if (pct >= 0.65) { stars=2; trophy='🥈'; title='Хорошо!'; msg='Почти всё правильно! Повтори правило ещё раз — и будет совсем отлично!'; }
+
+  if (lives === 0) { trophy='💪'; title='Попробуй снова!'; msg='В этот раз не получилось, но не сдавайся! Повтори правило и попробуй снова.'; }
+
+  document.getElementById('trophyEmoji').textContent = trophy;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultMessage').textContent = msg;
+
+  const starsRow = document.getElementById('starsRow');
+  starsRow.innerHTML = '';
+  for (let i=1; i<=3; i++) {
+    const s = document.createElement('span');
+    s.className = 'star' + (i>stars ? ' empty' : '');
+    s.textContent = '⭐';
+    s.style.animationDelay = (i*0.15) + 's';
+    starsRow.appendChild(s);
+  }
+
+  if (pct >= 0.9 && lives > 0) spawnConfetti();
+}
+
+function spawnConfetti() {
+  const colors = ['#ffd54f','#43c98c','#3a8fe8','#ff5c6c','#8b5cf6','#ff8f00'];
+  for (let i=0; i<60; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      top:0;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*10}px;
+      height:${6+Math.random()*10}px;
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${Math.random()*1}s;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+    `;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4000);
+  }
+}
+</script>
+</body>
+</html>

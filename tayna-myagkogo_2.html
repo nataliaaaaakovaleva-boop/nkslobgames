@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Разделительный мягкий знак — 2 класс</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap');
+
+  :root {
+    --sky: #5BC8F5;
+    --sun: #FFD93D;
+    --grass: #6BCB77;
+    --cloud: #FFFFFF;
+    --berry: #FF6B6B;
+    --violet: #845EC2;
+    --orange: #FF9A3C;
+    --mint: #4ECDC4;
+    --dark: #2D3250;
+    --soft: #F8F9FF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(180deg, #87CEEB 0%, #c9efff 40%, #d4f5c0 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Clouds */
+  .clouds { position: fixed; top: 0; left: 0; width: 100%; pointer-events: none; z-index: 0; }
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.85;
+    animation: floatCloud linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+  .cloud:nth-child(1) { width: 120px; height: 40px; top: 30px; animation-duration: 25s; animation-delay: 0s; }
+  .cloud:nth-child(1)::before { width: 60px; height: 60px; top: -30px; left: 15px; }
+  .cloud:nth-child(1)::after { width: 45px; height: 45px; top: -22px; left: 50px; }
+  .cloud:nth-child(2) { width: 90px; height: 30px; top: 70px; animation-duration: 35s; animation-delay: -12s; opacity: 0.7; }
+  .cloud:nth-child(2)::before { width: 45px; height: 45px; top: -22px; left: 10px; }
+  .cloud:nth-child(2)::after { width: 35px; height: 35px; top: -17px; left: 38px; }
+  .cloud:nth-child(3) { width: 100px; height: 35px; top: 20px; animation-duration: 30s; animation-delay: -20s; opacity: 0.75; }
+  .cloud:nth-child(3)::before { width: 50px; height: 50px; top: -25px; left: 12px; }
+  .cloud:nth-child(3)::after { width: 40px; height: 40px; top: -20px; left: 44px; }
+  @keyframes floatCloud { from { transform: translateX(-200px); } to { transform: translateX(110vw); } }
+
+  /* Layout */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .header-badge {
+    display: inline-block;
+    background: var(--violet);
+    color: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 13px;
+    letter-spacing: 1px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(28px, 5vw, 46px);
+    color: var(--dark);
+    text-shadow: 0 3px 0 rgba(0,0,0,0.1);
+    line-height: 1.15;
+  }
+  .header h1 span { color: var(--violet); }
+  .header p {
+    margin-top: 8px;
+    font-size: 16px;
+    color: #4a4f7a;
+    font-weight: 600;
+  }
+
+  /* Stars / score */
+  .score-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .star-wrap {
+    display: flex;
+    gap: 6px;
+  }
+  .star {
+    font-size: 28px;
+    filter: grayscale(1) opacity(0.35);
+    transition: filter 0.4s, transform 0.4s;
+  }
+  .star.earned { filter: none; transform: scale(1.2) rotate(-8deg); }
+  .score-num {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: var(--dark);
+    background: white;
+    border-radius: 14px;
+    padding: 4px 16px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+
+  /* Rule card */
+  .rule-card {
+    background: white;
+    border-radius: 24px;
+    padding: 22px 26px;
+    margin-bottom: 22px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.09);
+    border-left: 7px solid var(--violet);
+    position: relative;
+    overflow: hidden;
+  }
+  .rule-card::before {
+    content: '📖';
+    position: absolute;
+    right: 18px;
+    top: 14px;
+    font-size: 32px;
+    opacity: 0.15;
+  }
+  .rule-card h2 {
+    font-family: 'Fredoka One', cursive;
+    color: var(--violet);
+    font-size: 18px;
+    margin-bottom: 10px;
+  }
+  .rule-card p {
+    color: #444;
+    font-size: 15px;
+    line-height: 1.6;
+    font-weight: 600;
+  }
+  .rule-highlight {
+    display: inline-block;
+    background: #f0e9ff;
+    color: var(--violet);
+    border-radius: 8px;
+    padding: 1px 8px;
+    font-weight: 800;
+  }
+  .rule-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .rule-ex-word {
+    background: linear-gradient(135deg, var(--violet), #a78bfa);
+    color: white;
+    border-radius: 12px;
+    padding: 5px 14px;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    box-shadow: 0 3px 8px rgba(132,94,194,0.3);
+  }
+  .rule-ex-word em {
+    font-style: normal;
+    color: var(--sun);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    flex: 1;
+    min-width: 130px;
+    padding: 11px 14px;
+    border: none;
+    border-radius: 18px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    cursor: pointer;
+    background: white;
+    color: #888;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    transition: all 0.25s;
+  }
+  .tab-btn.active {
+    background: var(--violet);
+    color: white;
+    box-shadow: 0 5px 16px rgba(132,94,194,0.38);
+    transform: translateY(-2px);
+  }
+  .tab-btn:hover:not(.active) { background: #f0e9ff; color: var(--violet); }
+
+  /* Game panels */
+  .game-panel { display: none; }
+  .game-panel.active { display: block; }
+
+  /* Card styling shared */
+  .game-card {
+    background: white;
+    border-radius: 24px;
+    padding: 26px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.09);
+    margin-bottom: 18px;
+  }
+  .task-label {
+    font-size: 13px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--violet);
+    margin-bottom: 10px;
+  }
+  .question-text {
+    font-size: clamp(18px, 3.5vw, 24px);
+    font-weight: 800;
+    color: var(--dark);
+    line-height: 1.4;
+    margin-bottom: 18px;
+  }
+  .question-text .gap {
+    display: inline-block;
+    width: 36px;
+    height: 36px;
+    border-bottom: 3px solid var(--violet);
+    vertical-align: middle;
+    text-align: center;
+    font-size: 26px;
+    color: var(--violet);
+    line-height: 36px;
+  }
+
+  /* Options */
+  .options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .opt-btn {
+    padding: 14px 10px;
+    border: 3px solid #e8e8f0;
+    border-radius: 18px;
+    background: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(16px, 2.5vw, 20px);
+    font-weight: 800;
+    color: var(--dark);
+    cursor: pointer;
+    transition: all 0.22s;
+    position: relative;
+    overflow: hidden;
+  }
+  .opt-btn:hover:not(:disabled) {
+    border-color: var(--violet);
+    background: #f0e9ff;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(132,94,194,0.25);
+  }
+  .opt-btn.correct {
+    background: #d4fce8;
+    border-color: var(--grass);
+    color: #1a7a3a;
+    animation: popIn 0.4s ease;
+  }
+  .opt-btn.wrong {
+    background: #ffe0e0;
+    border-color: var(--berry);
+    color: #b00020;
+    animation: shake 0.4s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  /* Feedback */
+  .feedback-box {
+    margin-top: 14px;
+    padding: 12px 18px;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+  .feedback-box.show { display: flex; }
+  .feedback-box.correct-fb { background: #d4fce8; color: #1a7a3a; }
+  .feedback-box.wrong-fb { background: #ffe0e0; color: #b00020; }
+  .feedback-icon { font-size: 22px; }
+
+  /* Next btn */
+  .next-btn {
+    display: none;
+    width: 100%;
+    margin-top: 14px;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--violet), #a855f7);
+    color: white;
+    border: none;
+    border-radius: 18px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 5px 18px rgba(132,94,194,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .next-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(132,94,194,0.5); }
+  .next-btn.show { display: block; }
+
+  /* DRAG GAME */
+  .word-display {
+    font-size: clamp(24px, 5vw, 36px);
+    font-family: 'Fredoka One', cursive;
+    color: var(--dark);
+    margin-bottom: 16px;
+    letter-spacing: 2px;
+  }
+  .drop-zone-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+  .letter-tile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 52px;
+    background: white;
+    border: 2px solid #d0d4f0;
+    border-radius: 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 24px;
+    color: var(--dark);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.07);
+  }
+  .drop-slot {
+    width: 46px;
+    height: 52px;
+    border: 3px dashed var(--violet);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: var(--violet);
+    background: #f0e9ff;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .drop-slot:hover { background: #e0d4ff; }
+  .drop-slot.filled { background: #d4fce8; border-color: var(--grass); color: #1a7a3a; }
+  .drop-slot.wrong-slot { background: #ffe0e0; border-color: var(--berry); }
+  .choices-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .choice-chip {
+    padding: 10px 20px;
+    border-radius: 14px;
+    border: 3px solid var(--violet);
+    background: white;
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    color: var(--violet);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 3px 10px rgba(132,94,194,0.18);
+  }
+  .choice-chip:hover { background: var(--violet); color: white; transform: scale(1.05); }
+  .choice-chip.used { opacity: 0.35; pointer-events: none; }
+
+  /* SORT GAME */
+  .sort-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 18px;
+  }
+  .sort-col {
+    background: #f7f7ff;
+    border-radius: 20px;
+    padding: 14px;
+    min-height: 160px;
+  }
+  .sort-col-header {
+    font-family: 'Fredoka One', cursive;
+    font-size: 16px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    text-align: center;
+    margin-bottom: 10px;
+    color: white;
+  }
+  .sort-col:nth-child(1) .sort-col-header { background: var(--violet); }
+  .sort-col:nth-child(2) .sort-col-header { background: var(--mint); }
+  .sort-word-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 18px;
+  }
+  .sort-chip {
+    padding: 10px 18px;
+    border-radius: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 3px solid transparent;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+  .sort-chip.pool { background: white; color: var(--dark); border-color: #d0d4f0; }
+  .sort-chip.pool:hover { border-color: var(--violet); background: #f0e9ff; transform: translateY(-2px); }
+  .sort-chip.placed-violet { background: #ede9ff; color: var(--violet); border-color: var(--violet); }
+  .sort-chip.placed-mint { background: #e0faf8; color: #1a7a72; border-color: var(--mint); }
+  .sort-chip.correct-placed { background: #d4fce8 !important; border-color: var(--grass) !important; color: #1a7a3a !important; }
+  .sort-chip.wrong-placed { background: #ffe0e0 !important; border-color: var(--berry) !important; color: #b00020 !important; }
+  .sort-drop-area {
+    min-height: 80px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+  }
+  .check-sort-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--mint), #20b2aa);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(78,205,196,0.4);
+    transition: all 0.2s;
+  }
+  .check-sort-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 20px rgba(78,205,196,0.5); }
+
+  /* MISSING LETTER */
+  .missing-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 18px;
+    font-size: clamp(20px, 4vw, 30px);
+    font-family: 'Fredoka One', cursive;
+    color: var(--dark);
+  }
+  .word-part { letter-spacing: 1px; }
+  .input-slot {
+    display: inline-block;
+    width: 44px;
+    height: 48px;
+    border: none;
+    border-bottom: 4px solid var(--violet);
+    background: transparent;
+    text-align: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 26px;
+    color: var(--violet);
+    outline: none;
+    vertical-align: middle;
+  }
+  .input-slot.correct-in { border-color: var(--grass); color: #1a7a3a; }
+  .input-slot.wrong-in { border-color: var(--berry); color: var(--berry); animation: shake 0.4s ease; }
+
+  /* PROGRESS */
+  .progress-wrap {
+    margin-bottom: 18px;
+  }
+  .progress-bar-bg {
+    height: 10px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--violet), #f472b6);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    color: #5a5e8a;
+    margin-bottom: 5px;
+  }
+
+  /* FINISH screen */
+  .finish-screen {
+    display: none;
+    text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 28px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+  }
+  .finish-screen.show { display: block; }
+  .finish-emoji { font-size: 70px; animation: bounce 0.8s ease infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-15px); } }
+  .finish-screen h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 36px;
+    color: var(--violet);
+    margin: 16px 0 8px;
+  }
+  .finish-screen p { font-size: 18px; color: #555; font-weight: 700; margin-bottom: 20px; }
+  .restart-btn {
+    padding: 14px 36px;
+    background: linear-gradient(135deg, var(--violet), #a855f7);
+    color: white;
+    border: none;
+    border-radius: 18px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 5px 18px rgba(132,94,194,0.4);
+    transition: all 0.2s;
+  }
+  .restart-btn:hover { transform: scale(1.05); }
+  .confetti {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* HELPERS */
+  .helper-char {
+    display: inline-block;
+    font-size: 50px;
+    animation: wiggle 2s ease-in-out infinite;
+  }
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+  }
+  .section-divider {
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+    margin: 6px 0 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="clouds">
+  <div class="cloud" style="left:-150px"></div>
+  <div class="cloud" style="left:30vw"></div>
+  <div class="cloud" style="left:60vw"></div>
+</div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge">Русский язык · 2 класс</div>
+    <h1>Разделительный <span>мягкий знак</span> <span class="helper-char">Ь</span></h1>
+    <p>Учимся писать слова с разделительным мягким знаком!</p>
+  </div>
+
+  <!-- SCORE -->
+  <div class="score-bar">
+    <div class="star-wrap">
+      <span class="star" id="s1">⭐</span>
+      <span class="star" id="s2">⭐</span>
+      <span class="star" id="s3">⭐</span>
+      <span class="star" id="s4">⭐</span>
+      <span class="star" id="s5">⭐</span>
+    </div>
+    <div class="score-num">Очки: <span id="scoreVal">0</span></div>
+  </div>
+
+  <!-- RULE CARD -->
+  <div class="rule-card">
+    <h2>📚 Правило</h2>
+    <p>
+      Разделительный <span class="rule-highlight">Ь</span> пишется после согласных
+      <strong>перед гласными Е, Ё, Ю, Я, И</strong>.
+      Он как будто <em>«разделяет»</em> согласный и гласный, и мы слышим звук <strong>[Й]</strong>.
+    </p>
+    <div class="rule-examples">
+      <span class="rule-ex-word">вороб<em>Ь</em>и</span>
+      <span class="rule-ex-word">плат<em>Ь</em>е</span>
+      <span class="rule-ex-word">листь<em>Я</em></span>
+      <span class="rule-ex-word">семь<em>Я</em></span>
+      <span class="rule-ex-word">ружь<em>Ё</em></span>
+      <span class="rule-ex-word">деревь<em>Я</em></span>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('quiz')">🎯 Выбор ответа</button>
+    <button class="tab-btn" onclick="showTab('insert')">✏️ Вставь букву</button>
+    <button class="tab-btn" onclick="showTab('sort')">🗂️ Сортировка</button>
+  </div>
+
+  <!-- ============ QUIZ PANEL ============ -->
+  <div id="tab-quiz" class="game-panel active">
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Задание <span id="q-num">1</span> из <span id="q-total">8</span></span>
+        <span id="q-right">0 верных</span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="q-bar" style="width:0%"></div></div>
+    </div>
+    <div class="game-card" id="quiz-card">
+      <div class="task-label">🎯 Выбери правильный ответ</div>
+      <div class="question-text" id="quiz-question"></div>
+      <div class="options" id="quiz-options"></div>
+      <div class="feedback-box" id="quiz-feedback">
+        <span class="feedback-icon" id="quiz-fb-icon"></span>
+        <span id="quiz-fb-text"></span>
+      </div>
+      <button class="next-btn" id="quiz-next" onclick="nextQuiz()">Следующий вопрос →</button>
+    </div>
+    <div class="finish-screen" id="quiz-finish">
+      <div class="finish-emoji">🌟</div>
+      <h2>Молодец!</h2>
+      <p id="quiz-finish-text"></p>
+      <button class="restart-btn" onclick="restartQuiz()">Сыграть ещё раз</button>
+    </div>
+  </div>
+
+  <!-- ============ INSERT PANEL ============ -->
+  <div id="tab-insert" class="game-panel">
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Задание <span id="i-num">1</span> из <span id="i-total">8</span></span>
+        <span id="i-right">0 верных</span>
+      </div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="i-bar" style="width:0%"></div></div>
+    </div>
+    <div class="game-card" id="insert-card">
+      <div class="task-label">✏️ Нажми на клетку и вставь нужную букву</div>
+      <div class="question-text" id="insert-question"></div>
+      <div class="missing-row" id="insert-word-row"></div>
+      <div class="choices-row" id="insert-choices"></div>
+      <div class="feedback-box" id="insert-feedback">
+        <span class="feedback-icon" id="insert-fb-icon"></span>
+        <span id="insert-fb-text"></span>
+      </div>
+      <button class="next-btn" id="insert-next" onclick="nextInsert()">Следующее слово →</button>
+    </div>
+    <div class="finish-screen" id="insert-finish">
+      <div class="finish-emoji">🦋</div>
+      <h2>Отлично!</h2>
+      <p id="insert-finish-text"></p>
+      <button class="restart-btn" onclick="restartInsert()">Попробовать снова</button>
+    </div>
+  </div>
+
+  <!-- ============ SORT PANEL ============ -->
+  <div id="tab-sort" class="game-panel">
+    <div class="game-card">
+      <div class="task-label">🗂️ Распредели слова по группам</div>
+      <div class="question-text" style="font-size:17px">Нажимай на слово, чтобы поместить его в нужную группу!</div>
+      <div class="sort-word-pool" id="sort-pool"></div>
+      <div class="section-divider">▼ ПЕРЕТАЩИ СЮДА ▼</div>
+      <div class="sort-columns">
+        <div class="sort-col">
+          <div class="sort-col-header">С разделительным Ь</div>
+          <div class="sort-drop-area" id="sort-col-yes" onclick="dropToCol(event,'yes')"></div>
+        </div>
+        <div class="sort-col">
+          <div class="sort-col-header" style="background:var(--mint)">Без разделительного Ь</div>
+          <div class="sort-drop-area" id="sort-col-no" onclick="dropToCol(event,'no')"></div>
+        </div>
+      </div>
+      <button class="check-sort-btn" onclick="checkSort()">Проверить ✔</button>
+      <div class="feedback-box" id="sort-feedback" style="margin-top:12px">
+        <span class="feedback-icon" id="sort-fb-icon"></span>
+        <span id="sort-fb-text"></span>
+      </div>
+      <button class="next-btn" id="sort-next" onclick="nextSort()">Новый раунд →</button>
+    </div>
+  </div>
+
+</div>
+
+<canvas class="confetti" id="confetti-canvas"></canvas>
+
+<script>
+// ===================== DATA =====================
+const quizData = [
+  { q: 'В каком слове нужен разделительный Ь?', opts: ['лампочка','листья','дочка','горка'], ans: 'листья', explain: 'листЬя — Ь стоит перед Я' },
+  { q: 'Выбери слово с разделительным Ь:', opts: ['деньги','деревья','конец','синий'], ans: 'деревья', explain: 'деревЬя — Ь стоит перед Я' },
+  { q: 'В каком слове пишется разделительный Ь?', opts: ['полька','вьюга','галка','пальма'], ans: 'вьюга', explain: 'вЬюга — Ь стоит перед Ю' },
+  { q: 'Где стоит разделительный Ь?', opts: ['платье','тень','пальто','конь'], ans: 'платье', explain: 'платЬе — Ь стоит перед Е' },
+  { q: 'Какое слово содержит разделительный Ь?', opts: ['семья','синька','лошадь','ель'], ans: 'семья', explain: 'семЬя — Ь стоит перед Я' },
+  { q: 'Найди слово с разделительным Ь:', opts: ['соловьи','соль','уголь','тетрадь'], ans: 'соловьи', explain: 'соловЬи — Ь стоит перед И' },
+  { q: 'В каком слове Ь — разделительный?', opts: ['ружьё','моль','коль','картель'], ans: 'ружьё', explain: 'ружЬё — Ь стоит перед Ё' },
+  { q: 'Выбери правильный ответ:', opts: ['барьер','барель','бармен','батон'], ans: 'барьер', explain: 'барЬер — Ь стоит перед Е' },
+];
+
+const insertData = [
+  { before: 'пла', after: 'е', choices: ['ть','тк','т'], ans: 'ть', hint: 'плать + е = платье' },
+  { before: 'лист', after: 'я', choices: ['ь','л','й'], ans: 'ь', hint: 'листЬя' },
+  { before: 'с', after: 'ёмка', choices: ['е','ъ','ь'], ans: 'ъ', hint: 'сЪёмка — здесь разделительный Ъ' },
+  { before: 'вороб', after: 'и', choices: ['й','ь','е'], ans: 'ь', hint: 'воробЬи' },
+  { before: 'семь', after: '', choices: ['я','а','ё'], ans: 'я', hint: 'семьЯ — Ь + Я = [йа]' },
+  { before: 'п', after: 'ёт', choices: ['и','ь','о'], ans: 'ь', hint: 'пЬёт — Ь стоит перед Ё' },
+  { before: 'дерев', after: 'я', choices: ['ь','е','й'], ans: 'ь', hint: 'деревЬя' },
+  { before: 'руж', after: 'ё', choices: ['ь','й','е'], ans: 'ь', hint: 'ружЬё — Ь стоит перед Ё' },
+];
+
+const sortSets = [
+  {
+    words: ['платье','соль','листья','конь','семья','лес','вьюга','пальто','воробьи','лошадь'],
+    yes: ['платье','листья','семья','вьюга','воробьи'],
+    no:  ['соль','конь','лес','пальто','лошадь']
+  },
+  {
+    words: ['деревья','тень','ружьё','дочка','соловьи','стол','барьер','кость','платье','рыба'],
+    yes: ['деревья','ружьё','соловьи','барьер','платье'],
+    no:  ['тень','дочка','стол','кость','рыба']
+  },
+  {
+    words: ['семья','книга','вьюн','моль','обезьяна','парк','ручьи','соль','бурьян','конь'],
+    yes: ['семья','вьюн','обезьяна','ручьи','бурьян'],
+    no:  ['книга','моль','парк','соль','конь']
+  }
+];
+
+// ===================== STATE =====================
+let score = 0;
+let qIdx = 0, qRight = 0;
+let iIdx = 0, iRight = 0;
+let sortSetIdx = 0;
+let sortSelected = null; // chip currently picked
+let sortPlacements = {}; // word -> 'yes'|'no'
+
+// ===================== SCORE =====================
+function addScore(pts) {
+  score += pts;
+  document.getElementById('scoreVal').textContent = score;
+  updateStars();
+}
+function updateStars() {
+  const thresholds = [5, 15, 30, 50, 75];
+  for (let i = 0; i < 5; i++) {
+    const star = document.getElementById('s' + (i+1));
+    if (score >= thresholds[i]) star.classList.add('earned');
+  }
+}
+
+// ===================== TABS =====================
+function showTab(name) {
+  document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===================== QUIZ =====================
+function loadQuiz() {
+  const d = quizData[qIdx];
+  document.getElementById('q-num').textContent = qIdx + 1;
+  document.getElementById('q-total').textContent = quizData.length;
+  document.getElementById('q-right').textContent = qRight + ' верных';
+  document.getElementById('q-bar').style.width = ((qIdx / quizData.length) * 100) + '%';
+
+  document.getElementById('quiz-question').textContent = d.q;
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = '';
+  d.opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = o;
+    btn.onclick = () => answerQuiz(o, btn);
+    opts.appendChild(btn);
+  });
+  document.getElementById('quiz-feedback').className = 'feedback-box';
+  document.getElementById('quiz-next').className = 'next-btn';
+}
+
+function answerQuiz(choice, btn) {
+  const d = quizData[qIdx];
+  const allBtns = document.querySelectorAll('#quiz-options .opt-btn');
+  allBtns.forEach(b => { b.disabled = true; if (b.textContent === d.ans) b.classList.add('correct'); });
+  const fb = document.getElementById('quiz-feedback');
+  if (choice === d.ans) {
+    btn.classList.add('correct');
+    fb.className = 'feedback-box show correct-fb';
+    document.getElementById('quiz-fb-icon').textContent = '✅';
+    document.getElementById('quiz-fb-text').textContent = 'Верно! ' + d.explain;
+    qRight++;
+    addScore(10);
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback-box show wrong-fb';
+    document.getElementById('quiz-fb-icon').textContent = '❌';
+    document.getElementById('quiz-fb-text').textContent = 'Неверно. Правильный ответ: «' + d.ans + '». ' + d.explain;
+  }
+  document.getElementById('quiz-next').className = 'next-btn show';
+}
+
+function nextQuiz() {
+  qIdx++;
+  if (qIdx >= quizData.length) {
+    document.getElementById('quiz-card').style.display = 'none';
+    const fin = document.getElementById('quiz-finish');
+    fin.classList.add('show');
+    document.getElementById('quiz-finish-text').textContent =
+      'Ты ответил(а) верно на ' + qRight + ' из ' + quizData.length + ' вопросов! ' +
+      (qRight >= 6 ? '🌟 Отличный результат!' : '💪 Продолжай стараться!');
+    if (qRight >= quizData.length) launchConfetti();
+  } else {
+    loadQuiz();
+  }
+}
+
+function restartQuiz() {
+  qIdx = 0; qRight = 0;
+  document.getElementById('quiz-card').style.display = '';
+  document.getElementById('quiz-finish').classList.remove('show');
+  loadQuiz();
+}
+
+// ===================== INSERT =====================
+function loadInsert() {
+  const d = insertData[iIdx];
+  document.getElementById('i-num').textContent = iIdx + 1;
+  document.getElementById('i-total').textContent = insertData.length;
+  document.getElementById('i-right').textContent = iRight + ' верных';
+  document.getElementById('i-bar').style.width = ((iIdx / insertData.length) * 100) + '%';
+
+  const q = d.after
+    ? `Вставь нужные буквы: <b>${d.before}</b>__ <b>${d.after}</b>`
+    : `Вставь нужные буквы: <b>${d.before}</b>__`;
+  document.getElementById('insert-question').innerHTML = q;
+
+  const row = document.getElementById('insert-word-row');
+  row.innerHTML = '';
+  const span1 = document.createElement('span'); span1.className = 'word-part'; span1.textContent = d.before;
+  const inp = document.createElement('span'); inp.className = 'drop-slot'; inp.id = 'insert-slot'; inp.textContent = '?';
+  inp.dataset.filled = '';
+  const span2 = document.createElement('span'); span2.className = 'word-part'; span2.textContent = d.after;
+  row.appendChild(span1); row.appendChild(inp); row.appendChild(span2);
+
+  const ch = document.getElementById('insert-choices');
+  ch.innerHTML = '';
+  d.choices.forEach(c => {
+    const chip = document.createElement('button');
+    chip.className = 'choice-chip';
+    chip.textContent = c;
+    chip.onclick = () => fillSlot(c, chip);
+    ch.appendChild(chip);
+  });
+
+  document.getElementById('insert-feedback').className = 'feedback-box';
+  document.getElementById('insert-next').className = 'next-btn';
+}
+
+function fillSlot(val, chip) {
+  const slot = document.getElementById('insert-slot');
+  if (slot.dataset.answered) return;
+  const d = insertData[iIdx];
+  slot.textContent = val;
+  chip.classList.add('used');
+  const isCorrect = val === d.ans;
+  slot.dataset.answered = '1';
+
+  document.querySelectorAll('#insert-choices .choice-chip').forEach(c => c.disabled = true);
+
+  if (isCorrect) {
+    slot.classList.add('filled');
+    document.getElementById('insert-feedback').className = 'feedback-box show correct-fb';
+    document.getElementById('insert-fb-icon').textContent = '✅';
+    document.getElementById('insert-fb-text').textContent = 'Правильно! ' + d.hint;
+    iRight++;
+    addScore(10);
+  } else {
+    slot.classList.add('wrong-slot');
+    document.getElementById('insert-feedback').className = 'feedback-box show wrong-fb';
+    document.getElementById('insert-fb-icon').textContent = '❌';
+    document.getElementById('insert-fb-text').textContent = 'Неверно. Правильный ответ: «' + d.ans + '». ' + d.hint;
+  }
+  document.getElementById('insert-next').className = 'next-btn show';
+}
+
+function nextInsert() {
+  iIdx++;
+  if (iIdx >= insertData.length) {
+    document.getElementById('insert-card').style.display = 'none';
+    const fin = document.getElementById('insert-finish');
+    fin.classList.add('show');
+    document.getElementById('insert-finish-text').textContent =
+      'Ты вставил(а) буквы верно в ' + iRight + ' из ' + insertData.length + ' слов! ' +
+      (iRight >= 6 ? '🦋 Замечательно!' : '✏️ Попробуй ещё раз!');
+    if (iRight >= insertData.length) launchConfetti();
+  } else {
+    loadInsert();
+  }
+}
+
+function restartInsert() {
+  iIdx = 0; iRight = 0;
+  document.getElementById('insert-card').style.display = '';
+  document.getElementById('insert-finish').classList.remove('show');
+  loadInsert();
+}
+
+// ===================== SORT =====================
+function loadSort() {
+  sortPlacements = {};
+  sortSelected = null;
+  const set = sortSets[sortSetIdx];
+  const pool = document.getElementById('sort-pool');
+  pool.innerHTML = '';
+  document.getElementById('sort-col-yes').innerHTML = '';
+  document.getElementById('sort-col-no').innerHTML = '';
+  document.getElementById('sort-feedback').className = 'feedback-box';
+  document.getElementById('sort-next').className = 'next-btn';
+
+  set.words.forEach(w => {
+    const chip = document.createElement('button');
+    chip.className = 'sort-chip pool';
+    chip.textContent = w;
+    chip.dataset.word = w;
+    chip.onclick = () => selectSortChip(chip);
+    pool.appendChild(chip);
+  });
+}
+
+function selectSortChip(chip) {
+  document.querySelectorAll('.sort-chip').forEach(c => c.style.outline = '');
+  chip.style.outline = '3px solid var(--orange)';
+  sortSelected = chip;
+}
+
+function dropToCol(e, col) {
+  if (!sortSelected) return;
+  const word = sortSelected.dataset.word;
+  if (sortPlacements[word]) {
+    // remove from prev col
+    const prevColEl = document.getElementById('sort-col-' + sortPlacements[word]);
+    const prev = prevColEl.querySelector('[data-word="' + word + '"]');
+    if (prev) prev.remove();
+  }
+  sortPlacements[word] = col;
+
+  // Move chip to column
+  const colEl = document.getElementById('sort-col-' + col);
+  const newChip = document.createElement('button');
+  newChip.className = 'sort-chip ' + (col === 'yes' ? 'placed-violet' : 'placed-mint');
+  newChip.textContent = word;
+  newChip.dataset.word = word;
+  newChip.onclick = () => selectSortChip(newChip);
+  colEl.appendChild(newChip);
+
+  // Hide from pool
+  const poolChip = document.querySelector('#sort-pool [data-word="' + word + '"]');
+  if (poolChip) poolChip.style.display = 'none';
+
+  sortSelected.style.outline = '';
+  sortSelected = newChip;
+  newChip.style.outline = '3px solid var(--orange)';
+}
+
+function checkSort() {
+  const set = sortSets[sortSetIdx];
+  let correct = 0, total = set.words.length;
+  let allPlaced = true;
+
+  set.words.forEach(w => {
+    if (!sortPlacements[w]) { allPlaced = false; return; }
+    const isYes = set.yes.includes(w);
+    const placed = sortPlacements[w];
+    const colEl = document.getElementById('sort-col-' + placed);
+    const chip = colEl.querySelector('[data-word="' + w + '"]');
+    if (chip) {
+      if ((isYes && placed === 'yes') || (!isYes && placed === 'no')) {
+        chip.classList.add('correct-placed');
+        correct++;
+      } else {
+        chip.classList.add('wrong-placed');
+      }
+    }
+  });
+
+  if (!allPlaced) {
+    document.getElementById('sort-feedback').className = 'feedback-box show wrong-fb';
+    document.getElementById('sort-fb-icon').textContent = '⚠️';
+    document.getElementById('sort-fb-text').textContent = 'Расставь все слова по группам!';
+    return;
+  }
+
+  const fb = document.getElementById('sort-feedback');
+  if (correct === total) {
+    fb.className = 'feedback-box show correct-fb';
+    document.getElementById('sort-fb-icon').textContent = '✅';
+    document.getElementById('sort-fb-text').textContent = 'Все ' + total + ' слов расставлены верно! 🎉';
+    addScore(20);
+  } else {
+    fb.className = 'feedback-box show wrong-fb';
+    document.getElementById('sort-fb-icon').textContent = '❌';
+    document.getElementById('sort-fb-text').textContent = 'Верно: ' + correct + ' из ' + total + '. Посмотри на подсветку!';
+  }
+  document.getElementById('sort-next').className = 'next-btn show';
+}
+
+function nextSort() {
+  sortSetIdx = (sortSetIdx + 1) % sortSets.length;
+  loadSort();
+}
+
+// ===================== CONFETTI =====================
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const particles = [];
+  const colors = ['#FF6B6B','#FFD93D','#6BCB77','#5BC8F5','#845EC2','#FF9A3C'];
+  for (let i = 0; i < 120; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 5 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rot: Math.random() * 360,
+      vx: (Math.random() - 0.5) * 3,
+      vy: Math.random() * 4 + 2,
+      vr: (Math.random() - 0.5) * 6
+    });
+  }
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.vr;
+    });
+    frame++;
+    if (frame < 200) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+
+// ===================== INIT =====================
+loadQuiz();
+loadInsert();
+loadSort();
+</script>
+</body>
+</html>
