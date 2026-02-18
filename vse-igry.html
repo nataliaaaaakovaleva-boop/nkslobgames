@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Игры про разделительный мягкий знак</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.container{width:100%;max-width:900px}
+.header{text-align:center;margin-bottom:24px}
+.header h1{font-size:2.2rem;font-weight:900;color:#fff;text-shadow:0 3px 12px rgba(0,0,0,.3);margin-bottom:8px}
+.header p{color:rgba(255,255,255,.9);font-size:1.1rem;font-weight:700}
+.card{background:#fff;border-radius:24px;padding:28px;box-shadow:0 20px 60px rgba(0,0,0,.2);position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#667eea,#f093fb);border-radius:24px 24px 0 0}
+.screen{display:none}.screen.active{display:block}
+
+/* MENU SCREEN */
+.rule-card{background:linear-gradient(135deg,#fef9c3,#fde68a);border:3px solid #f59e0b;border-radius:20px;padding:24px;margin-bottom:24px}
+.rule-card h2{font-size:1.3rem;color:#92400e;font-weight:900;margin-bottom:12px}
+.rule-card p{color:#78350f;font-size:1rem;line-height:1.7;font-weight:600;margin-bottom:12px}
+.examples{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.ex-chip{background:#fff;border:2px solid #f59e0b;border-radius:50px;padding:6px 18px;font-size:1.05rem;font-weight:800;color:#92400e}
+.ex-chip b{color:#7c3aed;font-size:1.2rem}
+.games-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-bottom:16px}
+.game-card{background:#fff;border:3px solid #e2e8f0;border-radius:18px;padding:22px;transition:all .3s;cursor:pointer;position:relative}
+.game-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#667eea,#f093fb);border-radius:18px 18px 0 0}
+.game-card:hover{transform:translateY(-6px);box-shadow:0 16px 48px rgba(102,126,234,.3);border-color:#a78bfa}
+.game-icon{font-size:3rem;text-align:center;margin-bottom:10px}
+.game-title{font-size:1.2rem;font-weight:900;color:#1e1b4b;text-align:center;margin-bottom:6px}
+.game-desc{font-size:.88rem;color:#64748b;text-align:center;line-height:1.5;font-weight:600;margin-bottom:10px}
+.game-level{text-align:center;font-size:.8rem;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px}
+
+/* COMMON GAME ELEMENTS */
+.sbar{display:flex;justify-content:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.badge{background:rgba(255,255,255,.95);border-radius:50px;padding:7px 18px;font-weight:800;font-size:.9rem;color:#5a3fa0;box-shadow:0 3px 10px rgba(0,0,0,.15)}
+.badge.g{color:#16a34a}.badge.r{color:#dc2626}.badge.gold{color:#d97706}.badge.time{color:#d97706}
+.back-btn{display:inline-block;margin-bottom:16px;padding:8px 20px;background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.4);border-radius:50px;font-size:.9rem;font-weight:800;cursor:pointer;transition:all .2s;text-decoration:none}
+.back-btn:hover{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.6)}
+.prog{margin-bottom:14px}
+.prog-track{height:8px;background:#e2e8f0;border-radius:50px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#667eea,#f093fb);border-radius:50px;transition:width .4s}
+.tcnt{text-align:center;color:#94a3b8;font-size:.85rem;font-weight:700;margin-bottom:12px;text-transform:uppercase}
+.qlbl{text-align:center;font-size:.95rem;color:#64748b;font-weight:700;margin-bottom:10px}
+.wdisp{text-align:center;font-size:2.6rem;font-weight:900;color:#1e1b4b;margin-bottom:18px;min-height:56px;display:flex;align-items:center;justify-content:center;letter-spacing:1px}
+.wdisp .soft{color:#7c3aed}
+.wdisp .norm{color:#94a3b8}
+.wdisp .blank{display:inline-flex;align-items:center;justify-content:center;width:44px;height:50px;border-bottom:4px solid #7c3aed;color:#7c3aed;font-size:2.6rem;font-weight:900;transition:all .3s}
+.btns{display:flex;gap:12px;justify-content:center;margin-bottom:12px;flex-wrap:wrap}
+.btn{padding:13px 28px;border:3px solid transparent;border-radius:14px;font-family:Arial,sans-serif;font-size:1.05rem;font-weight:800;cursor:pointer;transition:all .2s;min-width:130px}
+.btn.yes{background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border-color:#34d399}
+.btn.no{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#7f1d1d;border-color:#f87171}
+.btn.opt{background:linear-gradient(135deg,#ede9fe,#ddd6fe);color:#4c1d95;border-color:#a78bfa;font-size:1.25rem}
+.btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 7px 16px rgba(0,0,0,.12)}
+.btn:disabled{opacity:.6;cursor:not-allowed}
+.btn.cf{background:linear-gradient(135deg,#bbf7d0,#4ade80)!important;border-color:#16a34a!important;transform:scale(1.05)}
+.btn.wf{background:linear-gradient(135deg,#fca5a5,#f87171)!important;border-color:#dc2626!important}
+.fb{text-align:center;font-size:1rem;font-weight:800;min-height:28px;margin-bottom:10px;border-radius:10px;padding:5px 12px}
+.fb.ok{color:#16a34a;background:#dcfce7}.fb.err{color:#dc2626;background:#fee2e2}
+.nxt{display:block;margin:12px auto 0;padding:12px 34px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:14px;font-family:Arial,sans-serif;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 5px 14px rgba(102,126,234,.4);transition:all .2s;opacity:0;pointer-events:none}
+.nxt.vis{opacity:1;pointer-events:all}
+.nxt:hover{transform:translateY(-2px)}
+
+/* GAME 3 - SYLLABLES */
+.slots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;min-height:56px;align-items:center}
+.slot{display:inline-flex;align-items:center;justify-content:center;min-width:80px;height:46px;border:3px dashed #a78bfa;border-radius:10px;background:#f5f3ff;color:#7c3aed;font-weight:900;font-size:1.1rem;padding:0 10px;transition:all .2s}
+.slot.filled{border-style:solid;border-color:#7c3aed;background:#ede9fe}
+.bank{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:14px}
+.chip{padding:8px 18px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:50px;font-weight:800;font-size:.96rem;cursor:pointer;box-shadow:0 3px 10px rgba(102,126,234,.4);transition:all .2s;border:none;font-family:Arial,sans-serif}
+.chip:hover:not(.used){transform:translateY(-2px);box-shadow:0 6px 16px rgba(102,126,234,.5)}
+.chip.used{opacity:.3;cursor:not-allowed}
+
+/* GAME 4 - SORT */
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.zone{border:3px dashed #cbd5e1;border-radius:14px;padding:18px 14px;min-height:160px;transition:all .3s}
+.zone-title{text-align:center;font-size:.95rem;font-weight:800;margin-bottom:10px;color:#475569}
+.zone-title.yes{color:#16a34a}.zone-title.no{color:#dc2626}
+.zone-words{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.wc{padding:6px 14px;background:linear-gradient(135deg,#e0e7ff,#ddd6fe);color:#4c1d95;border-radius:50px;font-weight:800;font-size:.85rem;border:2px solid #a78bfa}
+.wc.correct{background:linear-gradient(135deg,#d1fae5,#a7f3d0);color:#065f46;border-color:#34d399}
+.wc.wrong{background:linear-gradient(135deg,#fee2e2,#fecaca);color:#7f1d1d;border-color:#f87171}
+
+/* GAME 5 - CATCH */
+.game-intro{text-align:center;padding:20px}
+.game-intro h2{font-size:1.3rem;color:#1e1b4b;font-weight:900;margin-bottom:10px}
+.game-intro p{color:#64748b;font-size:.95rem;line-height:1.7;font-weight:600;margin-bottom:16px}
+.sbtn{display:block;margin:0 auto;padding:14px 40px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:14px;font-family:Arial,sans-serif;font-size:1.1rem;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(102,126,234,.4);transition:all .2s}
+.sbtn:hover{transform:translateY(-2px)}
+.game-area{position:relative;height:400px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border-radius:16px;overflow:hidden;margin-bottom:16px}
+.word-falling{position:absolute;padding:10px 20px;background:linear-gradient(135deg,#fef9c3,#fde68a);border:2px solid #f59e0b;border-radius:50px;font-weight:900;font-size:1rem;color:#92400e;cursor:pointer;transition:all .2s;box-shadow:0 4px 12px rgba(245,158,11,.3)}
+.word-falling:hover{transform:scale(1.1)}
+.word-falling.good{background:linear-gradient(135deg,#d1fae5,#a7f3d0);border-color:#34d399;color:#065f46}
+.word-falling.bad{background:linear-gradient(135deg,#fecaca,#fca5a5);border-color:#f87171;color:#7f1d1d}
+.msg{text-align:center;font-size:1.1rem;font-weight:800;margin-top:16px;min-height:30px}
+
+/* GAME 6 - ALL LEVELS */
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:#f1f5f9;border-radius:14px;padding:5px}
+.tab{flex:1;padding:9px 4px;border:none;background:transparent;border-radius:10px;font-family:Arial,sans-serif;font-weight:700;font-size:.85rem;cursor:pointer;color:#64748b;transition:all .2s}
+.tab.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 3px 10px rgba(102,126,234,.4)}
+
+/* RESULT */
+.re{font-size:4rem;text-align:center;margin-bottom:10px}
+.rt{text-align:center;font-size:1.6rem;font-weight:900;color:#1e1b4b;margin-bottom:6px}
+.rs{text-align:center;color:#64748b;font-size:.95rem;font-weight:600;margin-bottom:16px}
+.stars{text-align:center;font-size:2rem;letter-spacing:3px;margin:8px 0 16px}
+.rstat{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:6px}
+.sbox{background:#f8fafc;border:2px solid #e2e8f0;border-radius:14px;padding:12px 18px;text-align:center;min-width:90px}
+.sbox .num{font-size:1.7rem;font-weight:900}
+.sbox .lbl{font-size:.75rem;font-weight:700;color:#94a3b8;text-transform:uppercase}
+.rbtn,.hbtn{display:block;margin:14px auto 0;padding:13px 38px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:14px;font-family:Arial,sans-serif;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(102,126,234,.4);transition:all .2s}
+.rbtn:hover,.hbtn:hover{transform:translateY(-2px)}
+
+@media(max-width:600px){
+  .header h1{font-size:1.7rem}
+  .games-grid{grid-template-columns:1fr}
+  .wdisp{font-size:2rem}
+  .btn{padding:11px 18px;font-size:.96rem;min-width:100px}
+  .zones{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>🎮 Игры про разделительный мягкий знак</h1>
+    <p>Русский язык · 2 класс</p>
+  </div>
+
+  <div class="card">
+    <!-- MAIN MENU -->
+    <div class="screen active" id="mainMenu">
+      <div class="rule-card">
+        <h2>📖 Правило</h2>
+        <p>
+          <b>Разделительный мягкий знак (ь)</b> пишется после согласных
+          перед буквами <b style="color:#7c3aed">Е, Ё, Ю, Я, И</b>.
+          Он показывает, что согласный и гласный <b>не сливаются</b>, а произносятся отдельно.
+        </p>
+        <div class="examples">
+          <span class="ex-chip">сем<b>ь</b>я</span>
+          <span class="ex-chip">в<b>ь</b>юга</span>
+          <span class="ex-chip">плат<b>ь</b>е</span>
+          <span class="ex-chip">бел<b>ь</b>ё</span>
+          <span class="ex-chip">лист<b>ь</b>я</span>
+          <span class="ex-chip">обез<b>ь</b>яна</span>
+        </div>
+      </div>
+
+      <div class="games-grid">
+        <div class="game-card" onclick="startGame(1)">
+          <div class="game-icon">🎯</div>
+          <div class="game-title">Найди мягкий знак</div>
+          <div class="game-desc">Определи, есть ли в слове разделительный мягкий знак</div>
+          <div class="game-level">⭐ Лёгкий уровень</div>
+        </div>
+
+        <div class="game-card" onclick="startGame(2)">
+          <div class="game-icon">✏️</div>
+          <div class="game-title">Вставь букву</div>
+          <div class="game-desc">Реши, нужно ли вставить Ь на месте пропуска в слове</div>
+          <div class="game-level">⭐⭐ Средний уровень</div>
+        </div>
+
+        <div class="game-card" onclick="startGame(3)">
+          <div class="game-icon">🧩</div>
+          <div class="game-title">Собери слово</div>
+          <div class="game-desc">Составь правильное слово из слогов по порядку</div>
+          <div class="game-level">⭐⭐⭐ Сложный уровень</div>
+        </div>
+
+        <div class="game-card" onclick="startGame(4)">
+          <div class="game-icon">🏃</div>
+          <div class="game-title">Быстрая сортировка</div>
+          <div class="game-desc">Распредели слова: с разделительным Ь и без него</div>
+          <div class="game-level">⭐⭐ Средний уровень</div>
+        </div>
+
+        <div class="game-card" onclick="startGame(5)">
+          <div class="game-icon">🎪</div>
+          <div class="game-title">Поймай слово</div>
+          <div class="game-desc">Лови падающие слова с разделительным мягким знаком!</div>
+          <div class="game-level">⭐⭐ Средний уровень</div>
+        </div>
+
+        <div class="game-card" onclick="startGame(6)">
+          <div class="game-icon">🎲</div>
+          <div class="game-title">Все уровни</div>
+          <div class="game-desc">Пройди все три типа заданий подряд и получи звёзды!</div>
+          <div class="game-level">⭐⭐⭐ Полная игра</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME 1: FIND SOFT SIGN -->
+    <div class="screen" id="game1">
+      <a class="back-btn" onclick="backToMenu()">← Назад к играм</a>
+      <div class="sbar">
+        <div class="badge g">✅ Верно: <b id="g1R">0</b></div>
+        <div class="badge r">❌ Ошибки: <b id="g1W">0</b></div>
+      </div>
+      <div class="prog"><div class="prog-track"><div class="prog-fill" id="g1P" style="width:0%"></div></div></div>
+      <div class="tcnt" id="g1Cnt">Вопрос 1 из 10</div>
+      <div class="qlbl">Есть ли в этом слове разделительный мягкий знак?</div>
+      <div class="wdisp" id="g1W"></div>
+      <div class="btns">
+        <button class="btn yes" id="g1BY" onclick="g1Answer(true)">✅ Да, есть</button>
+        <button class="btn no" id="g1BN" onclick="g1Answer(false)">❌ Нет</button>
+      </div>
+      <div class="fb" id="g1FB"></div>
+      <button class="nxt" id="g1Nxt" onclick="g1Next()">Дальше →</button>
+    </div>
+
+    <!-- GAME 2: INSERT LETTER -->
+    <div class="screen" id="game2">
+      <a class="back-btn" onclick="backToMenu()">← Назад к играм</a>
+      <div class="sbar">
+        <div class="badge g">✅ Верно: <b id="g2R">0</b></div>
+        <div class="badge r">❌ Ошибки: <b id="g2W">0</b></div>
+      </div>
+      <div class="prog"><div class="prog-track"><div class="prog-fill" id="g2P" style="width:0%"></div></div></div>
+      <div class="tcnt" id="g2Cnt">Вопрос 1 из 10</div>
+      <div class="qlbl">Нужно ли вставить <b style="color:#7c3aed">Ь</b> на место пропуска?</div>
+      <div class="wdisp" id="g2W"></div>
+      <div class="btns">
+        <button class="btn opt" id="g2BY" onclick="g2Answer(true)">Ь</button>
+        <button class="btn no" id="g2BN" onclick="g2Answer(false)">—</button>
+      </div>
+      <div class="fb" id="g2FB"></div>
+      <button class="nxt" id="g2Nxt" onclick="g2Next()">Дальше →</button>
+    </div>
+
+    <!-- GAME 3: ASSEMBLE WORD -->
+    <div class="screen" id="game3">
+      <a class="back-btn" onclick="backToMenu()">← Назад к играм</a>
+      <div class="sbar">
+        <div class="badge g">✅ Верно: <b id="g3R">0</b></div>
+        <div class="badge r">❌ Ошибки: <b id="g3W">0</b></div>
+      </div>
+      <div class="prog"><div class="prog-track"><div class="prog-fill" id="g3P" style="width:0%"></div></div></div>
+      <div class="tcnt" id="g3Cnt">Задание 1 из 10</div>
+      <div class="qlbl">Собери правильное слово из слогов по порядку</div>
+      <div class="slots" id="g3Slots"></div>
+      <div class="bank" id="g3Bank"></div>
+      <div class="fb" id="g3FB"></div>
+      <button class="nxt" id="g3Nxt" onclick="g3Next()">Дальше →</button>
+    </div>
+
+    <!-- GAME 4: SORT -->
+    <div class="screen" id="game4">
+      <a class="back-btn" onclick="backToMenu()">← Назад к играм</a>
+      <div class="sbar">
+        <div class="badge g">✅ Верно: <b id="g4R">0</b></div>
+        <div class="badge r">❌ Ошибки: <b id="g4W">0</b></div>
+      </div>
+      <div class="qlbl">Куда относится это слово?</div>
+      <div class="wdisp" id="g4Word"></div>
+      <div class="btns">
+        <button class="btn yes" onclick="g4Answer(true)">✅ С разделительным Ь</button>
+        <button class="btn no" onclick="g4Answer(false)">❌ Без разделительного Ь</button>
+      </div>
+      <div class="fb" id="g4FB"></div>
+      <button class="nxt" id="g4Nxt" onclick="g4Next()">Дальше →</button>
+      <div class="zones">
+        <div class="zone">
+          <div class="zone-title yes">✅ С разделительным Ь</div>
+          <div class="zone-words" id="g4ZoneY"></div>
+        </div>
+        <div class="zone">
+          <div class="zone-title no">❌ Без разделительного Ь</div>
+          <div class="zone-words" id="g4ZoneN"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME 5: CATCH WORD -->
+    <div class="screen" id="game5">
+      <a class="back-btn" onclick="backToMenu()">← Назад к играм</a>
+      <div id="g5Intro">
+        <div class="game-intro">
+          <h2>🎯 Правила игры</h2>
+          <p>
+            Лови <b>только слова с разделительным мягким знаком!</b><br>
+            Не кликай на слова без разделительного Ь.<br>
+            У тебя есть <b>30 секунд</b>. Удачи!
+          </p>
+          <button class="sbtn" onclick="g5Start()">🚀 Начать игру!</button>
+        </div>
+      </div>
+      <div id="g5Play" style="display:none">
+        <div class="sbar">
+          <div class="badge g">✅ Верно: <b id="g5R">0</b></div>
+          <div class="badge r">❌ Ошибки: <b id="g5W">0</b></div>
+          <div class="badge time">⏱ Время: <b id="g5Timer">30</b></div>
+        </div>
+        <div class="game-area" id="g5Area"></div>
+        <div class="msg" id="g5Msg"></div>
+      </div>
+    </div>
+
+    <!-- GAME 6: ALL LEVELS -->
+    <div class="screen" id="game6">
+      <a class="back-btn" onclick="backToMenu()">← Назад к играм</a>
+      <div class="sbar">
+        <div class="badge g">✅ Верно: <b id="g6R">0</b></div>
+        <div class="badge r">❌ Ошибки: <b id="g6W">0</b></div>
+        <div class="badge gold">⭐ Звёзды: <b id="g6S">0</b></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" id="g6T1">⭐ Уровень 1</button>
+        <button class="tab" id="g6T2">⭐⭐ Уровень 2</button>
+        <button class="tab" id="g6T3">⭐⭐⭐ Уровень 3</button>
+      </div>
+      <div class="prog"><div class="prog-track"><div class="prog-fill" id="g6P" style="width:0%"></div></div></div>
+      <div class="tcnt" id="g6Cnt">Задание 1 из 15</div>
+      <div id="g6L1">
+        <div class="qlbl">Есть ли разделительный мягкий знак?</div>
+        <div class="wdisp" id="g6L1W"></div>
+        <div class="btns">
+          <button class="btn yes" id="g6L1Y" onclick="g6A1(true)">✅ Да</button>
+          <button class="btn no" id="g6L1N" onclick="g6A1(false)">❌ Нет</button>
+        </div>
+      </div>
+      <div id="g6L2" style="display:none">
+        <div class="qlbl">Нужно ли вставить <b style="color:#7c3aed">Ь</b>?</div>
+        <div class="wdisp" id="g6L2W"></div>
+        <div class="btns">
+          <button class="btn opt" id="g6L2Y" onclick="g6A2(true)">Ь</button>
+          <button class="btn no" id="g6L2N" onclick="g6A2(false)">—</button>
+        </div>
+      </div>
+      <div id="g6L3" style="display:none">
+        <div class="qlbl">Собери слово из слогов</div>
+        <div class="slots" id="g6L3Slots"></div>
+        <div class="bank" id="g6L3Bank"></div>
+      </div>
+      <div class="fb" id="g6FB"></div>
+      <button class="nxt" id="g6Nxt" onclick="g6Next()">Дальше →</button>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div class="screen" id="resultScreen">
+      <div class="re" id="resEmoji">🎉</div>
+      <div class="rt" id="resTitle">Отлично!</div>
+      <div class="rs" id="resSub">Ты справился с заданием!</div>
+      <div class="stars" id="resStars">⭐⭐⭐</div>
+      <div class="rstat">
+        <div class="sbox"><div class="num g" id="resR" style="color:#16a34a">0</div><div class="lbl" id="resRL">Верно</div></div>
+        <div class="sbox"><div class="num r" id="resW" style="color:#dc2626">0</div><div class="lbl">Ошибок</div></div>
+        <div class="sbox" id="resStarsBox" style="display:none"><div class="num gold" id="resS" style="color:#d97706">0</div><div class="lbl">Звёзд</div></div>
+      </div>
+      <button class="rbtn" onclick="restartCurrent()">🔄 Ещё раз</button>
+      <button class="hbtn" onclick="backToMenu()">🏠 В меню</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// DATA
+const D1=[
+  {w:["СЕМ","Ь","Я"],has:true,ex:"семья — Ь перед Я"},
+  {w:["ПАЛ","ь","ТО"],has:false,ex:"пальто — смягчительный Ь"},
+  {w:["ЛИСТ","Ь","Я"],has:true,ex:"листья — Ь перед Я"},
+  {w:["В","Ь","ЮГА"],has:true,ex:"вьюга — Ь перед Ю"},
+  {w:["МЕДВЕД","ь",""],has:false,ex:"медведь — смягчительный Ь"},
+  {w:["БЕЛ","Ь","Ё"],has:true,ex:"бельё — Ь перед Ё"},
+  {w:["П","Ь","ЁТ"],has:true,ex:"пьёт — Ь перед Ё"},
+  {w:["КОН","ь",""],has:false,ex:"конь — смягчительный Ь"},
+  {w:["ВОРОБ","Ь","И"],has:true,ex:"воробьи — Ь перед И"},
+  {w:["СОЛ","ь",""],has:false,ex:"соль — смягчительный Ь"},
+  {w:["ПЛАТ","Ь","Е"],has:true,ex:"платье — Ь перед Е"},
+  {w:["МАЛЬЧ","ь","ИК"],has:false,ex:"мальчик — смягчительный Ь"},
+  {w:["ВОРОН","Ь","Ё"],has:true,ex:"вороньё — Ь перед Ё"},
+  {w:["ДЕН","ь",""],has:false,ex:"день — смягчительный Ь"},
+];
+const D2=[
+  {tmpl:"ПЛАТ_Е",ans:true,full:"ПЛАТЬЕ",ex:"Ь перед Е"},
+  {tmpl:"ОБЕЗ_ЯНА",ans:true,full:"ОБЕЗЬЯНА",ex:"Ь перед Я"},
+  {tmpl:"В_ЮГА",ans:true,full:"ВЬЮГА",ex:"Ь перед Ю"},
+  {tmpl:"БЕЛ_Ё",ans:true,full:"БЕЛЬЁ",ex:"Ь перед Ё"},
+  {tmpl:"ВОРОН_Ё",ans:true,full:"ВОРОНЬЁ",ex:"Ь перед Ё"},
+  {tmpl:"ЛИСТ_Я",ans:true,full:"ЛИСТЬЯ",ex:"Ь перед Я"},
+  {tmpl:"КОН_КИ",ans:false,full:"КОНЬКИ",ex:"смягчительный Ь"},
+  {tmpl:"МАЛЬЧ_ИК",ans:false,full:"МАЛЬЧИК",ex:"смягчительный Ь"},
+  {tmpl:"СЕМ_Я",ans:true,full:"СЕМЬЯ",ex:"Ь перед Я"},
+  {tmpl:"ПЕ_Ю",ans:true,full:"ПЕЮ",ex:"Ь перед Ю"},
+  {tmpl:"ЗВЕР_",ans:false,full:"ЗВЕРЬ",ex:"смягчительный Ь"},
+  {tmpl:"ПАЛЬТ_",ans:false,full:"ПАЛЬТО",ex:"смягчительный Ь"},
+  {tmpl:"РУЧ_И",ans:true,full:"РУЧЬИ",ex:"Ь перед И"},
+];
+const D3=[
+  {word:"ВЬЮГА",syls:["ВЬЮ","ГА"],decoy:["БУ","МА"]},
+  {word:"СЕМЬЯ",syls:["СЕМ","ЬЯ"],decoy:["ТЕМ","А"]},
+  {word:"ПЛАТЬЕ",syls:["ПЛАТ","ЬЕ"],decoy:["ПАТ","Е"]},
+  {word:"ЛИСТЬЯ",syls:["ЛИСТ","ЬЯ"],decoy:["ЛИСТ","А"]},
+  {word:"БЕЛЬЁ",syls:["БЕЛ","ЬЁ"],decoy:["БЕЛ","Ё"]},
+  {word:"ВОРОБЬИ",syls:["ВОРОБ","ЬИ"],decoy:["ВОРОБ","И"]},
+  {word:"ВОРОНЬЁ",syls:["ВОРОН","ЬЁ"],decoy:["ВОРОН","Ё"]},
+  {word:"ПЬЁТ",syls:["П","ЬЁТ"],decoy:["ПА","ЁТ"]},
+  {word:"ОБЕЗЬЯНА",syls:["ОБЕЗ","ЬЯ","НА"],decoy:["ОБЕ","Я"]},
+  {word:"РУЧЬИ",syls:["РУЧ","ЬИ"],decoy:["РУЧ","И"]},
+  {word:"ДЕРЕВЬЯ",syls:["ДЕ","РЕВ","ЬЯ"],decoy:["ДЕ","Я"]},
+  {word:"МЕДВЕЖЬИ",syls:["МЕД","ВЕЖ","ЬИ"],decoy:["МЕД","И"]},
+];
+const D4=[
+  {w:"СЕМЬЯ",has:true},{w:"ПАЛЬТО",has:false},{w:"ЛИСТЬЯ",has:true},{w:"ВЬЮГА",has:true},
+  {w:"МЕДВЕДЬ",has:false},{w:"БЕЛЬЁ",has:true},{w:"ПЬЁТ",has:true},{w:"КОНЬ",has:false},
+  {w:"ВОРОБЬИ",has:true},{w:"СОЛЬ",has:false},{w:"ПЛАТЬЕ",has:true},{w:"МАЛЬЧИК",has:false},
+  {w:"ВОРОНЬЁ",has:true},{w:"ДЕНЬ",has:false},{w:"РУЧЬИ",has:true},{w:"ДЕРЕВЬЯ",has:true},
+];
+const D5G=["СЕМЬЯ","ЛИСТЬЯ","ВЬЮГА","БЕЛЬЁ","ПЬЁТ","ВОРОБЬИ","ПЛАТЬЕ","ВОРОНЬЁ","РУЧЬИ","ДЕРЕВЬЯ","ОБЕЗЬЯНА","МЕДВЕЖЬИ"];
+const D5B=["ПАЛЬТО","МЕДВЕДЬ","КОНЬ","СОЛЬ","МАЛЬЧИК","ДЕНЬ","МОРКОВЬ","ПЕНЬ","ГОСТЬ","ЛОШАДЬ"];
+
+function sh(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
+
+let curGame=0;
+let g1T,g1I,g1A,g1R,g1W;
+let g2T,g2I,g2A,g2R,g2W;
+let g3T,g3I,g3A,g3R,g3W,g3Sel,g3Tgt;
+let g4T,g4I,g4A,g4R,g4W;
+let g5R,g5W,g5Time,g5Int,g5Spawn;
+let g6Lvl,g6I,g6A,g6R,g6W,g6S,g6T1,g6T2,g6T3,g6Sel,g6Tgt;
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function backToMenu(){
+  if(g5Int)clearInterval(g5Int);
+  if(g5Spawn)clearInterval(g5Spawn);
+  showScreen('mainMenu');
+}
+
+function startGame(n){
+  curGame=n;
+  if(n===1)initG1();
+  else if(n===2)initG2();
+  else if(n===3)initG3();
+  else if(n===4)initG4();
+  else if(n===5)showG5Intro();
+  else if(n===6)initG6();
+}
+
+// GAME 1
+function initG1(){
+  g1T=sh(D1).slice(0,10);g1I=0;g1A=false;g1R=g1W=0;
+  updateG1Bar();showScreen('game1');renderG1();
+}
+function updateG1Bar(){
+  document.getElementById('g1R').textContent=g1R;
+  document.getElementById('g1W').textContent=g1W;
+}
+function renderG1(){
+  g1A=false;clearFB('g1FB');hideNxt('g1Nxt');
+  document.getElementById('g1Cnt').textContent=`Вопрос ${g1I+1} из 10`;
+  document.getElementById('g1P').style.width=((g1I/10)*100)+'%';
+  const t=g1T[g1I];
+  document.getElementById('g1W').innerHTML=t.w[0]+'<span class="'+(t.has?'soft':'norm')+'">'+t.w[1]+'</span>'+t.w[2];
+  enableBtns(['g1BY','g1BN']);
+}
+function g1Answer(yes){
+  if(g1A)return;g1A=true;
+  const t=g1T[g1I];
+  const ok=t.has===yes;
+  const btn=document.getElementById(yes?'g1BY':'g1BN');
+  if(ok){btn.classList.add('cf');setFB('g1FB','✅ Правильно! '+t.ex,true);g1R++;}
+  else{btn.classList.add('wf');setFB('g1FB','❌ Неверно. '+t.ex,false);g1W++;}
+  disableBtns(['g1BY','g1BN']);updateG1Bar();showNxt('g1Nxt');
+}
+function g1Next(){g1I++;if(g1I>=10){showResult(g1R,g1W);return;}renderG1();}
+
+// GAME 2
+function initG2(){
+  g2T=sh(D2).slice(0,10);g2I=0;g2A=false;g2R=g2W=0;
+  updateG2Bar();showScreen('game2');renderG2();
+}
+function updateG2Bar(){
+  document.getElementById('g2R').textContent=g2R;
+  document.getElementById('g2W').textContent=g2W;
+}
+function renderG2(){
+  g2A=false;clearFB('g2FB');hideNxt('g2Nxt');
+  document.getElementById('g2Cnt').textContent=`Вопрос ${g2I+1} из 10`;
+  document.getElementById('g2P').style.width=((g2I/10)*100)+'%';
+  const t=g2T[g2I];
+  const[before,after]=t.tmpl.split('_');
+  document.getElementById('g2W').innerHTML=before+'<span class="blank" id="g2Blk">_</span>'+after;
+  enableBtns(['g2BY','g2BN']);
+}
+function g2Answer(yes){
+  if(g2A)return;g2A=true;
+  const t=g2T[g2I];
+  const ok=t.ans===yes;
+  const blk=document.getElementById('g2Blk');
+  blk.textContent=t.ans?'Ь':'—';
+  blk.style.color=ok?'#16a34a':'#dc2626';
+  const btn=document.getElementById(yes?'g2BY':'g2BN');
+  if(ok){btn.classList.add('cf');setFB('g2FB','✅ Верно! «'+t.full+'»: '+t.ex,true);g2R++;}
+  else{btn.classList.add('wf');setFB('g2FB','❌ Ошибка! «'+t.full+'»: '+t.ex,false);g2W++;}
+  disableBtns(['g2BY','g2BN']);updateG2Bar();showNxt('g2Nxt');
+}
+function g2Next(){g2I++;if(g2I>=10){showResult(g2R,g2W);return;}renderG2();}
+
+// GAME 3
+function initG3(){
+  g3T=sh(D3).slice(0,10);g3I=0;g3A=false;g3R=g3W=0;
+  updateG3Bar();showScreen('game3');renderG3();
+}
+function updateG3Bar(){
+  document.getElementById('g3R').textContent=g3R;
+  document.getElementById('g3W').textContent=g3W;
+}
+function renderG3(){
+  g3A=false;clearFB('g3FB');hideNxt('g3Nxt');
+  document.getElementById('g3Cnt').textContent=`Задание ${g3I+1} из 10`;
+  document.getElementById('g3P').style.width=((g3I/10)*100)+'%';
+  const t=g3T[g3I];
+  g3Tgt=t.syls;g3Sel=[];
+  const slotsEl=document.getElementById('g3Slots');
+  slotsEl.innerHTML='';
+  t.syls.forEach((_,i)=>{
+    const s=document.createElement('div');
+    s.className='slot';s.id='g3Sl'+i;s.textContent='___';
+    slotsEl.appendChild(s);
+  });
+  const bankEl=document.getElementById('g3Bank');
+  bankEl.innerHTML='';
+  const chips=sh([...t.syls,...t.decoy.slice(0,2)]);
+  chips.forEach(syl=>{
+    const c=document.createElement('button');
+    c.className='chip';c.textContent=syl;
+    c.onclick=()=>g3Pick(c,syl,t);
+    bankEl.appendChild(c);
+  });
+}
+function g3Pick(btn,syl,t){
+  if(g3A||btn.classList.contains('used'))return;
+  const ni=g3Sel.length;
+  if(ni>=g3Tgt.length)return;
+  g3Sel.push(syl);btn.classList.add('used');
+  const sl=document.getElementById('g3Sl'+ni);
+  sl.textContent=syl;sl.classList.add('filled');
+  if(g3Sel.length===g3Tgt.length)g3Check(t);
+}
+function g3Check(t){
+  g3A=true;
+  const ok=g3Sel.every((s,i)=>s===g3Tgt[i]);
+  if(ok){
+    setFB('g3FB','✅ Отлично! Слово: '+t.word,true);g3R++;
+    g3Tgt.forEach((_,i)=>{const s=document.getElementById('g3Sl'+i);s.style.borderColor='#16a34a';s.style.background='#dcfce7';s.style.color='#16a34a'});
+  }else{
+    setFB('g3FB','❌ Неверно. Правильно: '+t.syls.join(' + '),false);g3W++;
+    g3Tgt.forEach((_,i)=>{const s=document.getElementById('g3Sl'+i);s.style.borderColor='#dc2626';s.style.background='#fee2e2';s.style.color='#dc2626'});
+  }
+  updateG3Bar();showNxt('g3Nxt');
+}
+function g3Next(){g3I++;if(g3I>=10){showResult(g3R,g3W);return;}renderG3();}
+
+// GAME 4
+function initG4(){
+  g4T=sh(D4).slice(0,12);g4I=0;g4A=false;g4R=g4W=0;
+  updateG4Bar();showScreen('game4');
+  document.getElementById('g4ZoneY').innerHTML='';
+  document.getElementById('g4ZoneN').innerHTML='';
+  renderG4();
+}
+function updateG4Bar(){
+  document.getElementById('g4R').textContent=g4R;
+  document.getElementById('g4W').textContent=g4W;
+}
+function renderG4(){
+  g4A=false;clearFB('g4FB');hideNxt('g4Nxt');
+  const t=g4T[g4I];
+  document.getElementById('g4Word').textContent=t.w;
+}
+function g4Answer(yes){
+  if(g4A)return;g4A=true;
+  const t=g4T[g4I];
+  const ok=t.has===yes;
+  const chip=document.createElement('div');
+  chip.className='wc '+(ok?'correct':'wrong');
+  chip.textContent=t.w;
+  const zone=document.getElementById(yes?'g4ZoneY':'g4ZoneN');
+  zone.appendChild(chip);
+  if(ok){setFB('g4FB','✅ Верно!',true);g4R++;}
+  else{setFB('g4FB','❌ Неверно. «'+t.w+'» '+(t.has?'с разделительным Ь':'без разделительного Ь'),false);g4W++;}
+  updateG4Bar();showNxt('g4Nxt');
+}
+function g4Next(){g4I++;if(g4I>=g4T.length){showResult(g4R,g4W);return;}renderG4();}
+
+// GAME 5
+function showG5Intro(){
+  showScreen('game5');
+  document.getElementById('g5Intro').style.display='';
+  document.getElementById('g5Play').style.display='none';
+}
+function g5Start(){
+  g5R=g5W=0;g5Time=30;
+  document.getElementById('g5R').textContent=g5R;
+  document.getElementById('g5W').textContent=g5W;
+  document.getElementById('g5Timer').textContent=g5Time;
+  document.getElementById('g5Intro').style.display='none';
+  document.getElementById('g5Play').style.display='';
+  const area=document.getElementById('g5Area');
+  area.innerHTML='';
+  g5Int=setInterval(()=>{
+    g5Time--;
+    document.getElementById('g5Timer').textContent=g5Time;
+    if(g5Time<=0){clearInterval(g5Int);clearInterval(g5Spawn);showResult(g5R,g5W,'Поймано');}
+  },1000);
+  g5Spawn=setInterval(g5SpawnWord,1200);
+  g5SpawnWord();
+}
+function g5SpawnWord(){
+  const isGood=Math.random()>0.4;
+  const list=isGood?D5G:D5B;
+  const word=list[Math.floor(Math.random()*list.length)];
+  const area=document.getElementById('g5Area');
+  const div=document.createElement('div');
+  div.className='word-falling';
+  div.textContent=word;
+  div.dataset.good=isGood;
+  div.style.left=Math.random()*80+'%';
+  div.style.top='-50px';
+  div.onclick=()=>g5Catch(div,isGood);
+  area.appendChild(div);
+  let pos=-50;
+  const fall=setInterval(()=>{
+    pos+=3;
+    div.style.top=pos+'px';
+    if(pos>420){clearInterval(fall);div.remove();}
+  },50);
+}
+function g5Catch(el,isGood){
+  if(isGood){
+    g5R++;
+    el.classList.add('good');
+    g5Msg('✅ Верно!','#16a34a');
+  }else{
+    g5W++;
+    el.classList.add('bad');
+    g5Msg('❌ Ошибка!','#dc2626');
+  }
+  document.getElementById('g5R').textContent=g5R;
+  document.getElementById('g5W').textContent=g5W;
+  setTimeout(()=>el.remove(),300);
+}
+function g5Msg(txt,color){
+  const m=document.getElementById('g5Msg');
+  m.textContent=txt;
+  m.style.color=color;
+  setTimeout(()=>m.textContent='',800);
+}
+
+// GAME 6
+function initG6(){
+  g6T1=sh(D1).slice(0,5);g6T2=sh(D2).slice(0,5);g6T3=sh(D3).slice(0,5);
+  g6R=g6W=g6S=0;g6Lvl=1;g6I=0;
+  updateG6Bar();showScreen('game6');setG6Tab(1);renderG6();
+}
+function updateG6Bar(){
+  document.getElementById('g6R').textContent=g6R;
+  document.getElementById('g6W').textContent=g6W;
+  document.getElementById('g6S').textContent=g6S;
+}
+function setG6Tab(n){
+  [1,2,3].forEach(i=>document.getElementById('g6T'+i).classList.toggle('active',i===n));
+}
+function renderG6(){
+  g6A=false;clearFB('g6FB');hideNxt('g6Nxt');
+  const g=(g6Lvl-1)*5+g6I+1;
+  document.getElementById('g6Cnt').textContent=`Задание ${g} из 15`;
+  document.getElementById('g6P').style.width=((g-1)/15*100)+'%';
+  if(g6Lvl===1)rG6L1();else if(g6Lvl===2)rG6L2();else rG6L3();
+}
+function showG6Lvl(n){
+  document.getElementById('g6L1').style.display=n===1?'':'none';
+  document.getElementById('g6L2').style.display=n===2?'':'none';
+  document.getElementById('g6L3').style.display=n===3?'':'none';
+}
+function rG6L1(){
+  showG6Lvl(1);
+  const t=g6T1[g6I];
+  document.getElementById('g6L1W').innerHTML=t.w[0]+'<span class="'+(t.has?'soft':'norm')+'">'+t.w[1]+'</span>'+t.w[2];
+  enableBtns(['g6L1Y','g6L1N']);
+}
+function g6A1(yes){
+  if(g6A)return;g6A=true;
+  const t=g6T1[g6I];
+  const ok=t.has===yes;
+  const btn=document.getElementById(yes?'g6L1Y':'g6L1N');
+  if(ok){btn.classList.add('cf');setFB('g6FB','✅ Правильно! '+t.ex,true);g6R++;g6S++;}
+  else{btn.classList.add('wf');setFB('g6FB','❌ Неверно. '+t.ex,false);g6W++;}
+  disableBtns(['g6L1Y','g6L1N']);updateG6Bar();showNxt('g6Nxt');
+}
+function rG6L2(){
+  showG6Lvl(2);
+  const t=g6T2[g6I];
+  const[before,after]=t.tmpl.split('_');
+  document.getElementById('g6L2W').innerHTML=before+'<span class="blank" id="g6Blk">_</span>'+after;
+  enableBtns(['g6L2Y','g6L2N']);
+}
+function g6A2(yes){
+  if(g6A)return;g6A=true;
+  const t=g6T2[g6I];
+  const ok=t.ans===yes;
+  const blk=document.getElementById('g6Blk');
+  blk.textContent=t.ans?'Ь':'—';
+  blk.style.color=ok?'#16a34a':'#dc2626';
+  const btn=document.getElementById(yes?'g6L2Y':'g6L2N');
+  if(ok){btn.classList.add('cf');setFB('g6FB','✅ Верно! «'+t.full+'»: '+t.ex,true);g6R++;g6S++;}
+  else{btn.classList.add('wf');setFB('g6FB','❌ Ошибка! «'+t.full+'»: '+t.ex,false);g6W++;}
+  disableBtns(['g6L2Y','g6L2N']);updateG6Bar();showNxt('g6Nxt');
+}
+function rG6L3(){
+  showG6Lvl(3);
+  const t=g6T3[g6I];
+  g6Tgt=t.syls;g6Sel=[];
+  const slotsEl=document.getElementById('g6L3Slots');
+  slotsEl.innerHTML='';
+  t.syls.forEach((_,i)=>{
+    const s=document.createElement('div');
+    s.className='slot';s.id='g6Sl'+i;s.textContent='___';
+    slotsEl.appendChild(s);
+  });
+  const bankEl=document.getElementById('g6L3Bank');
+  bankEl.innerHTML='';
+  const chips=sh([...t.syls,...t.decoy.slice(0,2)]);
+  chips.forEach(syl=>{
+    const c=document.createElement('button');
+    c.className='chip';c.textContent=syl;
+    c.onclick=()=>g6Pick(c,syl,t);
+    bankEl.appendChild(c);
+  });
+}
+function g6Pick(btn,syl,t){
+  if(g6A||btn.classList.contains('used'))return;
+  const ni=g6Sel.length;
+  if(ni>=g6Tgt.length)return;
+  g6Sel.push(syl);btn.classList.add('used');
+  const sl=document.getElementById('g6Sl'+ni);
+  sl.textContent=syl;sl.classList.add('filled');
+  if(g6Sel.length===g6Tgt.length)g6Check(t);
+}
+function g6Check(t){
+  g6A=true;
+  const ok=g6Sel.every((s,i)=>s===g6Tgt[i]);
+  if(ok){
+    setFB('g6FB','✅ Отлично! Слово: '+t.word,true);g6R++;g6S++;
+    g6Tgt.forEach((_,i)=>{const s=document.getElementById('g6Sl'+i);s.style.borderColor='#16a34a';s.style.background='#dcfce7';s.style.color='#16a34a'});
+  }else{
+    setFB('g6FB','❌ Неверно. Правильно: '+t.syls.join(' + '),false);g6W++;
+    g6Tgt.forEach((_,i)=>{const s=document.getElementById('g6Sl'+i);s.style.borderColor='#dc2626';s.style.background='#fee2e2';s.style.color='#dc2626'});
+  }
+  updateG6Bar();showNxt('g6Nxt');
+}
+function g6Next(){g6I++;if(g6I>=5){g6Lvl++;g6I=0;if(g6Lvl>3){showResult(g6R,g6W,null,g6S);return;}setG6Tab(g6Lvl);}renderG6();}
+
+// RESULT
+function showResult(r,w,lbl,stars){
+  const tot=(curGame===6?15:(curGame===4?12:10));
+  const p=r/tot;
+  let e,t,s,st;
+  if(p>=.85){e='🏆';t='Отлично!';s='Ты настоящий мастер!';st='⭐⭐⭐';}
+  else if(p>=.65){e='😊';t='Хорошо!';s='Ещё немного практики!';st='⭐⭐';}
+  else{e='💪';t='Продолжай!';s='Повторяй правило!';st='⭐';}
+  document.getElementById('resEmoji').textContent=e;
+  document.getElementById('resTitle').textContent=t;
+  document.getElementById('resSub').textContent=s;
+  document.getElementById('resStars').textContent=st;
+  document.getElementById('resR').textContent=r;
+  document.getElementById('resW').textContent=w;
+  document.getElementById('resRL').textContent=lbl||'Верно';
+  if(stars!==undefined){
+    document.getElementById('resStarsBox').style.display='';
+    document.getElementById('resS').textContent=stars;
+  }else{
+    document.getElementById('resStarsBox').style.display='none';
+  }
+  showScreen('resultScreen');
+}
+
+function restartCurrent(){
+  if(curGame===5){showG5Intro();}
+  else{startGame(curGame);}
+}
+
+// HELPERS
+function setFB(id,m,ok){const e=document.getElementById(id);e.textContent=m;e.className='fb '+(ok?'ok':'err')}
+function clearFB(id){const e=document.getElementById(id);e.textContent='';e.className='fb'}
+function showNxt(id){document.getElementById(id).classList.add('vis')}
+function hideNxt(id){document.getElementById(id).classList.remove('vis')}
+function enableBtns(ids){ids.forEach(id=>{const b=document.getElementById(id);b.disabled=false;b.classList.remove('cf','wf')})}
+function disableBtns(ids){ids.forEach(id=>document.getElementById(id).disabled=true)}
+</script>
+</body>
+</html>
