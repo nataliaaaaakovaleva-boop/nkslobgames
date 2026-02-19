@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Главные и второстепенные члены предложения</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Comfortaa:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FEF7E5;
+      --bg-card: #FFFBF3;
+      --fg: #4A3728;
+      --fg-light: #7A6555;
+      --accent-green: #5CB85C;
+      --accent-orange: #F5A623;
+      --accent-coral: #FF6B6B;
+      --accent-blue: #5BC0DE;
+      --accent-purple: #9B59B6;
+      --shadow: rgba(74, 55, 40, 0.12);
+      --border: #E8D5C4;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .font-display { font-family: 'Comfortaa', cursive; }
+
+    .bg-pattern {
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(92, 184, 92, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(245, 166, 35, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(91, 192, 222, 0.05) 0%, transparent 70%);
+    }
+
+    .floating-shape {
+      position: fixed;
+      border-radius: 50%;
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-20px) rotate(5deg); }
+    }
+
+    @keyframes floatReverse {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(20px) rotate(-5deg); }
+    }
+
+    .animate-float { animation: float 6s ease-in-out infinite; }
+    .animate-float-reverse { animation: floatReverse 7s ease-in-out infinite; }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: 24px;
+      box-shadow: 0 8px 32px var(--shadow), 0 2px 8px var(--shadow);
+      border: 2px solid var(--border);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent-orange) 0%, #E8941F 100%);
+      color: white;
+      font-weight: 700;
+      padding: 14px 32px;
+      border-radius: 16px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 4px 16px rgba(245, 166, 35, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 8px 24px rgba(245, 166, 35, 0.4);
+    }
+
+    .btn-primary:active { transform: translateY(0) scale(0.98); }
+
+    .btn-secondary {
+      background: white;
+      color: var(--fg);
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 14px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent-orange);
+      background: #FFF9ED;
+    }
+
+    .drag-item {
+      background: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      cursor: grab;
+      transition: all 0.2s ease;
+      user-select: none;
+      touch-action: none;
+    }
+
+    .drag-item:hover {
+      border-color: var(--accent-orange);
+      background: #FFF9ED;
+      transform: scale(1.02);
+    }
+
+    .drag-item.dragging {
+      opacity: 0.7;
+      transform: scale(1.05) rotate(2deg);
+      cursor: grabbing;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .drag-item.placed {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .drop-zone {
+      min-height: 60px;
+      border: 3px dashed var(--border);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.5);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+    }
+
+    .drop-zone.drag-over {
+      border-color: var(--accent-green);
+      background: rgba(92, 184, 92, 0.15);
+      transform: scale(1.02);
+    }
+
+    .drop-zone.filled {
+      border-style: solid;
+      border-color: var(--accent-orange);
+      background: rgba(245, 166, 35, 0.1);
+    }
+
+    .option-btn {
+      background: white;
+      padding: 16px 24px;
+      border-radius: 16px;
+      border: 3px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .option-btn:hover {
+      border-color: var(--accent-orange);
+      background: #FFF9ED;
+      transform: translateY(-2px);
+    }
+
+    .option-btn.selected {
+      border-color: var(--accent-blue);
+      background: rgba(91, 192, 222, 0.15);
+    }
+
+    .option-btn.correct {
+      border-color: var(--accent-green);
+      background: rgba(92, 184, 92, 0.2);
+    }
+
+    .option-btn.incorrect {
+      border-color: var(--accent-coral);
+      background: rgba(255, 107, 107, 0.2);
+    }
+
+    .balloon-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .balloon {
+      width: 110px;
+      height: 130px;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 12px 8px;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      box-shadow: inset -10px -10px 20px rgba(0,0,0,0.1), inset 10px 10px 20px rgba(255,255,255,0.2);
+    }
+
+    .balloon::before {
+      content: '';
+      position: absolute;
+      top: 15%;
+      left: 25%;
+      width: 20%;
+      height: 20%;
+      background: rgba(255,255,255,0.4);
+      border-radius: 50%;
+    }
+
+    .balloon::after {
+      content: '';
+      position: absolute;
+      bottom: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 30px;
+      background: linear-gradient(to bottom, var(--fg-light), transparent);
+    }
+
+    .balloon:hover { transform: translateY(-8px) scale(1.05); }
+
+    .balloon.color-red { background: linear-gradient(135deg, #FF6B6B 0%, #EE5A5A 100%); }
+    .balloon.color-blue { background: linear-gradient(135deg, #5BC0DE 0%, #4AA8C5 100%); }
+    .balloon.color-yellow { background: linear-gradient(135deg, #F5A623 0%, #E8941F 100%); }
+    .balloon.color-default {
+      background: linear-gradient(135deg, #E8E0D5 0%, #D4CCC0 100%);
+      color: var(--fg-light);
+      text-shadow: none;
+    }
+
+    .word-card {
+      background: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      cursor: grab;
+      transition: all 0.2s ease;
+      font-weight: 600;
+      font-size: 1rem;
+      touch-action: none;
+      user-select: none;
+    }
+
+    .word-card:hover {
+      border-color: var(--accent-orange);
+      background: #FFF9ED;
+    }
+
+    .word-card.dragging {
+      opacity: 0.7;
+      transform: scale(1.05) rotate(2deg);
+      cursor: grabbing;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .word-card.used {
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    .word-card.in-sentence {
+      background: linear-gradient(135deg, var(--accent-green) 0%, #4AA84A 100%);
+      color: white;
+      border-color: var(--accent-green);
+      cursor: grab;
+    }
+
+    .sentence-area {
+      min-height: 70px;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 16px;
+      padding: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      border: 3px dashed var(--border);
+      transition: all 0.2s ease;
+    }
+
+    .sentence-area.drag-over {
+      border-color: var(--accent-green);
+      background: rgba(92, 184, 92, 0.1);
+    }
+
+    .sentence-area.filled {
+      border-style: solid;
+      border-color: var(--accent-orange);
+    }
+
+    .progress-track {
+      height: 12px;
+      background: var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-green) 0%, #7ED07E 100%);
+      border-radius: 6px;
+      transition: width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .hippo-container {
+      position: relative;
+      width: 120px;
+      height: 120px;
+    }
+
+    @keyframes hippoBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .hippo-animate { animation: hippoBounce 2s ease-in-out infinite; }
+
+    .screen {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+      position: absolute;
+      width: 100%;
+    }
+
+    .screen.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      position: relative;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in { animation: slideUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+    .delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .delay-3 { animation-delay: 0.3s; opacity: 0; }
+    .delay-4 { animation-delay: 0.4s; opacity: 0; }
+
+    @keyframes starPop {
+      0% { transform: scale(0) rotate(0deg); opacity: 0; }
+      50% { transform: scale(1.3) rotate(180deg); opacity: 1; }
+      100% { transform: scale(1) rotate(360deg); opacity: 1; }
+    }
+
+    .star-pop { animation: starPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+    .menu-card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      border: 3px solid var(--border);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .menu-card:hover {
+      border-color: var(--accent-orange);
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px var(--shadow);
+    }
+
+    .menu-card.completed {
+      border-color: var(--accent-green);
+      background: rgba(92, 184, 92, 0.05);
+    }
+
+    @media (max-width: 640px) {
+      .balloon {
+        width: 85px;
+        height: 100px;
+        font-size: 0.7rem;
+        padding: 8px 6px;
+      }
+      .balloon::after { bottom: -20px; height: 20px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    button:focus-visible, .option-btn:focus-visible, .balloon:focus-visible, .word-card:focus-visible, .drag-item:focus-visible {
+      outline: 3px solid var(--accent-orange);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body class="bg-pattern">
+  <div class="floating-shape animate-float" style="width: 200px; height: 200px; background: var(--accent-green); top: 10%; left: 5%;"></div>
+  <div class="floating-shape animate-float-reverse" style="width: 150px; height: 150px; background: var(--accent-orange); top: 60%; right: 10%;"></div>
+  <div class="floating-shape animate-float" style="width: 120px; height: 120px; background: var(--accent-blue); bottom: 20%; left: 15%;"></div>
+
+  <div class="container mx-auto px-4 py-6 max-w-3xl relative z-10">
+    
+    <header id="header" class="mb-6" style="display: none;">
+      <div class="flex items-center justify-between mb-3">
+        <span class="font-bold text-lg">Прогресс</span>
+        <span id="progressText" class="font-bold text-lg">0 / 4</span>
+      </div>
+      <div class="progress-track">
+        <div id="progressBar" class="progress-fill" style="width: 0%;"></div>
+      </div>
+    </header>
+
+    <div id="screenContainer" class="relative">
+      
+      <!-- Welcome Screen -->
+      <div id="welcomeScreen" class="screen active">
+        <div class="card p-6 sm:p-8 text-center">
+          <div class="flex justify-center mb-6">
+            <div class="hippo-container hippo-animate">
+              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="60" cy="75" rx="45" ry="35" fill="#A8D5BA"/>
+                <ellipse cx="60" cy="45" rx="35" ry="30" fill="#A8D5BA"/>
+                <ellipse cx="30" cy="25" rx="10" ry="12" fill="#8BC49E"/>
+                <ellipse cx="90" cy="25" rx="10" ry="12" fill="#8BC49E"/>
+                <ellipse cx="45" cy="40" rx="8" ry="10" fill="white"/>
+                <ellipse cx="75" cy="40" rx="8" ry="10" fill="white"/>
+                <circle cx="47" cy="42" r="5" fill="#4A3728"/>
+                <circle cx="77" cy="42" r="5" fill="#4A3728"/>
+                <circle cx="48" cy="40" r="2" fill="white"/>
+                <circle cx="78" cy="40" r="2" fill="white"/>
+                <ellipse cx="60" cy="55" rx="20" ry="12" fill="#8BC49E"/>
+                <ellipse cx="52" cy="55" rx="5" ry="4" fill="#4A3728"/>
+                <ellipse cx="68" cy="55" rx="5" ry="4" fill="#4A3728"/>
+                <path d="M 45 62 Q 60 72 75 62" stroke="#4A3728" stroke-width="2" fill="none" stroke-linecap="round"/>
+                <ellipse cx="35" cy="50" rx="6" ry="4" fill="#F5A623" opacity="0.4"/>
+                <ellipse cx="85" cy="50" rx="6" ry="4" fill="#F5A623" opacity="0.4"/>
+              </svg>
+            </div>
+          </div>
+          <h1 class="font-display text-2xl sm:text-3xl md:text-4xl mb-4 animate-in delay-1">Привет, третьеклассник!</h1>
+          <p class="text-lg sm:text-xl mb-2 animate-in delay-2">Меня зовут <strong>Бегемотик Лёня</strong>.</p>
+          <p class="text-base sm:text-lg mb-6 animate-in delay-3" style="color: var(--fg-light);">
+            Я изучаю русский язык, но никак не могу понять, как определить главные и второстепенные члены предложения. Помоги мне разобраться с заданиями!
+          </p>
+          <button onclick="startGame()" class="btn-primary text-lg animate-in delay-4">Начать игру</button>
+        </div>
+      </div>
+
+      <!-- Menu Screen -->
+      <div id="menuScreen" class="screen">
+        <div class="card p-6 sm:p-8">
+          <h2 class="font-display text-2xl sm:text-3xl mb-6 text-center">Выбери задание</h2>
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div id="menuTask1" class="menu-card" onclick="goToTask(1)">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl mx-auto mb-3" style="background: var(--accent-green);">1</div>
+              <p class="font-semibold text-sm sm:text-base">Соедини члены предложения</p>
+            </div>
+            <div id="menuTask2" class="menu-card" onclick="goToTask(2)">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl mx-auto mb-3" style="background: var(--accent-orange);">2</div>
+              <p class="font-semibold text-sm sm:text-base">Найди главные члены</p>
+            </div>
+            <div id="menuTask3" class="menu-card" onclick="goToTask(3)">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl mx-auto mb-3" style="background: var(--accent-coral);">3</div>
+              <p class="font-semibold text-sm sm:text-base">Раскрась шарики</p>
+            </div>
+            <div id="menuTask4" class="menu-card" onclick="goToTask(4)">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-xl mx-auto mb-3" style="background: var(--accent-blue);">4</div>
+              <p class="font-semibold text-sm sm:text-base">Собери предложения</p>
+            </div>
+          </div>
+          <div class="text-center">
+            <button onclick="showResultsFromMenu()" class="btn-secondary">Посмотреть результаты</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Task 1 -->
+      <div id="task1Screen" class="screen">
+        <div class="card p-4 sm:p-6 mb-4">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-lg" style="background: var(--accent-green);">1</div>
+              <h2 class="font-display text-xl sm:text-2xl">Соедини члены предложения</h2>
+            </div>
+            <button onclick="showMenu()" class="btn-secondary text-sm px-4 py-2">Меню</button>
+          </div>
+          <p class="mb-4" style="color: var(--fg-light);">Перетащи конец предложения на нужное место:</p>
+          <div id="task1Container" class="space-y-4"></div>
+        </div>
+        <div class="flex justify-between items-center">
+          <button id="checkTask1" onclick="checkTask1()" class="btn-primary" disabled style="opacity: 0.5;">Проверить</button>
+          <div id="task1Result" class="font-bold text-lg"></div>
+        </div>
+      </div>
+
+      <!-- Task 2 -->
+      <div id="task2Screen" class="screen">
+        <div class="card p-4 sm:p-6 mb-4">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-lg" style="background: var(--accent-orange);">2</div>
+              <h2 class="font-display text-xl sm:text-2xl">Найди главные члены</h2>
+            </div>
+            <button onclick="showMenu()" class="btn-secondary text-sm px-4 py-2">Меню</button>
+          </div>
+          <div class="flex justify-center mb-4">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+              <ellipse cx="30" cy="35" rx="18" ry="20" fill="#8B4513"/>
+              <circle cx="30" cy="18" r="12" fill="#1a1a1a"/>
+              <circle cx="26" cy="16" r="3" fill="white"/>
+              <circle cx="26" cy="16" r="1.5" fill="black"/>
+              <path d="M 42 18 L 55 16 L 42 20 Z" fill="#8B4513"/>
+              <path d="M 30 6 L 28 0 L 32 0 Z" fill="#FF0000"/>
+              <path d="M 22 50 L 20 60 L 26 55 Z" fill="#8B4513"/>
+              <path d="M 38 50 L 40 60 L 34 55 Z" fill="#8B4513"/>
+            </svg>
+          </div>
+          <p class="mb-4 text-center font-semibold text-lg">Дятел принёс предложение:</p>
+          <div class="text-center p-4 rounded-xl mb-4" style="background: rgba(139, 69, 19, 0.1);">
+            <span class="text-xl sm:text-2xl font-bold">Я схватил еловую шишку.</span>
+          </div>
+          <p class="mb-4" style="color: var(--fg-light);">Выбери главные члены предложения:</p>
+          <div id="task2Options" class="grid grid-cols-2 gap-3"></div>
+          <div class="mt-4 p-3 rounded-xl text-sm" style="background: rgba(91, 192, 222, 0.1); color: var(--accent-blue);">
+            <strong>А ты знал?</strong> Дятел называется лесным доктором, потому что поедает большое количество насекомых-вредителей.
+          </div>
+        </div>
+        <div class="flex justify-between items-center">
+          <button id="checkTask2" onclick="checkTask2()" class="btn-primary" disabled style="opacity: 0.5;">Проверить</button>
+          <div id="task2Result" class="font-bold text-lg"></div>
+        </div>
+      </div>
+
+      <!-- Task 3 -->
+      <div id="task3Screen" class="screen">
+        <div class="card p-4 sm:p-6 mb-4">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-lg" style="background: var(--accent-coral);">3</div>
+              <h2 class="font-display text-xl sm:text-2xl">Раскрась шарики</h2>
+            </div>
+            <button onclick="showMenu()" class="btn-secondary text-sm px-4 py-2">Меню</button>
+          </div>
+          <div class="flex justify-center mb-4">
+            <svg width="50" height="60" viewBox="0 0 50 60" fill="none">
+              <ellipse cx="25" cy="40" rx="20" ry="18" fill="#8B7355"/>
+              <circle cx="25" cy="20" r="18" fill="#8B7355"/>
+              <circle cx="18" cy="18" r="8" fill="white"/>
+              <circle cx="32" cy="18" r="8" fill="white"/>
+              <circle cx="18" cy="18" r="4" fill="#4A3728"/>
+              <circle cx="32" cy="18" r="4" fill="#4A3728"/>
+              <path d="M 25 24 L 22 30 L 28 30 Z" fill="#FFA500"/>
+              <path d="M 10 8 L 15 18 L 5 18 Z" fill="#8B7355"/>
+              <path d="M 40 8 L 45 18 L 35 18 Z" fill="#8B7355"/>
+            </svg>
+          </div>
+          <p class="mb-4" style="color: var(--fg-light);">Сова принесла воздушные шарики. Раскрась их:</p>
+          <div class="flex flex-wrap justify-center gap-3 sm:gap-4 mb-4 p-3 rounded-xl" style="background: rgba(255,255,255,0.7);">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full" style="background: linear-gradient(135deg, #FF6B6B, #EE5A5A);"></div>
+              <span class="font-semibold text-sm">Определение</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full" style="background: linear-gradient(135deg, #5BC0DE, #4AA8C5);"></div>
+              <span class="font-semibold text-sm">Дополнение</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full" style="background: linear-gradient(135deg, #F5A623, #E8941F);"></div>
+              <span class="font-semibold text-sm">Обстоятельство</span>
+            </div>
+          </div>
+          <div class="flex justify-center gap-2 sm:gap-3 mb-4">
+            <button onclick="selectColor('red')" id="colorRed" class="px-3 sm:px-4 py-2 rounded-xl font-semibold transition-all" style="background: linear-gradient(135deg, #FF6B6B, #EE5A5A); color: white; border: 3px solid transparent;">Красный</button>
+            <button onclick="selectColor('blue')" id="colorBlue" class="px-3 sm:px-4 py-2 rounded-xl font-semibold transition-all" style="background: linear-gradient(135deg, #5BC0DE, #4AA8C5); color: white; border: 3px solid transparent;">Синий</button>
+            <button onclick="selectColor('yellow')" id="colorYellow" class="px-3 sm:px-4 py-2 rounded-xl font-semibold transition-all" style="background: linear-gradient(135deg, #F5A623, #E8941F); color: white; border: 3px solid transparent;">Жёлтый</button>
+          </div>
+          <p class="text-center mb-4 text-sm" style="color: var(--fg-light);">Выбери цвет и нажми на шарик</p>
+          <div id="balloonsContainer" class="balloon-container"></div>
+          <div class="mt-4 p-3 rounded-xl text-sm text-center" style="background: rgba(155, 89, 182, 0.1); color: var(--accent-purple);">
+            Ого! Совы не могут поворачивать голову на 360 градусов.
+          </div>
+        </div>
+        <div class="flex justify-between items-center">
+          <button id="checkTask3" onclick="checkTask3()" class="btn-primary" disabled style="opacity: 0.5;">Проверить</button>
+          <div id="task3Result" class="font-bold text-lg"></div>
+        </div>
+      </div>
+
+      <!-- Task 4 -->
+      <div id="task4Screen" class="screen">
+        <div class="card p-4 sm:p-6 mb-4">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-lg" style="background: var(--accent-blue);">4</div>
+              <h2 class="font-display text-xl sm:text-2xl">Собери предложения</h2>
+            </div>
+            <button onclick="showMenu()" class="btn-secondary text-sm px-4 py-2">Меню</button>
+          </div>
+          <p class="mb-4" style="color: var(--fg-light);">О нет! Я рассыпал предложения. Перетащи слова на нужные места:</p>
+          <div class="mb-6">
+            <p class="font-semibold mb-2">Предложение 1:</p>
+            <div id="sentence1" class="sentence-area mb-3"></div>
+            <div id="words1" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div class="mb-4">
+            <p class="font-semibold mb-2">Предложение 2:</p>
+            <div id="sentence2" class="sentence-area mb-3"></div>
+            <div id="words2" class="flex flex-wrap gap-2"></div>
+          </div>
+        </div>
+        <div class="flex justify-between items-center">
+          <button id="checkTask4" onclick="checkTask4()" class="btn-primary" disabled style="opacity: 0.5;">Проверить</button>
+          <div id="task4Result" class="font-bold text-lg"></div>
+        </div>
+      </div>
+
+      <!-- Results Screen -->
+      <div id="resultsScreen" class="screen">
+        <div class="card p-6 sm:p-8 text-center">
+          <div class="flex justify-center mb-6">
+            <div class="hippo-container hippo-animate">
+              <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="60" cy="75" rx="45" ry="35" fill="#A8D5BA"/>
+                <ellipse cx="60" cy="45" rx="35" ry="30" fill="#A8D5BA"/>
+                <ellipse cx="30" cy="25" rx="10" ry="12" fill="#8BC49E"/>
+                <ellipse cx="90" cy="25" rx="10" ry="12" fill="#8BC49E"/>
+                <ellipse cx="45" cy="40" rx="8" ry="10" fill="white"/>
+                <ellipse cx="75" cy="40" rx="8" ry="10" fill="white"/>
+                <circle cx="47" cy="42" r="5" fill="#4A3728"/>
+                <circle cx="77" cy="42" r="5" fill="#4A3728"/>
+                <circle cx="48" cy="40" r="2" fill="white"/>
+                <circle cx="78" cy="40" r="2" fill="white"/>
+                <ellipse cx="60" cy="55" rx="20" ry="12" fill="#8BC49E"/>
+                <ellipse cx="52" cy="55" rx="5" ry="4" fill="#4A3728"/>
+                <ellipse cx="68" cy="55" rx="5" ry="4" fill="#4A3728"/>
+                <path d="M 40 62 Q 60 80 80 62" stroke="#4A3728" stroke-width="3" fill="none" stroke-linecap="round"/>
+                <ellipse cx="35" cy="50" rx="8" ry="5" fill="#F5A623" opacity="0.5"/>
+                <ellipse cx="85" cy="50" rx="8" ry="5" fill="#F5A623" opacity="0.5"/>
+              </svg>
+            </div>
+          </div>
+          <h2 class="font-display text-2xl sm:text-3xl mb-4">Молодец!</h2>
+          <p class="text-lg mb-2">Ты помог мне разобраться!</p>
+          <div id="starsContainer" class="flex justify-center gap-2 mb-6"></div>
+          <div class="text-4xl font-bold mb-6" style="color: var(--accent-green);">
+            <span id="finalScore">0</span> / 4
+          </div>
+          <div id="resultMessage" class="text-lg mb-6 p-4 rounded-xl" style="background: rgba(92, 184, 92, 0.1);"></div>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <button onclick="restartGame()" class="btn-primary text-lg">Играть снова</button>
+            <button onclick="showMenu()" class="btn-secondary text-lg">В меню</button>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    // Game State
+    let currentTask = 0;
+    let score = 0;
+    let selectedColor = null;
+    let task1Matches = {};
+    let task2Selected = null;
+    let task3Colors = {};
+    let task4Sentences = { sentence1: [], sentence2: [] };
+    let taskScores = { task1: false, task2: false, task3: false, task4: false };
+
+    // Task Data
+    const task1Data = [
+      { start: 'Маша гуляла', end: 'в парке с собакой.', id: 1 },
+      { start: 'Лиза купалась', end: 'в речке прошлым летом.', id: 2 },
+      { start: 'Летят птицы', end: 'на юг в тёплые края.', id: 3 },
+      { start: 'Медведь спит', end: 'в уютной берлоге зимой.', id: 4 }
+    ];
+
+    const task2Options = [
+      { text: 'Я еловую', correct: false },
+      { text: 'Я схватил', correct: true },
+      { text: 'Еловую шишку', correct: false },
+      { text: 'Схватил шишку', correct: false }
+    ];
+
+    const task3Balloons = [
+      { word: 'милый', type: 'red' },
+      { word: 'добрый', type: 'red' },
+      { word: 'серый', type: 'red' },
+      { word: 'от волка', type: 'blue' },
+      { word: 'о книге', type: 'blue' },
+      { word: 'в город', type: 'yellow' },
+      { word: 'в лес', type: 'yellow' },
+      { word: 'в окно', type: 'yellow' }
+    ];
+
+    const task4Words1 = ['В', 'саду', 'цветут', 'цветы'];
+    const task4Words2 = ['Солнечный', 'луч', 'заглянул', 'в', 'окно'];
+
+    // Drag & Drop
+    let draggedElement = null;
+    let draggedData = null;
+    let touchClone = null;
+
+    function initDraggable(element, data) {
+      element.setAttribute('draggable', 'true');
+      
+      element.addEventListener('dragstart', (e) => {
+        draggedElement = element;
+        draggedData = data;
+        element.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      
+      element.addEventListener('dragend', () => {
+        element.classList.remove('dragging');
+        draggedElement = null;
+        draggedData = null;
+      });
+      
+      element.addEventListener('touchstart', handleTouchStart, { passive: false });
+      element.addEventListener('touchmove', handleTouchMove, { passive: false });
+      element.addEventListener('touchend', handleTouchEnd, { passive: false });
+    }
+
+    function handleTouchStart(e) {
+      const touch = e.touches[0];
+      draggedElement = e.target.closest('.drag-item, .word-card');
+      
+      if (draggedElement) {
+        e.preventDefault();
+        draggedElement.classList.add('dragging');
+        
+        if (draggedElement.dataset.endId) {
+          draggedData = { type: 'task1', endId: parseInt(draggedElement.dataset.endId), text: draggedElement.textContent.trim() };
+        } else if (draggedElement.dataset.word) {
+          draggedData = { type: 'task4', word: draggedElement.dataset.word, sentence: parseInt(draggedElement.dataset.sentence) };
+        }
+        
+        touchClone = draggedElement.cloneNode(true);
+        touchClone.style.cssText = 'position:fixed;pointer-events:none;z-index:1000;opacity:0.8;transform:scale(1.1)';
+        document.body.appendChild(touchClone);
+        updateClonePosition(touch);
+      }
+    }
+
+    function handleTouchMove(e) {
+      if (draggedElement && touchClone) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        updateClonePosition(touch);
+        
+        document.querySelectorAll('.drop-zone, .sentence-area').forEach(zone => {
+          const rect = zone.getBoundingClientRect();
+          zone.classList.toggle('drag-over', 
+            touch.clientX >= rect.left && touch.clientX <= rect.right &&
+            touch.clientY >= rect.top && touch.clientY <= rect.bottom);
+        });
+      }
+    }
+
+    function handleTouchEnd(e) {
+      if (draggedElement && touchClone) {
+        const touch = e.changedTouches[0];
+        
+        document.querySelectorAll('.drop-zone, .sentence-area').forEach(zone => {
+          const rect = zone.getBoundingClientRect();
+          if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+              touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+            if (draggedData.type === 'task1' && zone.classList.contains('drop-zone')) {
+              dropEndOnZone(draggedData.endId, draggedData.text, parseInt(zone.dataset.id));
+            } else if (draggedData.type === 'task4' && zone.classList.contains('sentence-area')) {
+              addWordToSentenceArea(draggedData.word, parseInt(zone.id.replace('sentence', '')));
+            }
+          }
+          zone.classList.remove('drag-over');
+        });
+        
+        draggedElement.classList.remove('dragging');
+        if (touchClone.parentNode) touchClone.parentNode.removeChild(touchClone);
+        touchClone = null;
+        draggedElement = null;
+        draggedData = null;
+      }
+    }
+
+    function updateClonePosition(touch) {
+      if (touchClone) {
+        touchClone.style.left = (touch.clientX - 50) + 'px';
+        touchClone.style.top = (touch.clientY - 25) + 'px';
+      }
+    }
+
+    function initDropZone(zone, onDrop) {
+      zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('drag-over');
+        if (draggedData) onDrop(draggedData, zone);
+      });
+    }
+
+    // Core Functions
+    function init() { showScreen('welcomeScreen'); }
+
+    function showScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function startGame() {
+      document.getElementById('header').style.display = 'block';
+      score = 0;
+      taskScores = { task1: false, task2: false, task3: false, task4: false };
+      currentTask = 1;
+      updateProgress();
+      initTask1();
+      showScreen('task1Screen');
+    }
+
+    function showMenu() {
+      updateMenuCards();
+      showScreen('menuScreen');
+    }
+
+    function updateMenuCards() {
+      ['Task1', 'Task2', 'Task3', 'Task4'].forEach(name => {
+        const card = document.getElementById('menu' + name);
+        const key = 'task' + name.replace('Task', '');
+        if (card) card.classList.toggle('completed', taskScores[key]);
+      });
+    }
+
+    function goToTask(taskNum) {
+      currentTask = taskNum;
+      updateProgress();
+      const initFn = { 1: initTask1, 2: initTask2, 3: initTask3, 4: initTask4 };
+      initFn[taskNum]();
+      showScreen('task' + taskNum + 'Screen');
+    }
+
+    function updateProgress() {
+      const completed = Object.values(taskScores).filter(v => v).length;
+      document.getElementById('progressBar').style.width = (completed / 4 * 100) + '%';
+      document.getElementById('progressText').textContent = completed + ' / 4';
+    }
+
+    // Task 1
+    function initTask1() {
+      task1Matches = {};
+      document.getElementById('task1Result').textContent = '';
+      document.getElementById('checkTask1').disabled = true;
+      document.getElementById('checkTask1').style.opacity = '0.5';
+      
+      const shuffledEnds = [...task1Data].sort(() => Math.random() - 0.5);
+      const container = document.getElementById('task1Container');
+      
+      container.innerHTML = task1Data.map(item => `
+        <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+          <div class="flex-1 p-3 rounded-xl font-semibold" style="background: rgba(245, 166, 35, 0.15); border: 2px solid var(--accent-orange);">${item.start}</div>
+          <div class="flex items-center justify-center px-2">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </div>
+          <div class="drop-zone flex-1" data-id="${item.id}"><span class="text-sm" style="color: var(--fg-light);">Перетащи сюда...</span></div>
+        </div>
+      `).join('') + `
+        <div class="mt-4 p-3 rounded-xl" style="background: rgba(255,255,255,0.5);">
+          <p class="font-semibold mb-2">Концы предложений (перетащи):</p>
+          <div class="flex flex-wrap gap-2" id="endsContainer">
+            ${shuffledEnds.map(item => `<div class="drag-item" data-end-id="${item.id}">${item.end}</div>`).join('')}
+          </div>
+        </div>`;
+      
+      setTimeout(() => {
+        document.querySelectorAll('.drag-item[data-end-id]').forEach(item => {
+          initDraggable(item, { type: 'task1', endId: parseInt(item.dataset.endId), text: item.textContent.trim() });
+        });
+        document.querySelectorAll('.drop-zone[data-id]').forEach(zone => {
+          initDropZone(zone, (data) => dropEndOnZone(data.endId, data.text, parseInt(zone.dataset.id)));
+        });
+      }, 50);
+    }
+
+    function dropEndOnZone(endId, text, zoneId) {
+      Object.keys(task1Matches).forEach(key => {
+        if (task1Matches[key] === endId) {
+          delete task1Matches[key];
+          const prevZone = document.querySelector(`.drop-zone[data-id="${key}"]`);
+          if (prevZone) {
+            prevZone.innerHTML = '<span class="text-sm" style="color: var(--fg-light);">Перетащи сюда...</span>';
+            prevZone.classList.remove('filled');
+          }
+        }
+      });
+      
+      if (task1Matches[zoneId]) {
+        const prevItem = document.querySelector(`.drag-item[data-end-id="${task1Matches[zoneId]}"]`);
+        if (prevItem) prevItem.classList.remove('placed');
+      }
+      
+      task1Matches[zoneId] = endId;
+      const zone = document.querySelector(`.drop-zone[data-id="${zoneId}"]`);
+      if (zone) { zone.innerHTML = text; zone.classList.add('filled'); }
+      
+      const item = document.querySelector(`.drag-item[data-end-id="${endId}"]`);
+      if (item) item.classList.add('placed');
+      
+      const checkBtn = document.getElementById('checkTask1');
+      checkBtn.disabled = Object.keys(task1Matches).length !== 4;
+      checkBtn.style.opacity = Object.keys(task1Matches).length === 4 ? '1' : '0.5';
+    }
+
+    function checkTask1() {
+      let correct = task1Data.filter(item => task1Matches[item.id] === item.id).length;
+      if (correct === 4) { if (!taskScores.task1) score++; taskScores.task1 = true; document.getElementById('task1Result').innerHTML = '<span style="color: var(--accent-green);">Отлично!</span>'; }
+      else document.getElementById('task1Result').innerHTML = `<span style="color: var(--accent-coral);">Правильно: ${correct}/4</span>`;
+      updateProgress();
+      setTimeout(() => { currentTask = 2; initTask2(); showScreen('task2Screen'); }, 1500);
+    }
+
+    // Task 2
+    function initTask2() {
+      task2Selected = null;
+      document.getElementById('task2Result').textContent = '';
+      document.getElementById('checkTask2').disabled = true;
+      document.getElementById('checkTask2').style.opacity = '0.5';
+      document.getElementById('task2Options').innerHTML = task2Options.map((opt, idx) => 
+        `<button class="option-btn" data-idx="${idx}" onclick="selectTask2Option(${idx})">${opt.text}</button>`
+      ).join('');
+    }
+
+    function selectTask2Option(idx) {
+      document.querySelectorAll('#task2Options .option-btn').forEach(btn => btn.classList.remove('selected'));
+      document.querySelector(`#task2Options .option-btn[data-idx="${idx}"]`).classList.add('selected');
+      task2Selected = idx;
+      document.getElementById('checkTask2').disabled = false;
+      document.getElementById('checkTask2').style.opacity = '1';
+    }
+
+    function checkTask2() {
+      const btn = document.querySelector(`#task2Options .option-btn[data-idx="${task2Selected}"]`);
+      if (task2Options[task2Selected].correct) {
+        if (!taskScores.task2) score++; taskScores.task2 = true;
+        btn.classList.add('correct');
+        document.getElementById('task2Result').innerHTML = '<span style="color: var(--accent-green);">Верно!</span>';
+      } else {
+        btn.classList.add('incorrect');
+        task2Options.forEach((opt, idx) => { if (opt.correct) document.querySelector(`#task2Options .option-btn[data-idx="${idx}"]`).classList.add('correct'); });
+        document.getElementById('task2Result').innerHTML = '<span style="color: var(--accent-coral);">Попробуй ещё!</span>';
+      }
+      updateProgress();
+      setTimeout(() => { currentTask = 3; initTask3(); showScreen('task3Screen'); }, 1500);
+    }
+
+    // Task 3
+    function initTask3() {
+      task3Colors = {}; selectedColor = null;
+      updateColorButtons();
+      document.getElementById('task3Result').textContent = '';
+      document.getElementById('checkTask3').disabled = true;
+      document.getElementById('checkTask3').style.opacity = '0.5';
+      const shuffled = [...task3Balloons].sort(() => Math.random() - 0.5);
+      document.getElementById('balloonsContainer').innerHTML = shuffled.map((b, idx) => 
+        `<div class="balloon color-default" data-idx="${idx}" onclick="colorBalloon(${idx})">${b.word}</div>`
+      ).join('');
+    }
+
+    function selectColor(color) { selectedColor = color; updateColorButtons(); }
+
+    function updateColorButtons() {
+      document.querySelectorAll('[id^="color"]').forEach(btn => { btn.style.border = '3px solid transparent'; btn.style.transform = 'scale(1)'; });
+      if (selectedColor) {
+        const btn = document.getElementById('color' + selectedColor.charAt(0).toUpperCase() + selectedColor.slice(1));
+        if (btn) { btn.style.border = '3px solid white'; btn.style.transform = 'scale(1.1)'; }
+      }
+    }
+
+    function colorBalloon(idx) {
+      if (!selectedColor) return;
+      const balloon = document.querySelector(`.balloon[data-idx="${idx}"]`);
+      if (balloon) {
+        balloon.className = 'balloon color-' + selectedColor;
+        task3Colors[idx] = selectedColor;
+        const checkBtn = document.getElementById('checkTask3');
+        checkBtn.disabled = Object.keys(task3Colors).length !== task3Balloons.length;
+        checkBtn.style.opacity = Object.keys(task3Colors).length === task3Balloons.length ? '1' : '0.5';
+      }
+    }
+
+    function checkTask3() {
+      let correct = Object.keys(task3Colors).filter(idx => task3Colors[idx] === task3Balloons[idx].type).length;
+      if (correct === task3Balloons.length) { if (!taskScores.task3) score++; taskScores.task3 = true; document.getElementById('task3Result').innerHTML = '<span style="color: var(--accent-green);">Супер!</span>'; }
+      else document.getElementById('task3Result').innerHTML = `<span style="color: var(--accent-coral);">Правильно: ${correct}/${task3Balloons.length}</span>`;
+      updateProgress();
+      setTimeout(() => { currentTask = 4; initTask4(); showScreen('task4Screen'); }, 1500);
+    }
+
+    // Task 4
+    function initTask4() {
+      task4Sentences = { sentence1: [], sentence2: [] };
+      document.getElementById('task4Result').textContent = '';
+      document.getElementById('checkTask4').disabled = true;
+      document.getElementById('checkTask4').style.opacity = '0.5';
+      
+      const shuffled1 = [...task4Words1].sort(() => Math.random() - 0.5);
+      const shuffled2 = [...task4Words2].sort(() => Math.random() - 0.5);
+      
+      document.getElementById('words1').innerHTML = shuffled1.map(w => `<div class="word-card" data-word="${w}" data-sentence="1">${w}</div>`).join('');
+      document.getElementById('sentence1').innerHTML = '<span class="text-sm" style="color: var(--fg-light);">Перетащи слова сюда...</span>';
+      document.getElementById('words2').innerHTML = shuffled2.map(w => `<div class="word-card" data-word="${w}" data-sentence="2">${w}</div>`).join('');
+      document.getElementById('sentence2').innerHTML = '<span class="text-sm" style="color: var(--fg-light);">Перетащи слова сюда...</span>';
+      
+      setTimeout(() => {
+        document.querySelectorAll('.word-card[data-word]').forEach(card => {
+          initDraggable(card, { type: 'task4', word: card.dataset.word, sentence: parseInt(card.dataset.sentence) });
+        });
+        [1, 2].forEach(num => {
+          initDropZone(document.getElementById('sentence' + num), (data) => addWordToSentenceArea(data.word, num));
+        });
+      }, 50);
+    }
+
+    function addWordToSentenceArea(word, sentenceNum) {
+      const wordBtn = document.querySelector(`.word-card[data-word="${word}"][data-sentence="${sentenceNum}"]`);
+      if (wordBtn && !wordBtn.classList.contains('used')) {
+        wordBtn.classList.add('used');
+        const sentenceArea = document.getElementById('sentence' + sentenceNum);
+        const key = 'sentence' + sentenceNum;
+        if (task4Sentences[key].length === 0) { sentenceArea.innerHTML = ''; sentenceArea.classList.add('filled'); }
+        task4Sentences[key].push(word);
+        const el = document.createElement('span');
+        el.className = 'word-card in-sentence';
+        el.textContent = word;
+        el.onclick = () => removeWordFromSentence(word, sentenceNum);
+        sentenceArea.appendChild(el);
+        checkTask4Ready();
+      }
+    }
+
+    function removeWordFromSentence(word, sentenceNum) {
+      const key = 'sentence' + sentenceNum;
+      const idx = task4Sentences[key].indexOf(word);
+      if (idx > -1) {
+        task4Sentences[key].splice(idx, 1);
+        const sentenceArea = document.getElementById('sentence' + sentenceNum);
+        sentenceArea.innerHTML = '';
+        task4Sentences[key].forEach(w => {
+          const el = document.createElement('span');
+          el.className = 'word-card in-sentence';
+          el.textContent = w;
+          el.onclick = () => removeWordFromSentence(w, sentenceNum);
+          sentenceArea.appendChild(el);
+        });
+        if (task4Sentences[key].length === 0) {
+          sentenceArea.innerHTML = '<span class="text-sm" style="color: var(--fg-light);">Перетащи слова сюда...</span>';
+          sentenceArea.classList.remove('filled');
+        }
+        document.querySelector(`.word-card[data-word="${word}"][data-sentence="${sentenceNum}"]`)?.classList.remove('used');
+        checkTask4Ready();
+      }
+    }
+
+    function checkTask4Ready() {
+      const totalWords = task4Words1.length + task4Words2.length;
+      const usedWords = task4Sentences.sentence1.length + task4Sentences.sentence2.length;
+      const checkBtn = document.getElementById('checkTask4');
+      checkBtn.disabled = usedWords !== totalWords;
+      checkBtn.style.opacity = usedWords === totalWords ? '1' : '0.5';
+    }
+
+    function checkTask4() {
+      const correct1 = task4Sentences.sentence1.join(' ') === task4Words1.join(' ');
+      const correct2 = task4Sentences.sentence2.join(' ') === task4Words2.join(' ');
+      if (correct1 && correct2) { if (!taskScores.task4) score++; taskScores.task4 = true; document.getElementById('task4Result').innerHTML = '<span style="color: var(--accent-green);">Замечательно!</span>'; }
+      else document.getElementById('task4Result').innerHTML = '<span style="color: var(--accent-coral);">Не совсем верно</span>';
+      updateProgress();
+      setTimeout(showResults, 1500);
+    }
+
+    // Results
+    function showResults() {
+      document.getElementById('finalScore').textContent = score;
+      const starsContainer = document.getElementById('starsContainer');
+      starsContainer.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const star = document.createElement('span');
+        star.className = 'text-4xl star-pop';
+        star.style.animationDelay = (i * 0.15) + 's';
+        star.innerHTML = i < score 
+          ? '<svg width="40" height="40" viewBox="0 0 24 24" fill="#F5A623"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>'
+          : '<svg width="40" height="40" viewBox="0 0 24 24" fill="#E8D5C4"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>';
+        starsContainer.appendChild(star);
+      }
+      const message = document.getElementById('resultMessage');
+      if (score === 4) { message.innerHTML = '<strong>Превосходно!</strong> Ты отлично знаешь главные и второстепенные члены предложения!'; message.style.background = 'rgba(92, 184, 92, 0.1)'; }
+      else if (score >= 2) { message.innerHTML = '<strong>Хорошо!</strong> Ты разобрался с большинством заданий. Продолжай учиться!'; message.style.background = 'rgba(245, 166, 35, 0.1)'; }
+      else { message.innerHTML = '<strong>Не расстраивайся!</strong> Попробуй ещё раз, и всё получится!'; message.style.background = 'rgba(91, 192, 222, 0.1)'; }
+      showScreen('resultsScreen');
+    }
+
+    function showResultsFromMenu() {
+      score = Object.values(taskScores).filter(v => v).length;
+      showResults();
+    }
+
+    function restartGame() {
+      score = 0; currentTask = 1;
+      taskScores = { task1: false, task2: false, task3: false, task4: false };
+      task1Matches = {}; task2Selected = null; selectedColor = null; task3Colors = {}; task4Sentences = { sentence1: [], sentence2: [] };
+      updateProgress();
+      initTask1();
+      showScreen('task1Screen');
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
