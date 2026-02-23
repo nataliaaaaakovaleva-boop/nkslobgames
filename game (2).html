@@ -1,0 +1,2595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Хранители Предложения</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Comfortaa:wght@400;600;700&display=swap');
+
+  :root {
+    --forest: #3d6e5e;
+    --forest-light: #4A7C6F;
+    --forest-pale: #a8c5bb;
+    --cream: #F5E6C8;
+    --cream-dark: #e8d4a8;
+    --terra: #C47A3A;
+    --terra-light: #d98f4e;
+    --terra-pale: #f0c890;
+    --sky: #b8d4e8;
+    --sky-deep: #7aabcc;
+    --blue-member: #5B8DB8;
+    --blue-member-light: #7aadd4;
+    --green-member: #5a9e6e;
+    --purple-member: #8b6ab5;
+    --orange-member: #c4783a;
+    --text-dark: #2C2C2C;
+    --text-mid: #4a4a4a;
+    --white: #ffffff;
+    --shadow: rgba(44,44,44,0.15);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: 'Nunito', sans-serif;
+    background: #2a4a3e;
+    touch-action: none;
+  }
+
+  #app {
+    width: 100vw; height: 100vh;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas#bg {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+  }
+
+  #ui {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* ===== HUD ===== */
+  #hud {
+    width: 100%;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(61,110,94,0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid rgba(255,255,255,0.15);
+  }
+
+  #hud-crystals {
+    display: flex; gap: 8px; align-items: center;
+  }
+
+  .crystal {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.15);
+    transition: all 0.4s ease;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  .crystal.lit {
+    background: radial-gradient(circle at 35% 35%, #ffe082, #f5a623);
+    border-color: #ffe082;
+    box-shadow: 0 0 12px rgba(245,166,35,0.7);
+  }
+
+  #hud-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(14px, 2.5vw, 20px);
+    color: var(--cream);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  #sound-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    transition: background 0.2s;
+  }
+  #sound-btn:hover { background: rgba(255,255,255,0.25); }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
+    padding: 20px;
+    gap: 16px;
+  }
+  .screen.active { display: flex; }
+
+  /* ===== START SCREEN ===== */
+  #start-screen {
+    text-align: center;
+  }
+
+  .owl-wrap {
+    animation: owlFloat 3s ease-in-out infinite;
+  }
+  @keyframes owlFloat {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .title-card {
+    background: rgba(245,230,200,0.92);
+    border-radius: 24px;
+    padding: 24px 36px;
+    border: 3px solid rgba(196,122,58,0.4);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    max-width: 500px;
+  }
+
+  .game-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(22px, 5vw, 38px);
+    color: var(--forest);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .game-subtitle {
+    font-size: clamp(13px, 2.5vw, 17px);
+    color: var(--text-mid);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .btn-primary {
+    display: inline-block;
+    padding: 14px 36px;
+    background: linear-gradient(135deg, var(--terra), var(--terra-light));
+    color: var(--white);
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(16px, 3vw, 22px);
+    font-weight: 800;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(196,122,58,0.45);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 0.5px;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(196,122,58,0.6); }
+  .btn-primary:active { transform: translateY(1px); }
+
+  .btn-secondary {
+    display: inline-block;
+    padding: 10px 24px;
+    background: rgba(61,110,94,0.9);
+    color: var(--cream);
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(14px, 2.5vw, 18px);
+    font-weight: 700;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(74,124,111,0.95); transform: translateY(-1px); }
+
+  /* ===== GAME AREA ===== */
+  #game-area {
+    flex: 1;
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 10px 16px 16px;
+  }
+
+  .game-card {
+    background: rgba(245,230,200,0.94);
+    border-radius: 20px;
+    padding: 18px 20px;
+    border: 2px solid rgba(196,122,58,0.25);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+
+  .mini-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(14px, 2.5vw, 19px);
+    color: var(--forest);
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .instruction {
+    font-size: clamp(13px, 2vw, 16px);
+    color: var(--text-mid);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  /* ===== SENTENCE DISPLAY ===== */
+  .sentence-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 14px;
+    min-height: 56px;
+    align-items: center;
+  }
+
+  .word-token {
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: clamp(15px, 2.5vw, 20px);
+    font-weight: 700;
+    cursor: pointer;
+    border: 2.5px solid transparent;
+    background: rgba(255,255,255,0.85);
+    color: var(--text-dark);
+    transition: all 0.2s;
+    user-select: none;
+    position: relative;
+    min-height: 44px;
+    display: flex; align-items: center;
+  }
+
+  .word-token:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+
+  .word-token.subject {
+    background: rgba(91,141,184,0.2);
+    border-color: var(--blue-member);
+    color: #1a5c8a;
+  }
+  .word-token.predicate {
+    background: rgba(90,158,110,0.2);
+    border-color: var(--green-member);
+    color: #2a6b3a;
+  }
+  .word-token.definition {
+    background: rgba(139,106,181,0.2);
+    border-color: var(--purple-member);
+    color: #5a3a8a;
+  }
+  .word-token.addition {
+    background: rgba(196,120,58,0.2);
+    border-color: var(--orange-member);
+    color: #7a3a0a;
+  }
+  .word-token.circumstance {
+    background: rgba(184,212,232,0.5);
+    border-color: var(--sky-deep);
+    color: #1a4a6a;
+  }
+
+  /* Member labels */
+  .member-label {
+    position: absolute;
+    top: -22px; left: 50%; transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 800;
+    white-space: nowrap;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: white;
+  }
+
+  /* ===== FEEDBACK ===== */
+  .feedback-box {
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: clamp(13px, 2vw, 16px);
+    font-weight: 700;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .feedback-box.visible { display: flex; }
+  .feedback-box.correct {
+    background: rgba(90,158,110,0.2);
+    border: 2px solid var(--green-member);
+    color: #2a6b3a;
+  }
+  .feedback-box.wrong {
+    background: rgba(196,80,60,0.12);
+    border: 2px solid #c45040;
+    color: #8a2a1a;
+  }
+  .feedback-box.hint {
+    background: rgba(196,122,58,0.15);
+    border: 2px solid var(--terra);
+    color: #7a4010;
+  }
+
+  /* ===== BUTTONS ROW ===== */
+  .btn-row {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+    margin-top: 12px;
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-bar-wrap {
+    width: 100%;
+    background: rgba(255,255,255,0.3);
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--terra), #f0c840);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+  }
+
+  /* ===== MEMBER LEGEND ===== */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: clamp(11px, 1.8vw, 14px);
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 2px solid transparent;
+  }
+  .legend-item.subject { background: rgba(91,141,184,0.15); border-color: var(--blue-member); color: #1a5c8a; }
+  .legend-item.predicate { background: rgba(90,158,110,0.15); border-color: var(--green-member); color: #2a6b3a; }
+  .legend-item.definition { background: rgba(139,106,181,0.15); border-color: var(--purple-member); color: #5a3a8a; }
+  .legend-item.addition { background: rgba(196,120,58,0.15); border-color: var(--orange-member); color: #7a3a0a; }
+  .legend-item.circumstance { background: rgba(122,171,204,0.2); border-color: var(--sky-deep); color: #1a4a6a; }
+
+  /* ===== SORT HOUSES ===== */
+  .houses-wrap {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    margin: 10px 0;
+  }
+  .house {
+    min-width: 120px; min-height: 80px;
+    border-radius: 16px;
+    border: 3px dashed transparent;
+    padding: 10px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+    transition: all 0.2s;
+    cursor: default;
+  }
+  .house.definition { background: rgba(139,106,181,0.1); border-color: var(--purple-member); }
+  .house.addition { background: rgba(196,120,58,0.1); border-color: var(--orange-member); }
+  .house.circumstance { background: rgba(122,171,204,0.15); border-color: var(--sky-deep); }
+  .house.drag-over { transform: scale(1.04); border-style: solid; }
+
+  .house-title {
+    font-size: clamp(11px, 1.8vw, 14px);
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .house.definition .house-title { color: #5a3a8a; }
+  .house.addition .house-title { color: #7a3a0a; }
+  .house.circumstance .house-title { color: #1a4a6a; }
+
+  .house-question {
+    font-size: 10px;
+    font-weight: 600;
+    opacity: 0.7;
+    text-align: center;
+  }
+
+  .house-items { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 30px; }
+
+  .sort-item {
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: clamp(13px, 2vw, 16px);
+    font-weight: 700;
+    background: rgba(255,255,255,0.85);
+    color: var(--text-dark);
+    cursor: grab;
+    border: 2px solid rgba(0,0,0,0.1);
+    transition: all 0.15s;
+    user-select: none;
+    min-height: 36px;
+    display: flex; align-items: center;
+    touch-action: none;
+  }
+  .sort-item:active { cursor: grabbing; opacity: 0.7; }
+  .sort-item.dragging { opacity: 0.4; }
+
+  /* ===== BUILDER ===== */
+  .builder-slots {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center;
+    padding: 12px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 14px;
+    min-height: 60px;
+    align-items: center;
+  }
+  .slot {
+    min-width: 70px; min-height: 44px;
+    border-radius: 10px;
+    border: 2.5px dashed rgba(0,0,0,0.2);
+    background: rgba(255,255,255,0.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(13px, 2vw, 16px);
+    font-weight: 700;
+    color: rgba(0,0,0,0.3);
+    transition: all 0.2s;
+    padding: 6px 10px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .slot.filled {
+    border-style: solid;
+    color: var(--text-dark);
+    background: rgba(255,255,255,0.85);
+    cursor: pointer;
+  }
+  .slot:hover { border-color: var(--terra); }
+
+  .word-bank {
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+    padding: 10px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 12px;
+  }
+
+  /* ===== ERROR HIGHLIGHT ===== */
+  .error-highlight {
+    animation: errorShake 0.4s ease;
+    border-color: #c45040 !important;
+    background: rgba(196,80,60,0.15) !important;
+  }
+  @keyframes errorShake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* ===== CONFETTI ===== */
+  .confetti-piece {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    animation: confettiFall 1.2s ease-out forwards;
+    pointer-events: none;
+    z-index: 100;
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(180px) rotate(720deg); opacity: 0; }
+  }
+
+  /* ===== RESULT SCREEN ===== */
+  #result-screen {
+    text-align: center;
+  }
+  .result-card {
+    background: rgba(245,230,200,0.95);
+    border-radius: 24px;
+    padding: 30px 36px;
+    max-width: 520px;
+    width: 100%;
+    border: 3px solid rgba(196,122,58,0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .result-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(20px, 4vw, 30px);
+    color: var(--forest);
+    font-weight: 700;
+    margin: 16px 0 8px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .stat-box {
+    background: rgba(255,255,255,0.7);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num {
+    font-size: clamp(22px, 4vw, 32px);
+    font-weight: 900;
+    color: var(--terra);
+    display: block;
+  }
+  .stat-label {
+    font-size: clamp(11px, 1.8vw, 13px);
+    color: var(--text-mid);
+    font-weight: 600;
+  }
+
+  .teacher-report {
+    background: rgba(61,110,94,0.1);
+    border: 2px solid rgba(61,110,94,0.3);
+    border-radius: 14px;
+    padding: 14px;
+    text-align: left;
+    margin-top: 14px;
+  }
+  .teacher-report h4 {
+    font-size: 13px;
+    color: var(--forest);
+    margin-bottom: 8px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .teacher-report p {
+    font-size: 12px;
+    color: var(--text-mid);
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+
+  /* ===== TRANSITION ===== */
+  .screen-transition {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--forest);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s;
+  }
+  .screen-transition.show { opacity: 1; pointer-events: all; }
+
+  /* ===== MINI-GAME COMPLETE OVERLAY ===== */
+  .mini-complete {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    background: rgba(245,230,200,0.97);
+    border-radius: 20px;
+    padding: 24px 32px;
+    text-align: center;
+    z-index: 200;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
+    border: 3px solid var(--terra);
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+    max-width: 340px;
+    width: 90%;
+  }
+  .mini-complete.show {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+    pointer-events: all;
+  }
+  .mini-complete h3 {
+    font-family: 'Comfortaa', cursive;
+    color: var(--forest);
+    font-size: 22px;
+    margin-bottom: 8px;
+  }
+  .mini-complete p { color: var(--text-mid); font-size: 14px; line-height: 1.5; }
+
+  /* ===== OWL SVG ===== */
+  .owl-svg { filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25)); }
+
+  /* ===== HINT COUNTER ===== */
+  .hint-counter {
+    display: flex; gap: 4px; align-items: center;
+    font-size: 12px; color: var(--terra);
+    font-weight: 700;
+  }
+  .hint-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--terra-pale);
+    border: 1.5px solid var(--terra);
+  }
+  .hint-dot.used { background: var(--terra); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    #hud { padding: 8px 12px; }
+    .title-card { padding: 18px 20px; }
+    .game-card { padding: 14px 14px; }
+    .houses-wrap { gap: 6px; }
+    .house { min-width: 95px; }
+  }
+
+  @media (min-height: 900px) {
+    #game-area { padding: 16px 20px 24px; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="bg"></canvas>
+
+  <div id="ui">
+    <!-- HUD -->
+    <div id="hud" style="display:none;">
+      <div id="hud-crystals">
+        <div class="crystal" id="c1">🔮</div>
+        <div class="crystal" id="c2">🔮</div>
+        <div class="crystal" id="c3">🔮</div>
+        <div class="crystal" id="c4">🔮</div>
+        <div class="crystal" id="c5">🔮</div>
+        <div class="crystal" id="c6">🔮</div>
+      </div>
+      <div id="hud-title">Хранители Предложения</div>
+      <button id="sound-btn" onclick="toggleSound()">🔊</button>
+    </div>
+
+    <!-- START SCREEN -->
+    <div class="screen active" id="start-screen">
+      <div class="owl-wrap">
+        <svg class="owl-svg" width="120" height="120" viewBox="0 0 120 120">
+          <!-- body -->
+          <ellipse cx="60" cy="75" rx="38" ry="38" fill="#4A7C6F"/>
+          <ellipse cx="60" cy="75" rx="30" ry="32" fill="#a8c5bb"/>
+          <!-- wings -->
+          <ellipse cx="28" cy="78" rx="18" ry="28" fill="#3d6e5e" transform="rotate(-10 28 78)"/>
+          <ellipse cx="92" cy="78" rx="18" ry="28" fill="#3d6e5e" transform="rotate(10 92 78)"/>
+          <!-- head -->
+          <ellipse cx="60" cy="42" rx="30" ry="28" fill="#4A7C6F"/>
+          <!-- ear tufts -->
+          <polygon points="44,18 38,6 50,14" fill="#3d6e5e"/>
+          <polygon points="76,18 82,6 70,14" fill="#3d6e5e"/>
+          <!-- face -->
+          <ellipse cx="60" cy="44" rx="22" ry="20" fill="#F5E6C8"/>
+          <!-- eyes -->
+          <circle cx="50" cy="40" r="10" fill="white"/>
+          <circle cx="70" cy="40" r="10" fill="white"/>
+          <circle cx="50" cy="40" r="7" fill="#5B8DB8"/>
+          <circle cx="70" cy="40" r="7" fill="#5B8DB8"/>
+          <circle cx="52" cy="38" r="4" fill="#1a3a5a"/>
+          <circle cx="72" cy="38" r="4" fill="#1a3a5a"/>
+          <circle cx="53" cy="36" r="1.5" fill="white"/>
+          <circle cx="73" cy="36" r="1.5" fill="white"/>
+          <!-- glasses -->
+          <circle cx="50" cy="40" r="11" fill="none" stroke="#C47A3A" stroke-width="2"/>
+          <circle cx="70" cy="40" r="11" fill="none" stroke="#C47A3A" stroke-width="2"/>
+          <line x1="61" y1="40" x2="59" y2="40" stroke="#C47A3A" stroke-width="2"/>
+          <!-- beak -->
+          <polygon points="60,48 55,54 65,54" fill="#C47A3A"/>
+          <!-- hat/cape hint -->
+          <path d="M30 62 Q60 56 90 62" fill="none" stroke="#C47A3A" stroke-width="3" stroke-linecap="round"/>
+          <!-- feather pen -->
+          <line x1="88" y1="55" x2="105" y2="25" stroke="#e8d4a8" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="M105 25 Q100 35 88 55 Q96 40 105 25" fill="#d4c080"/>
+          <!-- feet -->
+          <line x1="48" y1="110" x2="48" y2="118" stroke="#C47A3A" stroke-width="3"/>
+          <line x1="60" y1="111" x2="60" y2="119" stroke="#C47A3A" stroke-width="3"/>
+          <line x1="72" y1="110" x2="72" y2="118" stroke="#C47A3A" stroke-width="3"/>
+          <line x1="42" y1="118" x2="54" y2="118" stroke="#C47A3A" stroke-width="3" stroke-linecap="round"/>
+          <line x1="54" y1="119" x2="66" y2="119" stroke="#C47A3A" stroke-width="3" stroke-linecap="round"/>
+          <line x1="66" y1="118" x2="78" y2="118" stroke="#C47A3A" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+
+      <div class="title-card">
+        <div class="game-title">🌿 Хранители Предложения</div>
+        <div class="game-subtitle">
+          Хаос рассыпал все предложения Волшебного Леса!<br>
+          Помоги сове <strong>Синте</strong> восстановить их и стань Хранителем языка.
+        </div>
+        <button class="btn-primary" onclick="startGame()">Начать приключение!</button>
+      </div>
+    </div>
+
+    <!-- GAME AREA -->
+    <div class="screen" id="game-screen">
+      <div id="game-area">
+        <!-- Dynamic content injected by JS -->
+      </div>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div class="screen" id="result-screen">
+      <div class="result-card">
+        <div class="owl-wrap" style="margin-bottom:10px;">
+          <svg width="80" height="80" viewBox="0 0 120 120">
+            <ellipse cx="60" cy="75" rx="38" ry="38" fill="#4A7C6F"/>
+            <ellipse cx="60" cy="75" rx="30" ry="32" fill="#a8c5bb"/>
+            <ellipse cx="28" cy="78" rx="18" ry="28" fill="#3d6e5e" transform="rotate(-10 28 78)"/>
+            <ellipse cx="92" cy="78" rx="18" ry="28" fill="#3d6e5e" transform="rotate(10 92 78)"/>
+            <ellipse cx="60" cy="42" rx="30" ry="28" fill="#4A7C6F"/>
+            <polygon points="44,18 38,6 50,14" fill="#3d6e5e"/>
+            <polygon points="76,18 82,6 70,14" fill="#3d6e5e"/>
+            <ellipse cx="60" cy="44" rx="22" ry="20" fill="#F5E6C8"/>
+            <circle cx="50" cy="40" r="10" fill="white"/><circle cx="70" cy="40" r="10" fill="white"/>
+            <circle cx="50" cy="40" r="7" fill="#5B8DB8"/><circle cx="70" cy="40" r="7" fill="#5B8DB8"/>
+            <circle cx="52" cy="38" r="4" fill="#1a3a5a"/><circle cx="72" cy="38" r="4" fill="#1a3a5a"/>
+            <circle cx="53" cy="36" r="1.5" fill="white"/><circle cx="73" cy="36" r="1.5" fill="white"/>
+            <circle cx="50" cy="40" r="11" fill="none" stroke="#C47A3A" stroke-width="2"/>
+            <circle cx="70" cy="40" r="11" fill="none" stroke="#C47A3A" stroke-width="2"/>
+            <line x1="61" y1="40" x2="59" y2="40" stroke="#C47A3A" stroke-width="2"/>
+            <polygon points="60,48 55,54 65,54" fill="#C47A3A"/>
+          </svg>
+        </div>
+        <div class="result-title" id="result-title">🎉 Лес спасён!</div>
+        <p id="result-msg" style="color:var(--text-mid); font-size:15px; margin-bottom:16px;"></p>
+        <div class="stats-grid" id="stats-grid"></div>
+        <div class="teacher-report" id="teacher-report"></div>
+        <div class="btn-row" style="margin-top:16px;">
+          <button class="btn-primary" onclick="restartGame()">Сыграть ещё раз</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Transition overlay -->
+  <div class="screen-transition" id="transition"></div>
+
+  <!-- Mini-game complete overlay -->
+  <div class="mini-complete" id="mini-complete">
+    <div style="font-size:40px; margin-bottom:8px;" id="mc-emoji">⭐</div>
+    <h3 id="mc-title">Отличная работа!</h3>
+    <p id="mc-text"></p>
+    <button class="btn-primary" style="margin-top:14px; font-size:15px; padding:10px 24px;" onclick="nextMiniGame()">Дальше →</button>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// GAME DATA
+// ============================================================
+const MINI_GAMES = [
+  {
+    id: 1,
+    icon: '🌿',
+    title: 'Найди Хранителей',
+    desc: 'Найди подлежащее (кто? что?) и сказуемое (что делает?). Нажимай на нужные слова!',
+    type: 'findMain',
+    crystal: 'c1'
+  },
+  {
+    id: 2,
+    icon: '🍄',
+    title: 'Протяни нить',
+    desc: 'Нажми на главный член, затем на зависимое слово — проведи связь!',
+    type: 'drawLink',
+    crystal: 'c2'
+  },
+  {
+    id: 3,
+    icon: '🌲',
+    title: 'Сортировка в домики',
+    desc: 'Перетащи каждое слово в нужный домик: определение, дополнение или обстоятельство.',
+    type: 'sort',
+    crystal: 'c3'
+  },
+  {
+    id: 4,
+    icon: '🏰',
+    title: 'Восстанови предложение',
+    desc: 'Собери рассыпанные слова в правильном порядке!',
+    type: 'build',
+    crystal: 'c4'
+  },
+  {
+    id: 5,
+    icon: '🦋',
+    title: 'Исправь Хаос',
+    desc: 'В разборе предложения есть ошибка! Найди её и исправь.',
+    type: 'fixError',
+    crystal: 'c5'
+  },
+  {
+    id: 6,
+    icon: '🌟',
+    title: 'Построй сам',
+    desc: 'Составь предложение по схеме — расставь карточки-слова на нужные места!',
+    type: 'compose',
+    crystal: 'c6'
+  }
+];
+
+// Mini-game 1 data: find subject + predicate
+const FIND_MAIN_DATA = [
+  {
+    words: ['Рыжая', 'лиса', 'бежала', 'через', 'лес'],
+    subject: [1], predicate: [2],
+    subjectQ: 'кто?', predicateQ: 'что делала?'
+  },
+  {
+    words: ['Маленький', 'ёж', 'нашёл', 'грибы', 'в', 'лесу'],
+    subject: [1], predicate: [2],
+    subjectQ: 'кто?', predicateQ: 'что сделал?'
+  },
+  {
+    words: ['Синта', 'читала', 'интересную', 'книгу'],
+    subject: [0], predicate: [1],
+    subjectQ: 'кто?', predicateQ: 'что делала?'
+  },
+  {
+    words: ['Высокие', 'деревья', 'шумели', 'на', 'ветру'],
+    subject: [1], predicate: [2],
+    subjectQ: 'что?', predicateQ: 'что делали?'
+  },
+  {
+    words: ['Маша', 'и', 'Петя', 'играли', 'в', 'саду'],
+    subject: [0,2], predicate: [3],
+    subjectQ: 'кто?', predicateQ: 'что делали?'
+  }
+];
+
+// Mini-game 2 data: draw links (main → dependent)
+const DRAW_LINK_DATA = [
+  {
+    sentence: ['Добрый', 'волшебник', 'создал', 'красивый', 'замок'],
+    pairs: [
+      { from: 1, to: 0, q: 'какой?', type: 'definition' },
+      { from: 2, to: 4, q: 'что?', type: 'addition' },
+      { from: 4, to: 3, q: 'какой?', type: 'definition' }
+    ],
+    mainPairs: [{ from: 1, to: 2, q: 'что сделал?', type: 'predicate' }]
+  },
+  {
+    sentence: ['Маленькая', 'птица', 'пела', 'громко', 'утром'],
+    pairs: [
+      { from: 1, to: 0, q: 'какая?', type: 'definition' },
+      { from: 2, to: 3, q: 'как?', type: 'circumstance' },
+      { from: 2, to: 4, q: 'когда?', type: 'circumstance' }
+    ],
+    mainPairs: [{ from: 1, to: 2, q: 'что делала?', type: 'predicate' }]
+  }
+];
+
+// Mini-game 3 data: sort secondary members
+const SORT_DATA = [
+  {
+    sentence: 'Быстрая белка прыгала по высоким веткам вечером.',
+    items: [
+      { word: 'быстрая', type: 'definition', from: 'белка', q: 'какая?' },
+      { word: 'по веткам', type: 'addition', from: 'прыгала', q: 'по чему?' },
+      { word: 'высоким', type: 'definition', from: 'веткам', q: 'каким?' },
+      { word: 'вечером', type: 'circumstance', from: 'прыгала', q: 'когда?' }
+    ]
+  },
+  {
+    sentence: 'Старый дуб стоял у тихой реки много лет.',
+    items: [
+      { word: 'старый', type: 'definition', from: 'дуб', q: 'какой?' },
+      { word: 'у реки', type: 'circumstance', from: 'стоял', q: 'где?' },
+      { word: 'тихой', type: 'definition', from: 'реки', q: 'какой?' },
+      { word: 'много лет', type: 'circumstance', from: 'стоял', q: 'как долго?' }
+    ]
+  }
+];
+
+// Mini-game 4 data: build sentence
+const BUILD_DATA = [
+  {
+    words: ['Пушистая', 'кошка', 'тихо', 'сидела', 'на', 'окне'],
+    correct: [0,1,3,2,4,5],
+    hint: 'Подлежащее + сказуемое стоят рядом'
+  },
+  {
+    words: ['Смелый', 'рыцарь', 'победил', 'страшного', 'дракона', 'утром'],
+    correct: [0,1,2,3,4,5],
+    hint: 'Главные члены — рыцарь победил'
+  },
+  {
+    words: ['В', 'густом', 'лесу', 'жила', 'добрая', 'фея'],
+    correct: [0,1,2,3,4,5],
+    hint: 'Обстоятельство места часто стоит в начале'
+  }
+];
+
+// Mini-game 5 data: fix error
+const FIX_DATA = [
+  {
+    sentence: ['Маленькая', 'мышка', 'нашла', 'сыр', 'в', 'норке'],
+    wrongIndex: 0,
+    wrongLabel: 'Сказуемое',
+    correctLabel: 'Определение',
+    explanation: '«Маленькая» отвечает на вопрос «какая?» → это определение, а не сказуемое!',
+    allOptions: ['Подлежащее', 'Сказуемое', 'Определение', 'Дополнение']
+  },
+  {
+    sentence: ['Синта', 'летела', 'быстро', 'над', 'лесом'],
+    wrongIndex: 2,
+    wrongLabel: 'Дополнение',
+    correctLabel: 'Обстоятельство',
+    explanation: '«Быстро» отвечает на вопрос «как?» → это обстоятельство образа действия!',
+    allOptions: ['Подлежащее', 'Дополнение', 'Обстоятельство', 'Определение']
+  },
+  {
+    sentence: ['Добрый', 'волшебник', 'подарил', 'красивую', 'книгу'],
+    wrongIndex: 3,
+    wrongLabel: 'Подлежащее',
+    correctLabel: 'Определение',
+    explanation: '«Красивую» отвечает на вопрос «какую?» → это определение, а не подлежащее!',
+    allOptions: ['Подлежащее', 'Определение', 'Дополнение', 'Обстоятельство']
+  }
+];
+
+// Mini-game 6 data: compose sentence
+const COMPOSE_DATA = [
+  {
+    schema: ['Кто?', 'Что делает?', 'Какой?', 'Что?'],
+    schemaTypes: ['subject', 'predicate', 'definition', 'addition'],
+    wordCards: [
+      { word: 'Синта', type: 'subject' },
+      { word: 'читает', type: 'predicate' },
+      { word: 'интересную', type: 'definition' },
+      { word: 'книгу', type: 'addition' },
+      { word: 'весёлую', type: 'definition' }, // distractor
+      { word: 'пишет', type: 'predicate' }  // distractor
+    ]
+  },
+  {
+    schema: ['Кто?', 'Что делал?', 'Где?'],
+    schemaTypes: ['subject', 'predicate', 'circumstance'],
+    wordCards: [
+      { word: 'Ёжик', type: 'subject' },
+      { word: 'спал', type: 'predicate' },
+      { word: 'в норке', type: 'circumstance' },
+      { word: 'в лесу', type: 'circumstance' }, // both valid
+      { word: 'бежал', type: 'predicate' },
+      { word: 'Белка', type: 'subject' }
+    ]
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  currentMiniGame: 0,
+  soundOn: true,
+  totalCorrect: 0,
+  totalAttempts: 0,
+  totalHints: 0,
+  miniStats: [],
+  // per mini-game state
+  mg: {}
+};
+
+// ============================================================
+// BACKGROUND CANVAS
+// ============================================================
+const bgCanvas = document.getElementById('bg');
+const bgCtx = bgCanvas.getContext('2d');
+let bgW, bgH;
+let trees = [], fireflies = [];
+let forestProgress = 0; // 0..1, grows as crystals light up
+
+function initBg() {
+  bgW = bgCanvas.width = window.innerWidth;
+  bgH = bgCanvas.height = window.innerHeight;
+  trees = [];
+  fireflies = [];
+
+  // Generate trees
+  for (let i = 0; i < 14; i++) {
+    trees.push({
+      x: (bgW / 13) * i + Math.random() * 40 - 20,
+      baseY: bgH * 0.75 + Math.random() * bgH * 0.1,
+      h: 80 + Math.random() * 120,
+      w: 40 + Math.random() * 50,
+      hue: 145 + Math.random() * 30,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.3 + Math.random() * 0.4,
+      layer: Math.random() < 0.4 ? 0 : 1
+    });
+  }
+
+  // Generate fireflies
+  for (let i = 0; i < 25; i++) {
+    fireflies.push({
+      x: Math.random() * bgW,
+      y: bgH * 0.2 + Math.random() * bgH * 0.6,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.5 + Math.random() * 0.8,
+      r: 1.5 + Math.random() * 2.5,
+      vx: (Math.random() - 0.5) * 0.4,
+      vy: (Math.random() - 0.5) * 0.3
+    });
+  }
+}
+
+let bgTime = 0;
+function drawBg() {
+  bgTime += 0.016;
+
+  // Sky gradient — shifts from twilight to dawn as forest restores
+  const t = forestProgress;
+  const r1 = Math.round(lerp(42, 80, t)), g1 = Math.round(lerp(74, 120, t)), b1 = Math.round(lerp(82, 100, t));
+  const r2 = Math.round(lerp(25, 180, t)), g2 = Math.round(lerp(50, 140, t)), b2 = Math.round(lerp(60, 100, t));
+
+  const skyGrad = bgCtx.createLinearGradient(0, 0, 0, bgH * 0.7);
+  skyGrad.addColorStop(0, `rgb(${r1},${g1},${b1})`);
+  skyGrad.addColorStop(1, `rgb(${r2},${g2},${b2})`);
+  bgCtx.fillStyle = skyGrad;
+  bgCtx.fillRect(0, 0, bgW, bgH);
+
+  // Stars (fade as forest heals)
+  if (forestProgress < 0.8) {
+    bgCtx.fillStyle = `rgba(255,255,230,${0.6 * (1 - forestProgress)})`;
+    for (let i = 0; i < 40; i++) {
+      const sx = (Math.sin(i * 137.5) * 0.5 + 0.5) * bgW;
+      const sy = (Math.cos(i * 97.3) * 0.5 + 0.5) * bgH * 0.5;
+      const br = 0.5 + 0.5 * Math.sin(bgTime * 2 + i);
+      bgCtx.globalAlpha = br * (1 - forestProgress);
+      bgCtx.beginPath();
+      bgCtx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+      bgCtx.fill();
+    }
+    bgCtx.globalAlpha = 1;
+  }
+
+  // Moon/sun
+  const moonX = bgW * 0.8, moonY = bgH * 0.12;
+  const sunAlpha = forestProgress;
+  // Moon
+  bgCtx.globalAlpha = 1 - forestProgress * 0.8;
+  bgCtx.fillStyle = '#e8e8c8';
+  bgCtx.beginPath();
+  bgCtx.arc(moonX, moonY, 28, 0, Math.PI * 2);
+  bgCtx.fill();
+  bgCtx.fillStyle = `rgba(${r1},${g1},${b1},1)`;
+  bgCtx.beginPath();
+  bgCtx.arc(moonX + 10, moonY - 6, 22, 0, Math.PI * 2);
+  bgCtx.fill();
+  bgCtx.globalAlpha = 1;
+
+  // Sun (appears as forest heals)
+  if (forestProgress > 0.1) {
+    bgCtx.globalAlpha = (forestProgress - 0.1) * 1.1;
+    const sunGrad = bgCtx.createRadialGradient(bgW * 0.15, bgH * 0.08, 2, bgW * 0.15, bgH * 0.08, 40);
+    sunGrad.addColorStop(0, '#ffe082');
+    sunGrad.addColorStop(1, 'rgba(255,200,80,0)');
+    bgCtx.fillStyle = sunGrad;
+    bgCtx.fillRect(0, 0, bgW, bgH * 0.3);
+    bgCtx.fillStyle = '#ffe082';
+    bgCtx.beginPath();
+    bgCtx.arc(bgW * 0.15, bgH * 0.08, 24, 0, Math.PI * 2);
+    bgCtx.fill();
+    bgCtx.globalAlpha = 1;
+  }
+
+  // Ground
+  const groundGrad = bgCtx.createLinearGradient(0, bgH * 0.7, 0, bgH);
+  groundGrad.addColorStop(0, `hsl(${140 + t * 20}, ${40 + t * 20}%, ${25 + t * 15}%)`);
+  groundGrad.addColorStop(1, `hsl(${135 + t * 15}, ${35 + t * 15}%, ${20 + t * 10}%)`);
+  bgCtx.fillStyle = groundGrad;
+  bgCtx.fillRect(0, bgH * 0.72, bgW, bgH * 0.28);
+
+  // Draw back trees (layer 0)
+  trees.filter(t => t.layer === 0).forEach(tree => drawTree(tree));
+  // Mist
+  const mistGrad = bgCtx.createLinearGradient(0, bgH * 0.65, 0, bgH * 0.78);
+  mistGrad.addColorStop(0, 'rgba(255,255,255,0)');
+  mistGrad.addColorStop(1, `rgba(200,220,210,${0.25 - forestProgress * 0.15})`);
+  bgCtx.fillStyle = mistGrad;
+  bgCtx.fillRect(0, bgH * 0.65, bgW, bgH * 0.13);
+  // Draw front trees (layer 1)
+  trees.filter(t => t.layer === 1).forEach(tree => drawTree(tree));
+
+  // Fireflies
+  fireflies.forEach(f => {
+    f.x += f.vx; f.y += f.vy;
+    if (f.x < 0) f.x = bgW; if (f.x > bgW) f.x = 0;
+    if (f.y < bgH * 0.1) f.y = bgH * 0.7; if (f.y > bgH * 0.85) f.y = bgH * 0.2;
+    const glow = 0.4 + 0.6 * Math.sin(bgTime * f.speed + f.phase);
+    bgCtx.globalAlpha = glow * 0.8;
+    const fg = bgCtx.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r * 4);
+    fg.addColorStop(0, '#e8ff80');
+    fg.addColorStop(1, 'rgba(200,255,100,0)');
+    bgCtx.fillStyle = fg;
+    bgCtx.beginPath();
+    bgCtx.arc(f.x, f.y, f.r * 4, 0, Math.PI * 2);
+    bgCtx.fill();
+    bgCtx.fillStyle = '#e8ff90';
+    bgCtx.beginPath();
+    bgCtx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+    bgCtx.fill();
+    bgCtx.globalAlpha = 1;
+  });
+
+  requestAnimationFrame(drawBg);
+}
+
+function drawTree(tree) {
+  const sway = Math.sin(bgTime * tree.speed + tree.phase) * 3;
+  const alpha = tree.layer === 0 ? 0.6 : 1;
+  bgCtx.save();
+  bgCtx.globalAlpha = alpha;
+  bgCtx.translate(tree.x, tree.baseY);
+
+  // Trunk
+  bgCtx.fillStyle = `hsl(30, 30%, ${20 + forestProgress * 10}%)`;
+  bgCtx.fillRect(-6 + sway * 0.3, -tree.h * 0.35, 12, tree.h * 0.4);
+
+  // Canopy layers
+  for (let l = 0; l < 3; l++) {
+    const lh = tree.h * (1 - l * 0.3);
+    const lw = tree.w * (0.5 + (2 - l) * 0.25);
+    const ly = -tree.h * (0.3 + l * 0.2);
+    const green = Math.round(lerp(80, 120, forestProgress));
+    bgCtx.fillStyle = `hsl(${tree.hue}, ${35 + forestProgress * 20}%, ${green + l * 8}%)`;
+    bgCtx.beginPath();
+    bgCtx.moveTo(sway, ly - lh * 0.4);
+    bgCtx.lineTo(sway + lw * 0.55, ly + lh * 0.2);
+    bgCtx.lineTo(sway - lw * 0.55, ly + lh * 0.2);
+    bgCtx.closePath();
+    bgCtx.fill();
+  }
+
+  // Flowers if forest progressing
+  if (forestProgress > 0.3) {
+    for (let f = 0; f < 3; f++) {
+      const fx = (f - 1) * tree.w * 0.3 + sway * 0.5;
+      const fy = tree.h * 0.05 + f * 5;
+      bgCtx.globalAlpha = (forestProgress - 0.3) * alpha;
+      bgCtx.fillStyle = f % 2 === 0 ? '#f5c0d0' : '#f0e080';
+      bgCtx.beginPath();
+      bgCtx.arc(fx, fy, 4, 0, Math.PI * 2);
+      bgCtx.fill();
+    }
+    bgCtx.globalAlpha = alpha;
+  }
+
+  bgCtx.restore();
+}
+
+function lerp(a, b, t) { return a + (b - a) * Math.clamp(t, 0, 1); }
+Math.clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// ============================================================
+// AUDIO
+// ============================================================
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, dur, type='sine', vol=0.3) {
+  if (!state.soundOn) return;
+  try {
+    const ctx = getAudioCtx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.start(); o.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+
+function playCorrect() {
+  playTone(523, 0.1); setTimeout(() => playTone(659, 0.1), 80); setTimeout(() => playTone(784, 0.2), 160);
+}
+function playWrong() {
+  playTone(220, 0.15, 'sawtooth', 0.15); setTimeout(() => playTone(200, 0.15, 'sawtooth', 0.1), 100);
+}
+function playComplete() {
+  [523,587,659,698,784].forEach((f,i) => setTimeout(() => playTone(f, 0.15), i*80));
+}
+function playCrystal() {
+  playTone(880, 0.08); setTimeout(() => playTone(1046, 0.12), 60); setTimeout(() => playTone(1318, 0.2), 120);
+}
+
+function toggleSound() {
+  state.soundOn = !state.soundOn;
+  document.getElementById('sound-btn').textContent = state.soundOn ? '🔊' : '🔇';
+}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function spawnConfetti(x, y, count = 12) {
+  const colors = ['#f5a623','#5B8DB8','#5a9e6e','#8b6ab5','#f0c890','#e8d4a8'];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.left = (x + (Math.random()-0.5)*80) + 'px';
+    el.style.top = (y - 20) + 'px';
+    el.style.background = colors[Math.floor(Math.random()*colors.length)];
+    el.style.transform = `rotate(${Math.random()*360}deg)`;
+    el.style.animationDelay = (Math.random()*0.3) + 's';
+    document.getElementById('app').appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function transitionTo(fn) {
+  const t = document.getElementById('transition');
+  t.classList.add('show');
+  setTimeout(() => { fn(); t.classList.remove('show'); }, 400);
+}
+
+function startGame() {
+  playTone(440, 0.2);
+  state.currentMiniGame = 0;
+  state.totalCorrect = 0;
+  state.totalAttempts = 0;
+  state.totalHints = 0;
+  state.miniStats = [];
+  forestProgress = 0;
+  document.getElementById('hud').style.display = 'flex';
+  document.querySelectorAll('.crystal').forEach(c => c.classList.remove('lit'));
+  transitionTo(() => {
+    showScreen('game-screen');
+    loadMiniGame(0);
+  });
+}
+
+function restartGame() {
+  transitionTo(() => {
+    showScreen('start-screen');
+    document.getElementById('hud').style.display = 'none';
+  });
+}
+
+function nextMiniGame() {
+  document.getElementById('mini-complete').classList.remove('show');
+  state.currentMiniGame++;
+  if (state.currentMiniGame >= MINI_GAMES.length) {
+    transitionTo(showResults);
+  } else {
+    transitionTo(() => loadMiniGame(state.currentMiniGame));
+  }
+}
+
+function lightCrystal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.classList.add('lit');
+    el.textContent = '✨';
+    playCrystal();
+    forestProgress = state.currentMiniGame / (MINI_GAMES.length - 1);
+  }
+}
+
+function showMiniComplete(emoji, title, text) {
+  playComplete();
+  const mc = document.getElementById('mini-complete');
+  document.getElementById('mc-emoji').textContent = emoji;
+  document.getElementById('mc-title').textContent = title;
+  document.getElementById('mc-text').textContent = text;
+  mc.classList.add('show');
+}
+
+// ============================================================
+// LOAD MINI-GAME
+// ============================================================
+function loadMiniGame(idx) {
+  const mg = MINI_GAMES[idx];
+  state.mg = { correct: 0, attempts: 0, hints: 0, startTime: Date.now() };
+  const area = document.getElementById('game-area');
+  area.innerHTML = '';
+
+  switch (mg.type) {
+    case 'findMain': renderFindMain(area, mg); break;
+    case 'drawLink': renderDrawLink(area, mg); break;
+    case 'sort': renderSort(area, mg); break;
+    case 'build': renderBuild(area, mg); break;
+    case 'fixError': renderFixError(area, mg); break;
+    case 'compose': renderCompose(area, mg); break;
+  }
+}
+
+// ============================================================
+// MINI-GAME 1: FIND MAIN MEMBERS
+// ============================================================
+function renderFindMain(area, mg) {
+  let dataIdx = 0;
+  let selectedSubjects = new Set();
+  let selectedPredicates = new Set();
+  let answered = false;
+  let hintsUsed = 0;
+  let score = 0;
+
+  function render() {
+    const data = FIND_MAIN_DATA[dataIdx];
+    area.innerHTML = `
+      <div class="game-card">
+        <div class="mini-title">${mg.icon} ${mg.title}</div>
+        <p class="instruction">${mg.desc}</p>
+        <div class="legend">
+          <div class="legend-item subject">👤 Подлежащее — <em>кто? что?</em></div>
+          <div class="legend-item predicate">⚡ Сказуемое — <em>что делает?</em></div>
+        </div>
+        <div class="sentence-wrap" id="sentence-wrap"></div>
+        <div class="feedback-box" id="feedback"></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pg" style="width:${(dataIdx/FIND_MAIN_DATA.length)*100}%"></div></div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="mg1Hint()">💡 Подсказка</button>
+          <button class="btn-primary" id="check-btn" onclick="mg1Check()">Проверить ✓</button>
+        </div>
+        <div style="text-align:center;font-size:13px;color:var(--terra);margin-top:6px;">${dataIdx+1} из ${FIND_MAIN_DATA.length}</div>
+      </div>
+    `;
+
+    selectedSubjects = new Set();
+    selectedPredicates = new Set();
+    answered = false;
+
+    const wrap = document.getElementById('sentence-wrap');
+    data.words.forEach((w, i) => {
+      const btn = document.createElement('div');
+      btn.className = 'word-token';
+      btn.textContent = w;
+      btn.dataset.idx = i;
+      btn.onclick = () => toggleWord(i, btn, data);
+      wrap.appendChild(btn);
+    });
+  }
+
+  window.toggleWord = function(i, btn, data) {
+    if (answered) return;
+    playTone(400 + i*30, 0.05);
+    if (selectedSubjects.has(i)) {
+      selectedSubjects.delete(i);
+      btn.className = 'word-token';
+    } else if (selectedPredicates.has(i)) {
+      selectedPredicates.delete(i);
+      btn.className = 'word-token';
+    } else if (data.subject.includes(i) && !selectedSubjects.has(i)) {
+      // Try subject first time clicking
+      selectedSubjects.add(i);
+      btn.className = 'word-token subject';
+    } else {
+      selectedPredicates.add(i);
+      btn.className = 'word-token predicate';
+    }
+  };
+
+  window.mg1Hint = function() {
+    hintsUsed++; state.mg.hints++;
+    const data = FIND_MAIN_DATA[dataIdx];
+    const fb = document.getElementById('feedback');
+    fb.className = 'feedback-box hint visible';
+    fb.innerHTML = `💡 Задай вопросы: <strong>${data.subjectQ}</strong> → подлежащее, <strong>${data.predicateQ}</strong> → сказуемое`;
+    state.totalHints++;
+  };
+
+  window.mg1Check = function() {
+    const data = FIND_MAIN_DATA[dataIdx];
+    state.mg.attempts++;
+    state.totalAttempts++;
+    const subOk = data.subject.every(i => selectedSubjects.has(i)) && selectedSubjects.size === data.subject.length;
+    const predOk = data.predicate.every(i => selectedPredicates.has(i)) && selectedPredicates.size === data.predicate.length;
+
+    const fb = document.getElementById('feedback');
+    if (subOk && predOk) {
+      playCorrect();
+      score++;
+      state.mg.correct++;
+      state.totalCorrect++;
+      fb.className = 'feedback-box correct visible';
+      fb.innerHTML = `✅ Отлично! <strong>${data.words[data.subject[0]]}</strong> — подлежащее (${data.subjectQ}), <strong>${data.words[data.predicate[0]]}</strong> — сказуемое (${data.predicateQ})`;
+      // Mark words
+      data.subject.forEach(i => {
+        const el = document.querySelector(`[data-idx="${i}"]`);
+        if (el) {
+          el.className = 'word-token subject';
+          const lbl = document.createElement('span');
+          lbl.className = 'member-label';
+          lbl.style.background = 'var(--blue-member)';
+          lbl.textContent = '👤';
+          el.appendChild(lbl);
+        }
+      });
+      data.predicate.forEach(i => {
+        const el = document.querySelector(`[data-idx="${i}"]`);
+        if (el) {
+          el.className = 'word-token predicate';
+          const lbl = document.createElement('span');
+          lbl.className = 'member-label';
+          lbl.style.background = 'var(--green-member)';
+          lbl.textContent = '⚡';
+          el.appendChild(lbl);
+        }
+      });
+      answered = true;
+      const btn = document.getElementById('check-btn');
+      btn.textContent = dataIdx < FIND_MAIN_DATA.length - 1 ? 'Следующее →' : 'Завершить!';
+      btn.onclick = () => {
+        dataIdx++;
+        if (dataIdx < FIND_MAIN_DATA.length) {
+          render();
+        } else {
+          finishMiniGame1(score);
+        }
+      };
+    } else {
+      playWrong();
+      fb.className = 'feedback-box wrong visible';
+      if (!subOk && !predOk) fb.innerHTML = '❌ Попробуй ещё раз. Сначала найди того, кто совершает действие!';
+      else if (!subOk) fb.innerHTML = '❌ С подлежащим не так. Спроси: кто или что выполняет действие?';
+      else fb.innerHTML = '❌ Со сказуемым не так. Спроси: что делает подлежащее?';
+      const wrap = document.getElementById('sentence-wrap');
+      wrap.classList.add('error-highlight');
+      setTimeout(() => wrap.classList.remove('error-highlight'), 500);
+    }
+  };
+
+  function finishMiniGame1(score) {
+    saveMiniStat(`Испытание 1`, score, FIND_MAIN_DATA.length, hintsUsed);
+    lightCrystal(mg.crystal);
+    const pct = Math.round(score / FIND_MAIN_DATA.length * 100);
+    showMiniComplete('🌿', 'Главные члены найдены!',
+      `Верно: ${score} из ${FIND_MAIN_DATA.length} (${pct}%). Лес начинает восстанавливаться!`);
+  }
+
+  render();
+}
+
+// ============================================================
+// MINI-GAME 2: DRAW LINK
+// ============================================================
+function renderDrawLink(area, mg) {
+  let dataIdx = 0;
+  let selectedFrom = null;
+  let drawnLinks = [];
+  let hintsUsed = 0;
+  let score = 0;
+
+  function render() {
+    const data = DRAW_LINK_DATA[dataIdx];
+    area.innerHTML = `
+      <div class="game-card">
+        <div class="mini-title">${mg.icon} ${mg.title}</div>
+        <p class="instruction">Нажми на главное слово, затем на зависимое — проведи стрелку-связь! Задай вопрос от главного к зависимому.</p>
+        <div class="sentence-wrap" id="sentence-wrap"></div>
+        <div id="links-display" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;min-height:30px;"></div>
+        <div class="feedback-box" id="feedback"></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pg" style="width:${(dataIdx/DRAW_LINK_DATA.length)*100}%"></div></div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="mg2Hint()">💡 Подсказка</button>
+          <button class="btn-primary" id="check-btn" onclick="mg2Check()">Проверить ✓</button>
+        </div>
+        <p style="text-align:center;font-size:12px;color:var(--text-mid);margin-top:6px;">${dataIdx+1} из ${DRAW_LINK_DATA.length} | Связей осталось: <span id="links-left">${data.pairs.length + data.mainPairs.length}</span></p>
+      </div>
+    `;
+
+    selectedFrom = null;
+    drawnLinks = [];
+
+    const wrap = document.getElementById('sentence-wrap');
+    data.sentence.forEach((w, i) => {
+      const btn = document.createElement('div');
+      btn.className = 'word-token';
+      btn.textContent = w;
+      btn.dataset.idx = i;
+      btn.onclick = () => selectWord(i, btn, data);
+      wrap.appendChild(btn);
+    });
+  }
+
+  window.selectWord = function(i, btn, data) {
+    if (selectedFrom === null) {
+      selectedFrom = i;
+      document.querySelectorAll('.word-token').forEach(t => t.style.outline = '');
+      btn.style.outline = '3px solid var(--terra)';
+      playTone(440, 0.06);
+    } else {
+      if (selectedFrom === i) {
+        selectedFrom = null;
+        document.querySelectorAll('.word-token').forEach(t => t.style.outline = '');
+        return;
+      }
+      const from = selectedFrom, to = i;
+      selectedFrom = null;
+      document.querySelectorAll('.word-token').forEach(t => t.style.outline = '');
+
+      // Find matching pair
+      const allPairs = [...data.pairs, ...data.mainPairs];
+      const match = allPairs.find(p =>
+        (p.from === from && p.to === to) || (p.from === to && p.to === from)
+      );
+      const alreadyDrawn = drawnLinks.find(l =>
+        (l.from === from && l.to === to) || (l.from === to && l.to === from)
+      );
+
+      if (alreadyDrawn) {
+        showFeedback('hint', '💡 Эта связь уже нарисована!');
+        return;
+      }
+
+      if (match) {
+        drawnLinks.push({ from, to, q: match.q, type: match.type });
+        playCorrect();
+        state.mg.correct++;
+        state.totalCorrect++;
+        score++;
+        state.totalAttempts++;
+        state.mg.attempts++;
+
+        // Visual
+        const fromEl = document.querySelector(`[data-idx="${from}"]`);
+        const toEl = document.querySelector(`[data-idx="${to}"]`);
+        const typeClass = match.type === 'predicate' ? 'predicate' : match.type;
+        if (fromEl) fromEl.className = `word-token ${typeClass}`;
+        if (toEl) toEl.className = `word-token ${typeClass}`;
+
+        // Show link badge
+        const ld = document.getElementById('links-display');
+        const badge = document.createElement('div');
+        badge.style.cssText = `padding:4px 10px;background:rgba(255,255,255,0.7);border-radius:20px;font-size:13px;font-weight:700;border:2px solid var(--terra);color:var(--text-dark);`;
+        badge.innerHTML = `${data.sentence[from]} <span style="color:var(--terra);">—${match.q}→</span> ${data.sentence[to]}`;
+        ld.appendChild(badge);
+
+        showFeedback('correct', `✅ Верно! ${data.sentence[from]} —[${match.q}]→ ${data.sentence[to]}`);
+
+        const remaining = ([...data.pairs, ...data.mainPairs].length - drawnLinks.length);
+        document.getElementById('links-left').textContent = remaining;
+
+        if (remaining <= 0) {
+          setTimeout(() => finishMiniGame2(score), 800);
+        }
+      } else {
+        playWrong();
+        state.totalAttempts++;
+        state.mg.attempts++;
+        showFeedback('wrong', '❌ Эти слова не связаны напрямую. Попробуй другую пару!');
+        const toEl = document.querySelector(`[data-idx="${to}"]`);
+        if (toEl) { toEl.classList.add('error-highlight'); setTimeout(() => toEl.classList.remove('error-highlight'), 500); }
+      }
+    }
+  };
+
+  function showFeedback(type, text) {
+    const fb = document.getElementById('feedback');
+    if (!fb) return;
+    fb.className = `feedback-box ${type} visible`;
+    fb.innerHTML = text;
+  }
+
+  window.mg2Hint = function() {
+    hintsUsed++; state.mg.hints++; state.totalHints++;
+    const data = DRAW_LINK_DATA[dataIdx];
+    const allPairs = [...data.pairs, ...data.mainPairs];
+    const undrawn = allPairs.find(p => !drawnLinks.find(l => l.from===p.from && l.to===p.to));
+    if (undrawn) {
+      showFeedback('hint', `💡 Попробуй связать «${data.sentence[undrawn.from]}» и «${data.sentence[undrawn.to]}» — вопрос: ${undrawn.q}`);
+    }
+  };
+
+  window.mg2Check = function() {
+    const data = DRAW_LINK_DATA[dataIdx];
+    const total = data.pairs.length + data.mainPairs.length;
+    if (drawnLinks.length < total) {
+      showFeedback('hint', `💡 Нужно провести ещё ${total - drawnLinks.length} связей!`);
+    } else {
+      dataIdx++;
+      if (dataIdx < DRAW_LINK_DATA.length) render();
+      else finishMiniGame2(score);
+    }
+  };
+
+  function finishMiniGame2(score) {
+    saveMiniStat('Испытание 2', score, DRAW_LINK_DATA.reduce((s,d) => s+d.pairs.length+d.mainPairs.length,0), hintsUsed);
+    lightCrystal(mg.crystal);
+    showMiniComplete('🍄', 'Нити протянуты!', `Найдено связей: ${score}. Слова снова стоят в порядке!`);
+  }
+
+  render();
+}
+
+// ============================================================
+// MINI-GAME 3: SORT
+// ============================================================
+function renderSort(area, mg) {
+  let dataIdx = 0;
+  let hintsUsed = 0;
+  let score = 0;
+  let totalItems = 0;
+  let placed = {};
+  let dragItem = null;
+  let dragEl = null;
+
+  function render() {
+    const data = SORT_DATA[dataIdx];
+    placed = {};
+    totalItems += data.items.length;
+    area.innerHTML = `
+      <div class="game-card">
+        <div class="mini-title">${mg.icon} ${mg.title}</div>
+        <p class="instruction"><em>${data.sentence}</em></p>
+        <p style="font-size:13px;color:var(--text-mid);margin-bottom:8px;">Перетащи второстепенные члены в нужные домики:</p>
+        <div class="houses-wrap">
+          <div class="house definition" id="house-definition" data-type="definition">
+            <div class="house-title">🏷️ Определение</div>
+            <div class="house-question">какой? какая? чей?</div>
+            <div class="house-items" id="items-definition"></div>
+          </div>
+          <div class="house addition" id="house-addition" data-type="addition">
+            <div class="house-title">📦 Дополнение</div>
+            <div class="house-question">кого? чего? кому? что?</div>
+            <div class="house-items" id="items-addition"></div>
+          </div>
+          <div class="house circumstance" id="house-circumstance" data-type="circumstance">
+            <div class="house-title">🗺️ Обстоятельство</div>
+            <div class="house-question">где? когда? как? куда?</div>
+            <div class="house-items" id="items-circumstance"></div>
+          </div>
+        </div>
+        <div class="word-bank" id="word-bank"></div>
+        <div class="feedback-box" id="feedback"></div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="mg3Hint()">💡 Подсказка</button>
+          <button class="btn-primary" id="check-btn" onclick="mg3Check()">Проверить ✓</button>
+        </div>
+        <p style="text-align:center;font-size:12px;color:var(--text-mid);margin-top:4px;">${dataIdx+1} из ${SORT_DATA.length}</p>
+      </div>
+    `;
+
+    const bank = document.getElementById('word-bank');
+    data.items.forEach((item, i) => {
+      const el = createSortItem(item, i);
+      bank.appendChild(el);
+    });
+
+    setupHouseDrop(data);
+  }
+
+  function createSortItem(item, idx) {
+    const el = document.createElement('div');
+    el.className = 'sort-item';
+    el.textContent = item.word;
+    el.dataset.idx = idx;
+    el.draggable = true;
+
+    el.addEventListener('dragstart', e => {
+      dragItem = idx;
+      dragEl = el;
+      setTimeout(() => el.classList.add('dragging'), 0);
+    });
+    el.addEventListener('dragend', () => {
+      el.classList.remove('dragging');
+      dragItem = null;
+      dragEl = null;
+    });
+
+    // Touch support
+    el.addEventListener('touchstart', e => {
+      dragItem = idx;
+      dragEl = el;
+      el.style.opacity = '0.6';
+    }, {passive:true});
+
+    el.addEventListener('touchmove', e => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      el.style.position = 'fixed';
+      el.style.left = (touch.clientX - 30) + 'px';
+      el.style.top = (touch.clientY - 20) + 'px';
+      el.style.zIndex = 500;
+
+      document.querySelectorAll('.house').forEach(h => {
+        const r = h.getBoundingClientRect();
+        if (touch.clientX > r.left && touch.clientX < r.right &&
+            touch.clientY > r.top && touch.clientY < r.bottom) {
+          h.classList.add('drag-over');
+        } else {
+          h.classList.remove('drag-over');
+        }
+      });
+    }, {passive:false});
+
+    el.addEventListener('touchend', e => {
+      const touch = e.changedTouches[0];
+      el.style.position = '';
+      el.style.left = '';
+      el.style.top = '';
+      el.style.zIndex = '';
+      el.style.opacity = '';
+
+      document.querySelectorAll('.house').forEach(h => {
+        h.classList.remove('drag-over');
+        const r = h.getBoundingClientRect();
+        if (touch.clientX > r.left && touch.clientX < r.right &&
+            touch.clientY > r.top && touch.clientY < r.bottom) {
+          dropOnHouse(h.dataset.type, dragItem);
+        }
+      });
+      dragItem = null; dragEl = null;
+    }, {passive:true});
+
+    return el;
+  }
+
+  function setupHouseDrop(data) {
+    document.querySelectorAll('.house').forEach(house => {
+      house.addEventListener('dragover', e => { e.preventDefault(); house.classList.add('drag-over'); });
+      house.addEventListener('dragleave', () => house.classList.remove('drag-over'));
+      house.addEventListener('drop', e => {
+        e.preventDefault();
+        house.classList.remove('drag-over');
+        dropOnHouse(house.dataset.type, dragItem);
+      });
+    });
+  }
+
+  function dropOnHouse(houseType, itemIdx) {
+    if (itemIdx === null || itemIdx === undefined) return;
+    const data = SORT_DATA[dataIdx];
+    const item = data.items[itemIdx];
+    if (!item) return;
+    if (placed[itemIdx] !== undefined) return; // already placed
+
+    state.mg.attempts++;
+    state.totalAttempts++;
+
+    if (item.type === houseType) {
+      playCorrect();
+      placed[itemIdx] = houseType;
+      score++;
+      state.mg.correct++;
+      state.totalCorrect++;
+
+      const container = document.getElementById(`items-${houseType}`);
+      const badge = document.createElement('div');
+      badge.className = `sort-item`;
+      badge.style.cssText = `cursor:default; border-color: ${houseType==='definition'?'var(--purple-member)':houseType==='addition'?'var(--orange-member)':'var(--sky-deep)'};`;
+      badge.textContent = item.word;
+      container.appendChild(badge);
+
+      // Remove from bank
+      const bankEl = document.querySelector(`[data-idx="${itemIdx}"]`);
+      if (bankEl && bankEl.parentElement.id === 'word-bank') bankEl.remove();
+
+      spawnConfetti(window.innerWidth/2, window.innerHeight/2, 8);
+      showFeedback('correct', `✅ Верно! «${item.word}» — это ${houseType==='definition'?'определение':houseType==='addition'?'дополнение':'обстоятельство'} (вопрос: ${item.q} ← от «${item.from}»)`);
+
+      if (Object.keys(placed).length === data.items.length) {
+        setTimeout(() => {
+          dataIdx++;
+          if (dataIdx < SORT_DATA.length) render();
+          else finishMiniGame3();
+        }, 1000);
+      }
+    } else {
+      playWrong();
+      showFeedback('wrong', `❌ Не совсем! Задай вопрос от слова «${item.from}» → «${item.q}» — в какой домик?`);
+      const houseEl = document.getElementById(`house-${houseType}`);
+      if (houseEl) { houseEl.classList.add('error-highlight'); setTimeout(() => houseEl.classList.remove('error-highlight'), 500); }
+    }
+  }
+
+  function showFeedback(type, text) {
+    const fb = document.getElementById('feedback');
+    if (!fb) return;
+    fb.className = `feedback-box ${type} visible`;
+    fb.innerHTML = text;
+  }
+
+  window.mg3Hint = function() {
+    const data = SORT_DATA[dataIdx];
+    hintsUsed++; state.mg.hints++; state.totalHints++;
+    const unplaced = data.items.find((item, i) => placed[i] === undefined);
+    if (unplaced) {
+      showFeedback('hint', `💡 «${unplaced.word}» — задай вопрос от «${unplaced.from}»: ${unplaced.q}`);
+    }
+  };
+
+  window.mg3Check = function() {
+    const data = SORT_DATA[dataIdx];
+    const unplaced = data.items.filter((_, i) => placed[i] === undefined);
+    if (unplaced.length > 0) {
+      showFeedback('hint', `💡 Осталось расставить: ${unplaced.map(u=>u.word).join(', ')}`);
+    } else {
+      dataIdx++;
+      if (dataIdx < SORT_DATA.length) render();
+      else finishMiniGame3();
+    }
+  };
+
+  function finishMiniGame3() {
+    saveMiniStat('Испытание 3', score, totalItems, hintsUsed);
+    lightCrystal(mg.crystal);
+    const pct = Math.round(score/totalItems*100);
+    showMiniComplete('🌲', 'Домики заполнены!', `Верно: ${score} из ${totalItems} (${pct}%). Второстепенные члены по местам!`);
+  }
+
+  render();
+}
+
+// ============================================================
+// MINI-GAME 4: BUILD SENTENCE (drag & drop + touch)
+// ============================================================
+function renderBuild(area, mg) {
+  let dataIdx = 0;
+  let hintsUsed = 0;
+  let score = 0;
+  let slots = [];   // array of word strings or null
+  let bank = [];    // array of word strings remaining
+  let dragWord = null;   // word being dragged
+  let dragSource = null; // 'bank' | {slot: idx}
+
+  function render() {
+    const data = BUILD_DATA[dataIdx];
+    slots = new Array(data.words.length).fill(null);
+    bank = [...data.words].sort(() => Math.random() - 0.5);
+    dragWord = null; dragSource = null;
+
+    area.innerHTML = `
+      <div class="game-card">
+        <div class="mini-title">${mg.icon} ${mg.title}</div>
+        <p class="instruction">Перетащи слова из банка в нужном порядке — составь правильное предложение!</p>
+        <div class="builder-slots" id="slots-wrap"></div>
+        <div class="word-bank" id="bank-wrap" style="min-height:48px;"></div>
+        <div class="feedback-box" id="feedback"></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pg" style="width:${(dataIdx/BUILD_DATA.length)*100}%"></div></div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="mg4Hint()">💡 Подсказка</button>
+          <button class="btn-secondary" onclick="mg4Clear()">🔄 Очистить</button>
+          <button class="btn-primary" id="check-btn" onclick="mg4Check()">Проверить ✓</button>
+        </div>
+        <p style="text-align:center;font-size:12px;color:var(--text-mid);margin-top:4px;">${dataIdx+1} из ${BUILD_DATA.length}</p>
+      </div>
+    `;
+
+    renderSlots();
+    renderBank();
+  }
+
+  function renderSlots() {
+    const wrap = document.getElementById('slots-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    slots.forEach((word, i) => {
+      const slot = document.createElement('div');
+      slot.className = word ? 'slot filled' : 'slot';
+      slot.textContent = word || '?';
+      slot.dataset.slotIdx = i;
+
+      // Desktop drag-over / drop
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.style.borderColor = 'var(--terra)'; });
+      slot.addEventListener('dragleave', () => { slot.style.borderColor = ''; });
+      slot.addEventListener('drop', e => {
+        e.preventDefault();
+        slot.style.borderColor = '';
+        dropOnSlot(i);
+      });
+
+      // Click to remove filled slot back to bank
+      slot.addEventListener('click', () => {
+        if (slots[i]) {
+          bank.push(slots[i]);
+          slots[i] = null;
+          renderSlots(); renderBank();
+        }
+      });
+
+      // Draggable if filled (slot → slot or slot → bank)
+      if (word) {
+        slot.draggable = true;
+        slot.addEventListener('dragstart', () => {
+          dragWord = word;
+          dragSource = { slot: i };
+          setTimeout(() => slot.classList.add('dragging'), 0);
+        });
+        slot.addEventListener('dragend', () => slot.classList.remove('dragging'));
+        addTouchDragSlot(slot, i);
+      }
+
+      wrap.appendChild(slot);
+    });
+
+    // Bank drop zone (drag from slot back to bank)
+    const bankWrap = document.getElementById('bank-wrap');
+    if (bankWrap) {
+      bankWrap.addEventListener('dragover', e => { e.preventDefault(); bankWrap.style.outline = '2px dashed var(--terra)'; });
+      bankWrap.addEventListener('dragleave', () => { bankWrap.style.outline = ''; });
+      bankWrap.addEventListener('drop', e => {
+        e.preventDefault();
+        bankWrap.style.outline = '';
+        if (dragSource && dragSource.slot !== undefined) {
+          bank.push(dragWord);
+          slots[dragSource.slot] = null;
+          dragWord = null; dragSource = null;
+          renderSlots(); renderBank();
+        }
+      });
+    }
+  }
+
+  function renderBank() {
+    const wrap = document.getElementById('bank-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    bank.forEach(word => {
+      const el = document.createElement('div');
+      el.className = 'sort-item';
+      el.textContent = word;
+      el.draggable = true;
+      el.dataset.word = word;
+
+      el.addEventListener('dragstart', () => {
+        dragWord = word;
+        dragSource = 'bank';
+        setTimeout(() => el.classList.add('dragging'), 0);
+      });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+
+      addTouchDragBank(el, word);
+      wrap.appendChild(el);
+    });
+  }
+
+  function dropOnSlot(slotIdx) {
+    if (!dragWord) return;
+    // If something already in slot, swap it back
+    if (slots[slotIdx]) {
+      if (dragSource === 'bank') {
+        bank.push(slots[slotIdx]);
+      } else if (dragSource && dragSource.slot !== undefined) {
+        slots[dragSource.slot] = slots[slotIdx];
+      }
+    } else {
+      if (dragSource && dragSource.slot !== undefined) {
+        slots[dragSource.slot] = null;
+      }
+    }
+    slots[slotIdx] = dragWord;
+    if (dragSource === 'bank') {
+      const idx = bank.indexOf(dragWord);
+      if (idx > -1) bank.splice(idx, 1);
+    }
+    dragWord = null; dragSource = null;
+    playTone(440, 0.05);
+    renderSlots(); renderBank();
+  }
+
+  // Touch drag for bank items
+  function addTouchDragBank(el, word) {
+    let ghost = null;
+    el.addEventListener('touchstart', e => {
+      dragWord = word; dragSource = 'bank';
+      ghost = createGhost(el);
+    }, {passive:true});
+    el.addEventListener('touchmove', e => {
+      e.preventDefault();
+      moveGhost(ghost, e.touches[0]);
+      highlightSlotUnder(e.touches[0]);
+    }, {passive:false});
+    el.addEventListener('touchend', e => {
+      removeGhost(ghost); ghost = null;
+      clearSlotHighlight();
+      const touch = e.changedTouches[0];
+      const slotEl = getSlotUnder(touch);
+      if (slotEl) dropOnSlot(parseInt(slotEl.dataset.slotIdx));
+      else { dragWord = null; dragSource = null; }
+    }, {passive:true});
+  }
+
+  // Touch drag for slot items
+  function addTouchDragSlot(el, slotIdx) {
+    let ghost = null;
+    el.addEventListener('touchstart', e => {
+      dragWord = slots[slotIdx]; dragSource = { slot: slotIdx };
+      ghost = createGhost(el);
+    }, {passive:true});
+    el.addEventListener('touchmove', e => {
+      e.preventDefault();
+      moveGhost(ghost, e.touches[0]);
+      highlightSlotUnder(e.touches[0]);
+    }, {passive:false});
+    el.addEventListener('touchend', e => {
+      removeGhost(ghost); ghost = null;
+      clearSlotHighlight();
+      const touch = e.changedTouches[0];
+      const slotEl = getSlotUnder(touch);
+      if (slotEl) dropOnSlot(parseInt(slotEl.dataset.slotIdx));
+      else {
+        // Drop back to bank
+        bank.push(slots[slotIdx]);
+        slots[slotIdx] = null;
+        dragWord = null; dragSource = null;
+        renderSlots(); renderBank();
+      }
+    }, {passive:true});
+  }
+
+  function createGhost(el) {
+    const g = el.cloneNode(true);
+    g.style.cssText = `position:fixed;pointer-events:none;z-index:999;opacity:0.85;transform:scale(1.08);transition:none;`;
+    document.body.appendChild(g);
+    return g;
+  }
+  function moveGhost(ghost, touch) {
+    if (!ghost) return;
+    ghost.style.left = (touch.clientX - ghost.offsetWidth/2) + 'px';
+    ghost.style.top = (touch.clientY - ghost.offsetHeight/2) + 'px';
+  }
+  function removeGhost(ghost) { if (ghost) ghost.remove(); }
+  function getSlotUnder(touch) {
+    return document.elementFromPoint(touch.clientX, touch.clientY)?.closest('[data-slot-idx]');
+  }
+  function highlightSlotUnder(touch) {
+    clearSlotHighlight();
+    const el = getSlotUnder(touch);
+    if (el) el.style.borderColor = 'var(--terra)';
+  }
+  function clearSlotHighlight() {
+    document.querySelectorAll('[data-slot-idx]').forEach(s => s.style.borderColor = '');
+  }
+
+  window.mg4Hint = function() {
+    const data = BUILD_DATA[dataIdx];
+    hintsUsed++; state.mg.hints++; state.totalHints++;
+    const fb = document.getElementById('feedback');
+    if (fb) {
+      fb.className = 'feedback-box hint visible';
+      fb.innerHTML = `💡 ${data.hint}. Первое слово — «${data.words[data.correct[0]]}»`;
+    }
+  };
+
+  window.mg4Clear = function() {
+    const data = BUILD_DATA[dataIdx];
+    slots = new Array(data.words.length).fill(null);
+    bank = [...data.words].sort(() => Math.random() - 0.5);
+    dragWord = null; dragSource = null;
+    renderSlots(); renderBank();
+  };
+
+  window.mg4Check = function() {
+    const data = BUILD_DATA[dataIdx];
+    const slotWords = slots.map(s => s || '');
+    const correctWords = data.correct.map(i => data.words[i]);
+    state.mg.attempts++; state.totalAttempts++;
+
+    if (slots.some(s => !s)) {
+      const fb = document.getElementById('feedback');
+      if (fb) { fb.className = 'feedback-box hint visible'; fb.innerHTML = '💡 Заполни все ячейки!'; }
+      return;
+    }
+
+    let ok = JSON.stringify(slotWords) === JSON.stringify(correctWords);
+    const fb = document.getElementById('feedback');
+    if (ok) {
+      playCorrect(); score++; state.mg.correct++; state.totalCorrect++;
+      if (fb) { fb.className = 'feedback-box correct visible'; fb.innerHTML = `✅ Верно! «${correctWords.join(' ')}» — правильный порядок!`; }
+      spawnConfetti(window.innerWidth/2, window.innerHeight/2, 12);
+      setTimeout(() => {
+        dataIdx++;
+        if (dataIdx < BUILD_DATA.length) render();
+        else finishMiniGame4();
+      }, 1200);
+    } else {
+      playWrong();
+      if (fb) { fb.className = 'feedback-box wrong visible'; fb.innerHTML = `❌ Почти! Попробуй переставить слова. Найди подлежащее и сказуемое — они помогут.`; }
+    }
+  };
+
+  function finishMiniGame4() {
+    saveMiniStat('Испытание 4', score, BUILD_DATA.length, hintsUsed);
+    lightCrystal(mg.crystal);
+    const pct = Math.round(score/BUILD_DATA.length*100);
+    showMiniComplete('🏰', 'Предложения собраны!', `Верно: ${score} из ${BUILD_DATA.length} (${pct}%). Замок Слова стоит крепко!`);
+  }
+
+  render();
+}
+
+// ============================================================
+// MINI-GAME 5: FIX ERROR
+// ============================================================
+function renderFixError(area, mg) {
+  let dataIdx = 0;
+  let hintsUsed = 0;
+  let score = 0;
+  let answered = false;
+
+  // Labels shown on each word — one label is wrong (but all labels look identical style)
+  const LABELS = [
+    // sentence 0: Маленькая мышка нашла сыр в норке
+    // wrongIndex=0 (Маленькая подписана как "Сказуемое", правильно "Определение")
+    ['Сказуемое','Подлежащее','Сказуемое','Дополнение','—','Обстоятельство'],
+    // sentence 1: Синта летела быстро над лесом
+    // wrongIndex=2 (быстро подписана как "Дополнение", правильно "Обстоятельство")
+    ['Подлежащее','Сказуемое','Дополнение','—','Обстоятельство'],
+    // sentence 2: Добрый волшебник подарил красивую книгу
+    // wrongIndex=3 (красивую подписана как "Подлежащее", правильно "Определение")
+    ['Определение','Подлежащее','Сказуемое','Подлежащее','Дополнение'],
+  ];
+
+  function render() {
+    const data = FIX_DATA[dataIdx];
+    answered = false;
+    area.innerHTML = `
+      <div class="game-card">
+        <div class="mini-title">${mg.icon} ${mg.title}</div>
+        <p class="instruction">В разборе предложения есть ошибка! Нажми на слово с неверной подписью, затем выбери правильный член предложения.</p>
+        <div class="sentence-wrap" id="sentence-wrap"></div>
+        <div id="options-wrap" style="display:none;margin-top:12px;"></div>
+        <div class="feedback-box" id="feedback"></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pg" style="width:${(dataIdx/FIX_DATA.length)*100}%"></div></div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="mg5Hint()">💡 Подсказка</button>
+        </div>
+        <p style="text-align:center;font-size:12px;color:var(--text-mid);margin-top:4px;">${dataIdx+1} из ${FIX_DATA.length}</p>
+      </div>
+    `;
+
+    const wrap = document.getElementById('sentence-wrap');
+    const memberLabels = LABELS[dataIdx];
+
+    data.sentence.forEach((w, i) => {
+      const btn = document.createElement('div');
+      btn.className = 'word-token';
+      btn.style.paddingTop = '28px';
+      btn.style.position = 'relative';
+      btn.dataset.idx = i;
+
+      const lbl = document.createElement('span');
+      lbl.className = 'member-label';
+      lbl.textContent = memberLabels[i] || '—';
+      // ALL labels same colour — no visual hint which one is wrong
+      lbl.style.background = 'var(--forest)';
+      lbl.style.top = '4px';
+
+      btn.appendChild(lbl);
+      btn.appendChild(document.createTextNode(w));
+      btn.onclick = () => wordClicked(i, btn, data);
+      wrap.appendChild(btn);
+    });
+  }
+
+  window.wordClicked = function(i, btn, data) {
+    if (answered) return;
+    playTone(440, 0.05);
+
+    const optWrap = document.getElementById('options-wrap');
+    optWrap.style.display = 'flex';
+    optWrap.style.flexWrap = 'wrap';
+    optWrap.style.gap = '8px';
+    optWrap.style.justifyContent = 'center';
+    optWrap.innerHTML = `<p style="width:100%;text-align:center;font-size:13px;font-weight:700;color:var(--text-mid);">«${data.sentence[i]}» — это:</p>`;
+
+    document.querySelectorAll('.word-token').forEach(t => t.style.outline = '');
+    btn.style.outline = '3px solid var(--terra)';
+
+    data.allOptions.forEach(opt => {
+      const ob = document.createElement('button');
+      ob.className = 'btn-secondary';
+      ob.style.cssText = 'font-size:14px;padding:8px 16px;';
+      ob.textContent = opt;
+      ob.onclick = () => checkAnswer(i, opt, data);
+      optWrap.appendChild(ob);
+    });
+  };
+
+  function checkAnswer(wordIdx, chosen, data) {
+    if (answered) return;
+    state.mg.attempts++; state.totalAttempts++;
+    const fb = document.getElementById('feedback');
+    const isWrongWord = wordIdx === data.wrongIndex;
+    const isCorrectLabel = chosen === data.correctLabel;
+
+    if (isWrongWord && isCorrectLabel) {
+      answered = true;
+      playCorrect(); score++; state.mg.correct++; state.totalCorrect++;
+      fb.className = 'feedback-box correct visible';
+      fb.innerHTML = `✅ Нашёл! «${data.sentence[data.wrongIndex]}» — это ${data.correctLabel}. ${data.explanation}`;
+      spawnConfetti(window.innerWidth/2, window.innerHeight/2, 10);
+
+      // Fix label colour to green to confirm
+      const wrongEl = document.querySelector(`[data-idx="${data.wrongIndex}"]`);
+      if (wrongEl) {
+        const lbl = wrongEl.querySelector('.member-label');
+        if (lbl) { lbl.textContent = data.correctLabel; lbl.style.background = 'var(--green-member)'; }
+      }
+
+      setTimeout(() => {
+        dataIdx++;
+        if (dataIdx < FIX_DATA.length) render();
+        else finishMiniGame5();
+      }, 1800);
+    } else if (isWrongWord && !isCorrectLabel) {
+      playWrong();
+      fb.className = 'feedback-box wrong visible';
+      fb.innerHTML = `❌ Слово верное, но ответ не тот. Задай вопрос от соседнего слова!`;
+    } else {
+      playWrong();
+      fb.className = 'feedback-box wrong visible';
+      fb.innerHTML = `❌ Это слово подписано верно. Ошибка в другом месте!`;
+    }
+  }
+
+  window.mg5Hint = function() {
+    const data = FIX_DATA[dataIdx];
+    hintsUsed++; state.mg.hints++; state.totalHints++;
+    const fb = document.getElementById('feedback');
+    if (fb) {
+      fb.className = 'feedback-box hint visible';
+      fb.innerHTML = `💡 Посмотри внимательно на каждое слово и задай к нему вопрос. Одна подпись не совпадает с вопросом!`;
+    }
+  };
+
+  function finishMiniGame5() {
+    saveMiniStat('Испытание 5', score, FIX_DATA.length, hintsUsed);
+    lightCrystal(mg.crystal);
+    const pct = Math.round(score/FIX_DATA.length*100);
+    showMiniComplete('🦋', 'Ошибки исправлены!', `Найдено: ${score} из ${FIX_DATA.length} (${pct}%). Ты настоящий знаток грамматики!`);
+  }
+
+  render();
+}
+
+// ============================================================
+// MINI-GAME 6: COMPOSE (drag & drop + touch, auto-advance)
+// ============================================================
+function renderCompose(area, mg) {
+  let dataIdx = 0;
+  let hintsUsed = 0;
+  let score = 0;
+  let slots = [];
+  let availableCards = [];
+  let dragCard = null;   // card object
+  let dragSource = null; // 'bank' | {slot: idx}
+
+  function render() {
+    const data = COMPOSE_DATA[dataIdx];
+    slots = new Array(data.schema.length).fill(null);
+    availableCards = data.wordCards.map((c,i) => ({...c, id: i}));
+    dragCard = null; dragSource = null;
+
+    area.innerHTML = `
+      <div class="game-card">
+        <div class="mini-title">${mg.icon} ${mg.title}</div>
+        <p class="instruction">Перетащи карточки-слова на нужные места по схеме!</p>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:10px;" id="schema-wrap"></div>
+        <div class="word-bank" id="card-bank" style="min-height:48px;"></div>
+        <div class="feedback-box" id="feedback"></div>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pg" style="width:${(dataIdx/COMPOSE_DATA.length)*100}%"></div></div>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="mg6Hint()">💡 Подсказка</button>
+          <button class="btn-secondary" onclick="mg6Clear()">🔄 Очистить</button>
+          <button class="btn-primary" onclick="mg6Check()">Проверить ✓</button>
+        </div>
+        <p style="text-align:center;font-size:12px;color:var(--text-mid);margin-top:4px;">${dataIdx+1} из ${COMPOSE_DATA.length}</p>
+      </div>
+    `;
+
+    renderSchema(data);
+    renderCardBank(data);
+  }
+
+  function renderSchema(data) {
+    const wrap = document.getElementById('schema-wrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    data.schema.forEach((label, i) => {
+      const col = document.createElement('div');
+      col.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
+
+      const labelEl = document.createElement('div');
+      labelEl.style.cssText = 'font-size:11px;font-weight:800;color:var(--text-mid);text-align:center;';
+      labelEl.textContent = label;
+
+      const slot = document.createElement('div');
+      const filled = slots[i];
+      slot.className = filled ? `slot filled schema-slot ${filled.type}` : 'slot schema-slot';
+      slot.textContent = filled ? filled.word : '?';
+      slot.dataset.slotIdx = i;
+
+      // Drag-over / drop for desktop
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.style.borderColor = 'var(--terra)'; });
+      slot.addEventListener('dragleave', () => { slot.style.borderColor = ''; });
+      slot.addEventListener('drop', e => { e.preventDefault(); slot.style.borderColor = ''; dropOnSchemaSlot(i); });
+
+      // Click to remove
+      slot.addEventListener('click', () => {
+        if (slots[i]) {
+          availableCards.push(slots[i]);
+          slots[i] = null;
+          renderSchema(data); renderCardBank(data);
+        }
+      });
+
+      // Draggable if filled
+      if (filled) {
+        slot.draggable = true;
+        slot.addEventListener('dragstart', () => { dragCard = filled; dragSource = { slot: i }; setTimeout(() => slot.classList.add('dragging'), 0); });
+        slot.addEventListener('dragend', () => slot.classList.remove('dragging'));
+        addTouchDragSchemaSlot(slot, i, data);
+      }
+
+      col.appendChild(labelEl);
+      col.appendChild(slot);
+      wrap.appendChild(col);
+    });
+
+    // Bank as drop target (return slot → bank)
+    const bank = document.getElementById('card-bank');
+    if (bank) {
+      bank.addEventListener('dragover', e => { e.preventDefault(); bank.style.outline = '2px dashed var(--terra)'; });
+      bank.addEventListener('dragleave', () => { bank.style.outline = ''; });
+      bank.addEventListener('drop', e => {
+        e.preventDefault(); bank.style.outline = '';
+        if (dragSource && dragSource.slot !== undefined) {
+          availableCards.push(dragCard);
+          slots[dragSource.slot] = null;
+          dragCard = null; dragSource = null;
+          renderSchema(data); renderCardBank(data);
+        }
+      });
+    }
+  }
+
+  function renderCardBank(data) {
+    const wrap = document.getElementById('card-bank');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    availableCards.forEach(card => {
+      if (slots.find(s => s && s.id === card.id)) return;
+      const el = document.createElement('div');
+      el.className = 'sort-item';
+      el.textContent = card.word;
+      el.draggable = true;
+
+      el.addEventListener('dragstart', () => { dragCard = card; dragSource = 'bank'; setTimeout(() => el.classList.add('dragging'), 0); });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+      addTouchDragCardBank(el, card, data);
+      wrap.appendChild(el);
+    });
+  }
+
+  function dropOnSchemaSlot(slotIdx) {
+    if (!dragCard) return;
+    const data = COMPOSE_DATA[dataIdx];
+    if (slots[slotIdx]) {
+      if (dragSource === 'bank') availableCards.push(slots[slotIdx]);
+      else if (dragSource && dragSource.slot !== undefined) slots[dragSource.slot] = slots[slotIdx];
+    } else {
+      if (dragSource && dragSource.slot !== undefined) slots[dragSource.slot] = null;
+    }
+    slots[slotIdx] = dragCard;
+    if (dragSource === 'bank') {
+      const idx = availableCards.findIndex(c => c.id === dragCard.id);
+      if (idx > -1) availableCards.splice(idx, 1);
+    }
+    dragCard = null; dragSource = null;
+    playTone(440, 0.05);
+    renderSchema(data); renderCardBank(data);
+    // Auto-check if all slots filled
+    if (slots.every(s => s)) autoCheck();
+  }
+
+  function autoCheck() {
+    const data = COMPOSE_DATA[dataIdx];
+    let correct = true;
+    for (let i = 0; i < data.schemaTypes.length; i++) {
+      if (!slots[i] || slots[i].type !== data.schemaTypes[i]) { correct = false; break; }
+    }
+    if (correct) {
+      state.mg.attempts++; state.totalAttempts++;
+      playCorrect(); score++; state.mg.correct++; state.totalCorrect++;
+      const fb = document.getElementById('feedback');
+      if (fb) { fb.className = 'feedback-box correct visible'; fb.innerHTML = `✅ Замечательно! «${slots.map(s=>s.word).join(' ')}» — отличное предложение!`; }
+      spawnConfetti(window.innerWidth/2, window.innerHeight/2, 16);
+      setTimeout(() => {
+        dataIdx++;
+        if (dataIdx < COMPOSE_DATA.length) render();
+        else finishMiniGame6();
+      }, 1500);
+    }
+  }
+
+  // Touch drag for bank cards
+  function addTouchDragCardBank(el, card, data) {
+    let ghost = null;
+    el.addEventListener('touchstart', e => { dragCard = card; dragSource = 'bank'; ghost = createGhost6(el); }, {passive:true});
+    el.addEventListener('touchmove', e => { e.preventDefault(); moveGhost6(ghost, e.touches[0]); highlightSchemaSlotUnder(e.touches[0]); }, {passive:false});
+    el.addEventListener('touchend', e => {
+      removeGhost6(ghost); ghost = null; clearSchemaHighlight();
+      const touch = e.changedTouches[0];
+      const slotEl = getSchemaSlotUnder(touch);
+      if (slotEl) dropOnSchemaSlot(parseInt(slotEl.dataset.slotIdx));
+      else { dragCard = null; dragSource = null; }
+    }, {passive:true});
+  }
+
+  // Touch drag for schema slots
+  function addTouchDragSchemaSlot(el, slotIdx, data) {
+    let ghost = null;
+    el.addEventListener('touchstart', e => { dragCard = slots[slotIdx]; dragSource = { slot: slotIdx }; ghost = createGhost6(el); }, {passive:true});
+    el.addEventListener('touchmove', e => { e.preventDefault(); moveGhost6(ghost, e.touches[0]); highlightSchemaSlotUnder(e.touches[0]); }, {passive:false});
+    el.addEventListener('touchend', e => {
+      removeGhost6(ghost); ghost = null; clearSchemaHighlight();
+      const touch = e.changedTouches[0];
+      const slotEl = getSchemaSlotUnder(touch);
+      if (slotEl) dropOnSchemaSlot(parseInt(slotEl.dataset.slotIdx));
+      else {
+        availableCards.push(slots[slotIdx]);
+        slots[slotIdx] = null;
+        dragCard = null; dragSource = null;
+        renderSchema(data); renderCardBank(data);
+      }
+    }, {passive:true});
+  }
+
+  function createGhost6(el) {
+    const g = el.cloneNode(true);
+    g.style.cssText = `position:fixed;pointer-events:none;z-index:999;opacity:0.85;transform:scale(1.08);transition:none;`;
+    document.body.appendChild(g);
+    return g;
+  }
+  function moveGhost6(g, t) { if (!g) return; g.style.left=(t.clientX-g.offsetWidth/2)+'px'; g.style.top=(t.clientY-g.offsetHeight/2)+'px'; }
+  function removeGhost6(g) { if (g) g.remove(); }
+  function getSchemaSlotUnder(touch) { return document.elementFromPoint(touch.clientX, touch.clientY)?.closest('[data-slot-idx]'); }
+  function highlightSchemaSlotUnder(touch) { clearSchemaHighlight(); const el = getSchemaSlotUnder(touch); if (el) el.style.borderColor='var(--terra)'; }
+  function clearSchemaHighlight() { document.querySelectorAll('[data-slot-idx]').forEach(s => s.style.borderColor=''); }
+
+  window.mg6Hint = function() {
+    const data = COMPOSE_DATA[dataIdx];
+    hintsUsed++; state.mg.hints++; state.totalHints++;
+    const emptyIdx = slots.findIndex(s => !s);
+    const fb = document.getElementById('feedback');
+    if (fb && emptyIdx >= 0) {
+      fb.className = 'feedback-box hint visible';
+      fb.innerHTML = `💡 В ячейку «${data.schema[emptyIdx]}» нужно слово типа «${data.schemaTypes[emptyIdx]}»`;
+    }
+  };
+
+  window.mg6Clear = function() {
+    const data = COMPOSE_DATA[dataIdx];
+    slots = new Array(data.schema.length).fill(null);
+    availableCards = data.wordCards.map((c,i) => ({...c, id: i}));
+    dragCard = null; dragSource = null;
+    renderSchema(data); renderCardBank(data);
+  };
+
+  window.mg6Check = function() {
+    const data = COMPOSE_DATA[dataIdx];
+    state.mg.attempts++; state.totalAttempts++;
+
+    if (slots.some(s => !s)) {
+      const fb = document.getElementById('feedback');
+      if (fb) { fb.className = 'feedback-box hint visible'; fb.innerHTML = '💡 Заполни все ячейки!'; }
+      return;
+    }
+
+    let correct = true;
+    for (let i = 0; i < data.schemaTypes.length; i++) {
+      if (slots[i].type !== data.schemaTypes[i]) { correct = false; break; }
+    }
+
+    const fb = document.getElementById('feedback');
+    if (correct) {
+      playCorrect(); score++; state.mg.correct++; state.totalCorrect++;
+      if (fb) { fb.className = 'feedback-box correct visible'; fb.innerHTML = `✅ Замечательно! «${slots.map(s=>s.word).join(' ')}» — отличное предложение!`; }
+      spawnConfetti(window.innerWidth/2, window.innerHeight/2, 16);
+      setTimeout(() => {
+        dataIdx++;
+        if (dataIdx < COMPOSE_DATA.length) render();
+        else finishMiniGame6();
+      }, 1500);
+    } else {
+      playWrong();
+      if (fb) {
+        const wrongSlot = data.schemaTypes.findIndex((t, i) => slots[i] && slots[i].type !== t);
+        fb.className = 'feedback-box wrong visible';
+        fb.innerHTML = `❌ Ячейка «${data.schema[wrongSlot]}» — проверь: нужно слово, отвечающее на вопрос «${data.schema[wrongSlot]}»`;
+      }
+    }
+  };
+
+  function finishMiniGame6() {
+    saveMiniStat('Испытание 6', score, COMPOSE_DATA.length, hintsUsed);
+    lightCrystal(mg.crystal);
+    forestProgress = 1;
+    const pct = Math.round(score/COMPOSE_DATA.length*100);
+    showMiniComplete('🌟', 'Предложения созданы!', `Верно: ${score} из ${COMPOSE_DATA.length} (${pct}%). Ты стал настоящим Хранителем Предложения!`);
+  }
+
+  render();
+}
+
+// ============================================================
+// STATS & RESULTS
+// ============================================================
+function saveMiniStat(name, correct, total, hints) {
+  state.miniStats.push({ name, correct, total, hints });
+}
+
+function showResults() {
+  showScreen('result-screen');
+  document.getElementById('hud').style.display = 'none';
+  forestProgress = 1;
+
+  const totalCorrect = state.miniStats.reduce((s,m) => s+m.correct, 0);
+  const totalItems = state.miniStats.reduce((s,m) => s+m.total, 0);
+  const pct = Math.round(totalCorrect/totalItems*100);
+  const totalHints = state.miniStats.reduce((s,m) => s+m.hints, 0);
+
+  document.getElementById('result-title').textContent =
+    pct >= 80 ? '🎉 Лес спасён! Ты Хранитель!' :
+    pct >= 60 ? '🌿 Лес почти восстановлен!' :
+    '🌱 Хорошее начало! Ещё потренируемся';
+
+  document.getElementById('result-msg').textContent =
+    `Правильных ответов: ${totalCorrect} из ${totalItems} (${pct}%). Использовано подсказок: ${totalHints}.`;
+
+  const statsGrid = document.getElementById('stats-grid');
+  statsGrid.innerHTML = `
+    <div class="stat-box"><span class="stat-num">${pct}%</span><span class="stat-label">Точность</span></div>
+    <div class="stat-box"><span class="stat-num">${totalHints}</span><span class="stat-label">Подсказок использовано</span></div>
+    <div class="stat-box"><span class="stat-num">${totalCorrect}</span><span class="stat-label">Верных ответов</span></div>
+    <div class="stat-box"><span class="stat-num">${totalItems}</span><span class="stat-label">Всего заданий</span></div>
+  `;
+
+  let reportHtml = '<h4>📋 Отчёт для учителя</h4>';
+  state.miniStats.forEach(m => {
+    const p = Math.round(m.correct/m.total*100);
+    const color = p >= 80 ? 'var(--green-member)' : p >= 60 ? 'var(--terra)' : '#c45040';
+    reportHtml += `<p><strong>${m.name}:</strong> ${m.correct}/${m.total} (${p}%) | Подсказки: ${m.hints} <span style="color:${color};font-size:16px;">${p>=80?'●':p>=60?'◑':'○'}</span></p>`;
+  });
+
+  // Recommendation
+  const weakMini = state.miniStats.reduce((w,m) => (m.correct/m.total < (w?.correct/w?.total ?? 1)) ? m : w, null);
+  if (weakMini) {
+    reportHtml += `<p style="margin-top:8px;border-top:1px solid rgba(0,0,0,0.1);padding-top:8px;"><strong>Рекомендация:</strong> Уделить внимание «${weakMini.name}» — ${Math.round(weakMini.correct/weakMini.total*100)}% точности. Разобрать с классом на следующем уроке.</p>`;
+  }
+
+  document.getElementById('teacher-report').innerHTML = reportHtml;
+  spawnConfetti(window.innerWidth/2, window.innerHeight/3, 20);
+  playComplete();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('resize', () => { initBg(); });
+initBg();
+drawBg();
+</script>
+</body>
+</html>
