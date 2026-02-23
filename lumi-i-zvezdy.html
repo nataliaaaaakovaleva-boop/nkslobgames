@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Люми и Звёзды | Математика</title>
+    <style>
+        /* --- ШРИФТЫ И ПЕРЕМЕННЫЕ --- */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        :root {
+            --primary: #6C5CE7;      /* Яркий фиолетовый */
+            --primary-hover: #5649c0;
+            --secondary: #A29BFE;    /* Светлый фиолетовый */
+            --accent: #FDCB6E;       /* Желтый (Звезды) */
+            --bg-dark: #2D3436;
+            --text-white: #ffffff;
+            --success: #00b894;
+            --error: #ff7675;
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --font-main: 'Nunito', sans-serif;
+        }
+
+        /* --- БАЗОВЫЕ НАСТРОЙКИ --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            height: 100dvh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-white);
+            touch-action: manipulation;
+        }
+
+        /* --- ФОН (ЗВЕЗДЫ) --- */
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* --- UI ИНТЕРФЕЙС (ВЕРХНЯЯ ПАНЕЛЬ) --- */
+        header {
+            position: absolute;
+            top: 2vmin;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 5vmin;
+            font-size: 1.2rem;
+            font-weight: 700;
+            z-index: 10;
+            pointer-events: none; /* Чтобы клики проходили сквозь пустые места */
+        }
+
+        .hud-badge {
+            background: var(--glass);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            border: 1px solid var(--glass-border);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* --- ИГРОВАЯ ОБЛАСТЬ --- */
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            z-index: 5;
+        }
+
+        /* --- ПЕРСОНАЖ (ЛЮМИ) --- */
+        .character-wrapper {
+            width: 30vmin;
+            height: 30vmin;
+            max-width: 200px;
+            max-height: 200px;
+            margin-bottom: 3vh;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            animation: float 4s ease-in-out infinite;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+
+        .character-wrapper svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        /* Свечение за персонажем */
+        .char-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(circle, rgba(162, 155, 254, 0.4) 0%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        /* --- ВОПРОС И ОТВЕТЫ --- */
+        .question-box {
+            background: rgba(255, 255, 255, 0.95);
+            color: var(--bg-dark);
+            padding: 1.5rem 3rem;
+            border-radius: 25px;
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 3vh;
+            box-shadow: 0 10px 0 rgba(0,0,0,0.15);
+            min-width: 220px;
+            text-align: center;
+            transform: scale(0);
+            animation: popIn 0.5s forwards 0.2s;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            width: 100%;
+        }
+
+        .option-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1.2rem;
+            font-size: 2.2rem;
+            font-weight: 700;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 8px 0 var(--primary-hover);
+            transition: all 0.15s;
+            position: relative;
+            overflow: hidden;
+            outline: none;
+        }
+
+        .option-btn:active {
+            transform: translateY(8px);
+            box-shadow: 0 0 0 var(--primary-hover);
+        }
+
+        .option-btn.correct {
+            background-color: var(--success);
+            box-shadow: 0 8px 0 #008f72;
+            animation: bounce 0.4s;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error);
+            box-shadow: 0 8px 0 #d63031;
+            opacity: 0.6;
+            pointer-events: none;
+            transform: scale(0.9);
+        }
+
+        /* --- ГЛАВНЫЙ ЭКРАН (INTRO) - КРАСИВЫЙ --- */
+        #intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 10, 30, 0.8);
+            backdrop-filter: blur(15px); /* Эффект матового стекла */
+            -webkit-backdrop-filter: blur(15px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .intro-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 40px;
+            padding: 3rem 2rem;
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Аватар Люми на главном экране */
+        .intro-avatar {
+            width: 140px;
+            height: 140px;
+            margin-top: -80px; /* Вылезает за пределы карточки */
+            margin-bottom: 1rem;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.4));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .intro-title {
+            font-size: 2.8rem;
+            line-height: 1.1;
+            margin-bottom: 1rem;
+            font-weight: 900;
+            background: linear-gradient(to right, #a29bfe, #74b9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+        }
+
+        .intro-desc {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            color: #dfe6e9;
+            margin-bottom: 2rem;
+        }
+
+        .start-btn {
+            background: linear-gradient(45deg, var(--accent), #f1c40f);
+            color: var(--bg-dark);
+            font-size: 1.4rem;
+            font-weight: 800;
+            padding: 1.2rem 3.5rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(253, 203, 110, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            animation: pulse-btn 2s infinite;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(253, 203, 110, 0.6);
+        }
+        
+        .start-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* --- АНИМАЦИИ --- */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-20px); }
+            60% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse-btn {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Конфетти */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+            animation: fall linear forwards;
+            pointer-events: none;
+            z-index: 50;
+        }
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- ФОНОВЫЕ ЗВЕЗДЫ -->
+    <svg class="stars" id="bg-stars" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <!-- HEADER -->
+    <header>
+        <div class="hud-badge" aria-label="Счет">
+            <!-- Иконка звезды -->
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#FDCB6E" stroke="#e1b12c" stroke-width="2" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+            <span id="score">0</span>
+        </div>
+        <div class="hud-badge" aria-label="Уровень">
+            <span style="color:#dfe6e9">УРОВЕНЬ</span>
+            <span id="level" style="color:#fff; font-size:1.4em;">1</span>
+        </div>
+    </header>
+
+    <!-- ИГРА -->
+    <main>
+        <!-- ПЕРСОНАЖ ЛЮМИ -->
+        <div class="character-wrapper" id="char-container">
+            <div class="char-glow"></div>
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <!-- Антенна -->
+                <line x1="100" y1="20" x2="100" y2="50" stroke="#6C5CE7" stroke-width="4"/>
+                <circle cx="100" cy="20" r="8" fill="#FDCB6E"/>
+
+                <!-- Тело -->
+                <rect x="40" y="50" width="120" height="110" rx="30" ry="30" fill="#A29BFE" stroke="#6C5CE7" stroke-width="5"/>
+                
+                <!-- Животик (экран) -->
+                <rect x="65" y="120" width="70" height="30" rx="10" fill="rgba(255,255,255,0.3)"/>
+
+                <!-- Глаза (Группа для анимации) -->
+                <g id="eyes">
+                    <!-- Левый глаз -->
+                    <ellipse cx="75" cy="85" rx="15" ry="18" fill="white" stroke="#2D3436" stroke-width="3"/>
+                    <circle id="pupil-l" cx="75" cy="85" r="7" fill="#2D3436"/>
+                    
+                    <!-- Правый глаз -->
+                    <ellipse cx="125" cy="85" rx="15" ry="18" fill="white" stroke="#2D3436" stroke-width="3"/>
+                    <circle id="pupil-r" cx="125" cy="85" r="7" fill="#2D3436"/>
+                </g>
+
+                <!-- Блики -->
+                <circle cx="55" cy="65" r="5" fill="rgba(255,255,255,0.5)"/>
+
+                <!-- Рот (Изменяемый путь) -->
+                <path id="mouth" d="M 85 105 Q 100 115 115 105" fill="none" stroke="#2D3436" stroke-width="4" stroke-linecap="round"/>
+                
+                <!-- Ручки -->
+                <path d="M 40 90 Q 20 110 40 130" fill="none" stroke="#6C5CE7" stroke-width="6" stroke-linecap="round"/>
+                <path d="M 160 90 Q 180 110 160 130" fill="none" stroke="#6C5CE7" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+        </div>
+
+        <div class="question-box" id="question" aria-live="polite">
+            <!-- Пример -->
+        </div>
+
+        <div class="options-grid" id="options">
+            <!-- Кнопки -->
+        </div>
+    </main>
+
+    <!-- ИНТРО (НОВОЕ, КРАСИВОЕ) -->
+    <div id="intro-screen">
+        <div class="intro-card">
+            <!-- Копия SVG для Интро -->
+            <div class="intro-avatar">
+                <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <line x1="100" y1="20" x2="100" y2="50" stroke="#6C5CE7" stroke-width="4"/>
+                    <circle cx="100" cy="20" r="8" fill="#FDCB6E"/>
+                    <rect x="40" y="50" width="120" height="110" rx="30" ry="30" fill="#A29BFE" stroke="#6C5CE7" stroke-width="5"/>
+                    <rect x="65" y="120" width="70" height="30" rx="10" fill="rgba(255,255,255,0.3)"/>
+                    <ellipse cx="75" cy="85" rx="15" ry="18" fill="white" stroke="#2D3436" stroke-width="3"/>
+                    <circle cx="75" cy="85" r="7" fill="#2D3436"/>
+                    <ellipse cx="125" cy="85" rx="15" ry="18" fill="white" stroke="#2D3436" stroke-width="3"/>
+                    <circle cx="125" cy="85" r="7" fill="#2D3436"/>
+                    <!-- Улыбка для интро всегда широкая -->
+                    <path d="M 85 105 Q 100 120 115 105" fill="none" stroke="#2D3436" stroke-width="4" stroke-linecap="round"/> 
+                </svg>
+            </div>
+            
+            <h1 class="intro-title">Люми и Звёзды</h1>
+            <p class="intro-desc">Привет! Я Люми. Помоги мне собрать энергию для путешествия по галактике. Решай примеры и зажигай звезды!</p>
+            <button class="start-btn" onclick="startGame()">ПОЛЕТЕЛИ 🚀</button>
+        </div>
+    </div>
+
+    <script>
+        // --- КОНФИГУРАЦИЯ ---
+        const gameState = {
+            score: 0,
+            level: 1,
+            streak: 0,
+            currentAnswer: 0,
+            isThinking: false
+        };
+
+        const els = {
+            score: document.getElementById('score'),
+            level: document.getElementById('level'),
+            question: document.getElementById('question'),
+            options: document.getElementById('options'),
+            intro: document.getElementById('intro-screen'),
+            mouth: document.getElementById('mouth'),
+            pupilL: document.getElementById('pupil-l'),
+            pupilR: document.getElementById('pupil-r'),
+            charContainer: document.getElementById('char-container'),
+            bgStars: document.getElementById('bg-stars')
+        };
+
+        // --- ГЕНЕРАЦИЯ ФОНА ---
+        function generateStars() {
+            let svgContent = '';
+            for(let i=0; i<60; i++) {
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const r = Math.random() * 1.5 + 0.5;
+                const opacity = Math.random() * 0.8 + 0.2;
+                // Анимация мерцания через CSS классы была бы сложнее без внешнего CSS, 
+                // поэтому используем нативный SMIL SVG (просто и работает)
+                svgContent += `
+                    <circle cx="${x}%" cy="${y}%" r="${r}" fill="white" opacity="${opacity}">
+                        <animate attributeName="opacity" values="${opacity};0.2;${opacity}" dur="${Math.random()*3 + 2}s" repeatCount="indefinite" />
+                    </circle>`;
+            }
+            els.bgStars.innerHTML = svgContent;
+        }
+
+        // --- УПРАВЛЕНИЕ ПЕРСОНАЖЕМ (ЭМОЦИИ И ГЛАЗА) ---
+        // Люми (Lumi) более квадратный, координаты рта другие
+        const emotions = {
+            idle: "M 85 105 Q 100 115 115 105", // Легкая улыбка
+            happy: "M 85 105 Q 100 130 115 105", // Широкая радость
+            thinking: "M 85 110 Q 95 100 105 110 T 115 110", // Волна (задумался)
+            sad: "M 85 115 Q 100 100 115 115" // Грусть
+        };
+
+        function setEmotion(state) {
+            els.mouth.setAttribute('d', emotions[state] || emotions.idle);
+        }
+
+        // Слежение глазами
+        document.addEventListener('mousemove', (e) => {
+            if(gameState.isThinking) return;
+
+            const rect = els.charContainer.getBoundingClientRect();
+            const charCenterX = rect.left + rect.width / 2;
+            const charCenterY = rect.top + rect.height / 2;
+
+            // Ограничиваем радиус движения зрачков
+            const angle = Math.atan2(e.clientY - charCenterY, e.clientX - charCenterX);
+            const distance = Math.min(4, Math.hypot(e.clientX - charCenterX, e.clientY - charCenterY) / 25);
+
+            const offsetX = Math.cos(angle) * distance;
+            const offsetY = Math.sin(angle) * distance;
+
+            els.pupilL.setAttribute('cx', 75 + offsetX);
+            els.pupilL.setAttribute('cy', 85 + offsetY);
+            els.pupilR.setAttribute('cx', 125 + offsetX);
+            els.pupilR.setAttribute('cy', 85 + offsetY);
+        });
+
+        // --- ЛОГИКА ИГРЫ ---
+        function startGame() {
+            // Плавное скрытие
+            els.intro.style.opacity = '0';
+            setTimeout(() => {
+                els.intro.style.display = 'none';
+            }, 500);
+            
+            generateStars();
+            nextLevel();
+        }
+
+        function nextLevel() {
+            setEmotion('idle');
+            gameState.isThinking = false;
+            
+            // Сложность зависит от уровня
+            const maxNum = 10 + (gameState.level * 5); 
+            const isAddition = Math.random() > 0.4; // Чаще сложение для разгона
+            
+            let a, b, symbol;
+            
+            if (isAddition) {
+                a = Math.floor(Math.random() * (maxNum - 2)) + 1;
+                b = Math.floor(Math.random() * (maxNum - a)) + 1;
+                gameState.currentAnswer = a + b;
+                symbol = '+';
+            } else {
+                a = Math.floor(Math.random() * maxNum) + 3;
+                b = Math.floor(Math.random() * a);
+                gameState.currentAnswer = a - b;
+                symbol = '-';
+            }
+
+            // Анимация вопроса
+            els.question.style.animation = 'none';
+            els.question.offsetHeight; /* trigger reflow */
+            els.question.style.animation = 'popIn 0.5s forwards';
+            els.question.textContent = `${a} ${symbol} ${b} = ?`;
+
+            generateOptions(gameState.currentAnswer);
+        }
+
+        function generateOptions(correct) {
+            let options = new Set([correct]);
+            while(options.size < 3) {
+                // Генерируем числа рядом с правильным ответом
+                let range = Math.max(3, Math.floor(correct * 0.3));
+                let offset = Math.floor(Math.random() * (range * 2)) - range;
+                let wrong = correct + offset;
+                
+                if (wrong >= 0 && wrong !== correct) {
+                    options.add(wrong);
+                }
+            }
+            
+            const shuffled = Array.from(options).sort(() => Math.random() - 0.5);
+            
+            els.options.innerHTML = '';
+            shuffled.forEach((num, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = num;
+                btn.setAttribute('aria-label', `Ответ ${num}`);
+                
+                // Добавляем задержку появления для красоты
+                btn.style.animation = `popIn 0.4s forwards ${index * 0.1}s`;
+                btn.style.opacity = '0'; // начальное состояние перед анимацией
+                
+                btn.onclick = () => checkAnswer(num, btn);
+                els.options.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selected, btn) {
+            if (selected === gameState.currentAnswer) {
+                // SUCCESS
+                gameState.score += 10;
+                gameState.streak++;
+                
+                // Анимация счета
+                animateValue(els.score, parseInt(els.score.textContent), gameState.score, 500);
+                
+                // Адаптивность: повышение уровня
+                if(gameState.streak % 3 === 0) {
+                    gameState.level++;
+                    els.level.textContent = gameState.level;
+                    // Небольшой салют при повышении уровня
+                    setTimeout(spawnConfetti, 200);
+                }
+
+                btn.classList.add('correct');
+                setEmotion('happy');
+                spawnConfetti();
+                
+                // Блокируем остальные
+                const allBtns = document.querySelectorAll('.option-btn');
+                allBtns.forEach(b => {
+                    if(b !== btn) b.style.opacity = '0.5';
+                    b.disabled = true;
+                });
+
+                setTimeout(nextLevel, 1500);
+            } else {
+                // ERROR
+                gameState.streak = 0;
+                btn.classList.add('wrong');
+                setEmotion('thinking');
+                
+                // Шейк персонажа
+                els.charContainer.style.transform = "rotate(-5deg)";
+                setTimeout(() => els.charContainer.style.transform = "rotate(5deg)", 100);
+                setTimeout(() => els.charContainer.style.transform = "rotate(0deg)", 200);
+            }
+        }
+
+        // Анимация набора чисел
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- VFX: CONFETTI ---
+        function spawnConfetti() {
+            const colors = ['#FDCB6E', '#6C5CE7', '#00b894', '#ff7675', '#74b9ff'];
+            for(let i=0; i<40; i++) {
+                const conf = document.createElement('div');
+                conf.className = 'confetti';
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = '-10px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Случайная форма (квадрат или круг)
+                if(Math.random() > 0.5) conf.style.borderRadius = '50%';
+                
+                // Случайный размер
+                const size = Math.random() * 8 + 6 + 'px';
+                conf.style.width = size;
+                conf.style.height = size;
+
+                conf.style.animationDuration = (Math.random() * 2 + 1.5) + 's';
+                document.body.appendChild(conf);
+                
+                setTimeout(() => conf.remove(), 3500);
+            }
+        }
+
+        // Запуск при загрузке
+        generateStars();
+
+    </script>
+</body>
+</html>
