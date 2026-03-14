@@ -1,0 +1,2504 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Словик — Остров Речестан</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sky: #A8E6E6;
+    --sky-deep: #4ABFBF;
+    --coral: #E8845A;
+    --coral-light: #F5C4A8;
+    --cream: #FAFAF2;
+    --green: #6DBF7A;
+    --green-light: #B8E6BF;
+    --yellow: #F5D76E;
+    --purple: #9B8FD4;
+    --text-dark: #2D3A3A;
+    --text-mid: #4A5A5A;
+    --white: #FFFFFF;
+    --shadow: rgba(45,58,58,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--sky);
+    min-height: 100vh;
+    overflow: hidden;
+    color: var(--text-dark);
+    user-select: none;
+  }
+
+  /* ===== CLOUDS ===== */
+  .cloud {
+    position: fixed;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.85;
+    animation: float-cloud linear infinite;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+  .cloud::before { width: 60%; height: 150%; top: -40%; left: 15%; }
+  .cloud::after { width: 40%; height: 120%; top: -30%; right: 15%; }
+  @keyframes float-cloud { from { transform: translateX(-200px); } to { transform: translateX(calc(100vw + 200px)); } }
+
+  /* ===== SCREEN WRAPPER ===== */
+  #app {
+    position: relative;
+    z-index: 1;
+    width: 100vw;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  /* ===== MUTE BTN ===== */
+  #mute-btn {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 1000;
+    background: var(--white);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px var(--shadow);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ===== HUD ===== */
+  #hud {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--sky-deep);
+    align-items: center;
+    gap: 12px;
+  }
+  #hud.visible { display: flex; }
+  #hud-mini-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--sky-deep);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #progress-dots {
+    display: flex;
+    gap: 5px;
+  }
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+    transition: background 0.3s, transform 0.3s;
+  }
+  .dot.done { background: var(--green); transform: scale(1.2); }
+  .dot.current { background: var(--coral); transform: scale(1.3); }
+  #score-hud {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--coral);
+  }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    display: none;
+    width: 100%;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    padding-top: 70px;
+    animation: fadeIn 0.4s ease;
+  }
+  .screen.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+  /* ===== START SCREEN ===== */
+  #screen-start {
+    padding-top: 16px;
+    background: linear-gradient(180deg, #A8E6E6 0%, #7FDBDB 60%, #6DBF7A 100%);
+  }
+  .island-scene {
+    position: relative;
+    width: min(360px, 92vw);
+    height: 200px;
+    margin-bottom: 8px;
+  }
+  .island-ground {
+    position: absolute;
+    bottom: 0;
+    left: 10%;
+    width: 80%;
+    height: 90px;
+    background: var(--green);
+    border-radius: 50% 50% 20px 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  }
+  .island-ground::before {
+    content: '';
+    position: absolute;
+    top: 8px; left: 15%; width: 70%; height: 40px;
+    background: var(--green-light);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+  .tree {
+    position: absolute;
+    bottom: 70px;
+  }
+  .tree-trunk { width: 10px; height: 24px; background: #8B6340; border-radius: 3px; margin: 0 auto; }
+  .tree-top { width: 36px; height: 36px; background: #5AA65A; border-radius: 50% 50% 40% 40%; margin: 0 auto; margin-top: -10px; }
+
+  /* SLOVIK mascot */
+  .slovik {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    animation: slovik-bounce 2s ease-in-out infinite;
+    cursor: default;
+    font-size: 0;
+  }
+  @keyframes slovik-bounce { 0%,100%{transform:translateX(-50%) translateY(0);} 50%{transform:translateX(-50%) translateY(-10px);} }
+  .slovik-svg { width: 70px; height: 80px; }
+
+  .game-title {
+    font-size: clamp(28px, 8vw, 44px);
+    font-weight: 900;
+    color: var(--white);
+    text-shadow: 0 3px 0 var(--sky-deep), 0 5px 12px rgba(0,0,0,0.15);
+    text-align: center;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .game-subtitle {
+    font-size: 15px;
+    color: var(--cream);
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 20px;
+    opacity: 0.9;
+  }
+  .btn-primary {
+    background: var(--coral);
+    color: white;
+    border: none;
+    border-radius: 28px;
+    padding: 16px 48px;
+    font-size: 20px;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #c05a30, 0 6px 20px rgba(232,132,90,0.35);
+    transition: transform 0.1s, box-shadow 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 #c05a30, 0 2px 8px rgba(232,132,90,0.2); }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    animation: shine 2s infinite;
+  }
+  @keyframes shine { 0%{left:-100%;} 50%,100%{left:200%;} }
+
+  .btn-secondary {
+    background: var(--white);
+    color: var(--sky-deep);
+    border: 2.5px solid var(--sky-deep);
+    border-radius: 20px;
+    padding: 12px 32px;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 10px;
+  }
+  .btn-secondary:hover { background: var(--sky); }
+
+  /* ===== MAP SCREEN ===== */
+  #screen-map {
+    background: linear-gradient(180deg, #A8E6E6 0%, #7FDBDB 60%, #B8E6BF 100%);
+    padding-top: 70px;
+  }
+  .map-title {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--white);
+    text-shadow: 0 2px 0 var(--sky-deep);
+    margin-bottom: 4px;
+  }
+  .map-score {
+    font-size: 14px;
+    color: var(--cream);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  .map-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    width: min(400px, 96vw);
+  }
+  .map-cell {
+    aspect-ratio: 1;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+    border: 2.5px solid rgba(255,255,255,0.6);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    padding: 6px 4px 4px;
+    text-align: center;
+  }
+  .map-cell .cell-icon { font-size: 24px; margin-bottom: 2px; }
+  .map-cell .cell-num { position: absolute; top: 5px; left: 8px; font-size: 10px; opacity: 0.7; }
+  .map-cell.locked { background: rgba(255,255,255,0.35); color: rgba(45,58,58,0.45); cursor: not-allowed; }
+  .map-cell.available { background: var(--white); color: var(--text-dark); }
+  .map-cell.available:active { transform: scale(0.95); }
+  .map-cell.done { background: var(--green); color: white; }
+  .map-cell.done::after { content: '✓'; position: absolute; top: 5px; right: 8px; font-size: 12px; }
+  .map-cell.current { background: var(--coral-light); color: var(--text-dark); border-color: var(--coral); animation: pulse-cell 1.5s ease-in-out infinite; }
+  @keyframes pulse-cell { 0%,100%{box-shadow:0 3px 10px rgba(0,0,0,0.1);} 50%{box-shadow:0 3px 20px rgba(232,132,90,0.5);} }
+
+  /* ===== GAME SCREEN ===== */
+  #screen-game {
+    padding-top: 65px;
+    justify-content: flex-start;
+  }
+
+  .game-card {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 18px 16px 20px;
+    width: min(420px, 98vw);
+    box-shadow: 0 6px 24px rgba(45,58,58,0.12);
+    position: relative;
+    overflow: hidden;
+  }
+  .game-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--sky-deep), var(--coral));
+  }
+
+  .mini-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .mini-icon-wrap {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    background: var(--sky);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .mini-title-wrap {}
+  .mini-num { font-size: 11px; color: var(--text-mid); font-weight: 700; letter-spacing: 0.5px; }
+  .mini-title { font-size: 16px; font-weight: 800; color: var(--text-dark); line-height: 1.2; }
+
+  .instruction-box {
+    background: var(--sky);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .instruction-box .inst-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* Feedback box */
+  .feedback-box {
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-top: 12px;
+    display: none;
+    animation: feedbackPop 0.3s ease;
+    line-height: 1.4;
+  }
+  @keyframes feedbackPop { from{transform:scale(0.9);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .feedback-box.correct { background: #D4F4DC; color: #1A6B2A; display: block; }
+  .feedback-box.wrong { background: #FFE8DC; color: #8B3A1A; display: block; }
+  .feedback-box.hint { background: #FFF8DC; color: #6B5A1A; display: block; }
+
+  /* HINT ladder */
+  .hint-btn {
+    background: var(--yellow);
+    border: none;
+    border-radius: 14px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-dark);
+    display: inline-block;
+    transition: transform 0.1s;
+  }
+  .hint-btn:active { transform: scale(0.96); }
+
+  /* NEXT btn */
+  .next-btn {
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 13px 36px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    margin-top: 12px;
+    box-shadow: 0 3px 0 #3A9B4A;
+    transition: transform 0.1s;
+    display: none;
+  }
+  .next-btn.visible { display: inline-block; }
+  .next-btn:active { transform: translateY(2px); }
+
+  /* ===== GAME 1: SORT drag ===== */
+  .word-cards-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 14px;
+    min-height: 44px;
+  }
+  .word-card {
+    background: var(--cream);
+    border: 2px solid #D0E8E8;
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: grab;
+    transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+    touch-action: none;
+  }
+  .word-card:active { transform: scale(1.08); box-shadow: 0 6px 16px rgba(0,0,0,0.15); cursor: grabbing; }
+  .word-card.dragging { opacity: 0.4; }
+  .word-card.placed { opacity: 0.5; pointer-events: none; }
+
+  .sort-bins {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .sort-bin {
+    border-radius: 16px;
+    padding: 12px 8px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: 3px dashed rgba(0,0,0,0.1);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .sort-bin.who { background: #E8F5FB; }
+  .sort-bin.what { background: #FBF0E8; }
+  .sort-bin.drag-over { border-color: var(--coral); background: #FFF0E8; }
+  .sort-bin-label {
+    font-size: 18px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sort-bin.who .sort-bin-label { color: #2A7FA8; }
+  .sort-bin.what .sort-bin-label { color: #A86030; }
+  .sort-bin-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+  }
+  .sort-bin-words .placed-word {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 10px;
+    color: white;
+  }
+  .sort-bin.who .placed-word { background: #4AAFD4; }
+  .sort-bin.what .placed-word { background: #D48050; }
+
+  /* ===== GAME 2: TAP capitals ===== */
+  .tap-words-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+  .tap-word {
+    background: var(--cream);
+    border: 2.5px solid #D0E8E8;
+    border-radius: 16px;
+    padding: 12px 18px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tap-word.selected-correct { background: var(--green); color: white; border-color: var(--green); }
+  .tap-word.selected-wrong { background: #FFCCA8; border-color: var(--coral); animation: shake 0.3s; }
+  .tap-word.revealed-correct { background: var(--green-light); border-color: var(--green); }
+  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);} 75%{transform:translateX(5px);} }
+
+  /* ===== GAME 3: IMAGE tap ===== */
+  .forest-scene {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .forest-item {
+    border-radius: 16px;
+    padding: 14px 8px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: transform 0.15s;
+    background: var(--cream);
+    border: 2.5px solid transparent;
+  }
+  .forest-item .item-emoji { font-size: 32px; }
+  .forest-item .item-name { font-size: 12px; font-weight: 700; text-align: center; color: var(--text-dark); }
+  .forest-item .item-question {
+    font-size: 18px;
+    font-weight: 900;
+    border-radius: 8px;
+    padding: 2px 10px;
+    display: none;
+  }
+  .forest-item.answered-who { border-color: #4AAFD4; background: #E8F5FB; }
+  .forest-item.answered-what { border-color: #D48050; background: #FBF0E8; }
+  .forest-item.answered-who .item-question { display: block; color: #2A7FA8; background: #C8EAF5; }
+  .forest-item.answered-what .item-question { display: block; color: #A86030; background: #F5D8C0; }
+  .forest-item:active { transform: scale(0.95); }
+  .choice-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    background: rgba(45,58,58,0.4);
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 20px;
+  }
+  .choice-modal.open { display: flex; animation: slideUp 0.25s ease; }
+  @keyframes slideUp { from{transform:translateY(60px);opacity:0;} to{transform:none;opacity:1;} }
+  .choice-sheet {
+    background: var(--white);
+    border-radius: 24px 24px 16px 16px;
+    padding: 20px 20px 16px;
+    width: min(380px, 96vw);
+    text-align: center;
+    box-shadow: 0 -4px 30px rgba(0,0,0,0.15);
+  }
+  .choice-sheet-label { font-size: 16px; font-weight: 800; margin-bottom: 12px; }
+  .choice-btns { display: flex; gap: 12px; justify-content: center; }
+  .choice-btn {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    font-size: 22px;
+    font-weight: 900;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: transform 0.1s;
+  }
+  .choice-btn:active { transform: scale(0.93); }
+  .choice-btn.who { background: #E8F5FB; color: #2A7FA8; }
+  .choice-btn.what { background: #FBF0E8; color: #A86030; }
+
+  /* ===== GAME 4: TRAPS2 two-question ===== */
+  .trap2-word {
+    font-size: 32px;
+    font-weight: 900;
+    text-align: center;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--sky), var(--cream));
+    border-radius: 20px;
+    margin-bottom: 14px;
+    color: var(--text-dark);
+  }
+  .trap2-counter {
+    font-size: 12px;
+    color: var(--text-mid);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .trap2-block {
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: var(--cream);
+    border: 2.5px solid #D0E8E8;
+  }
+  .trap2-block.answered-correct { border-color: var(--green); background: #EAF8ED; }
+  .trap2-block.answered-wrong { border-color: var(--coral); background: #FFF0E8; }
+  .trap2-question {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .trap2-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .trap2-btn {
+    flex: 1;
+    padding: 12px 6px;
+    border: none;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: transform 0.1s, box-shadow 0.1s;
+    background: var(--white);
+    border: 2px solid #D0E8E8;
+    color: var(--text-dark);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .trap2-btn:active { transform: scale(0.95); }
+  .trap2-btn.selected-ok { background: var(--green); color: white; border-color: var(--green); }
+  .trap2-btn.selected-err { background: var(--coral); color: white; border-color: var(--coral); animation: shake 0.3s; }
+  .trap2-btn.reveal-ok { background: #D4F4DC; border-color: var(--green); }
+  .trap2-btn:disabled { cursor: default; }
+
+  /* ===== GAME 5: FOUR HOUSES ===== */
+  .four-houses {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .house {
+    border-radius: 16px;
+    padding: 10px 8px;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: 3px dashed rgba(0,0,0,0.12);
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .house-label {
+    font-size: 11px;
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .house-icon { font-size: 22px; }
+  .house.h1 { background: #E8F5E8; }
+  .house.h2 { background: #E8EEF5; }
+  .house.h3 { background: #F5EBE8; }
+  .house.h4 { background: #F0E8F5; }
+  .house.h1 .house-label { color: #1A6B2A; }
+  .house.h2 .house-label { color: #1A3A6B; }
+  .house.h3 .house-label { color: #6B2A1A; }
+  .house.h4 .house-label { color: #4A1A6B; }
+  .house.drag-over { border-color: var(--coral) !important; }
+  .house-words { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .house-words .hw { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 8px; color: white; background: rgba(0,0,0,0.25); }
+
+  /* ===== GAME 6: FIX SLOVIK ===== */
+  .fix-statement {
+    font-size: 18px;
+    font-weight: 800;
+    text-align: center;
+    padding: 16px;
+    background: linear-gradient(135deg, var(--coral-light), var(--cream));
+    border-radius: 18px;
+    margin-bottom: 14px;
+    line-height: 1.4;
+  }
+  .fix-statement .word-highlight {
+    color: var(--coral);
+    text-decoration: underline dotted;
+  }
+  .fix-btns { display: flex; gap: 10px; justify-content: center; }
+  .fix-btn {
+    flex: 1;
+    max-width: 160px;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    transition: transform 0.1s;
+  }
+  .fix-btn:active { transform: scale(0.95); }
+  .fix-btn.verno { background: #D4F4DC; color: #1A6B2A; }
+  .fix-btn.oshibka { background: #FFE8DC; color: #8B3A1A; }
+  .fix-btn.selected-right { background: var(--green); color: white; }
+  .fix-btn.selected-wrong { background: var(--coral); color: white; animation: shake 0.3s; }
+
+  /* ===== GAME 7: BUILD SENTENCE ===== */
+  .sentence-target {
+    background: var(--sky);
+    border-radius: 14px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .sentence-drop-zone {
+    min-height: 56px;
+    border-radius: 14px;
+    border: 3px dashed var(--sky-deep);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 8px 10px;
+    align-items: center;
+    margin-bottom: 12px;
+    background: var(--cream);
+    transition: border-color 0.2s;
+  }
+  .sentence-drop-zone.drag-over { border-color: var(--coral); }
+  .sentence-word {
+    background: var(--sky-deep);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: grab;
+    touch-action: none;
+  }
+  .sentence-word.in-pool {
+    background: var(--cream);
+    color: var(--text-dark);
+    border: 2px solid #D0E8E8;
+  }
+  .word-pool-sentence {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  /* ===== GAME 8: EXPLAIN ===== */
+  .explain-word {
+    font-size: 28px;
+    font-weight: 900;
+    text-align: center;
+    padding: 16px;
+    background: linear-gradient(135deg, #F0E8FF, var(--cream));
+    border-radius: 18px;
+    margin-bottom: 14px;
+    color: var(--text-dark);
+  }
+  .explain-question {
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    color: var(--text-mid);
+    margin-bottom: 12px;
+  }
+  .explain-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .explain-option {
+    background: var(--cream);
+    border: 2.5px solid #D0E8E8;
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    color: var(--text-dark);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .explain-option:active { transform: scale(0.98); }
+  .explain-option .opt-letter {
+    width: 24px; height: 24px; flex-shrink: 0;
+    background: var(--sky);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 900; color: var(--sky-deep);
+  }
+  .explain-option.correct-pick { background: #D4F4DC; border-color: var(--green); }
+  .explain-option.correct-pick .opt-letter { background: var(--green); color: white; }
+  .explain-option.wrong-pick { background: #FFE8DC; border-color: var(--coral); }
+  .explain-option.wrong-pick .opt-letter { background: var(--coral); color: white; }
+  .explain-option.reveal-correct { background: #D4F4DC; border-color: var(--green); }
+
+  /* ===== SLOVIK REACTIONS ===== */
+  #slovik-reaction {
+    position: fixed;
+    bottom: 20px;
+    right: 16px;
+    z-index: 300;
+    pointer-events: none;
+    transition: transform 0.3s;
+  }
+  #slovik-reaction .reaction-bubble {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    background: white;
+    border-radius: 16px 16px 0 16px;
+    padding: 8px 12px;
+    font-size: 13px;
+    font-weight: 700;
+    max-width: 160px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    display: none;
+    color: var(--text-dark);
+    line-height: 1.3;
+  }
+  #slovik-reaction .reaction-bubble.show { display: block; animation: bubblePop 0.3s ease; }
+  @keyframes bubblePop { from{transform:scale(0.8);opacity:0;} to{transform:scale(1);opacity:1;} }
+
+  /* ===== END SCREEN ===== */
+  #screen-end {
+    background: linear-gradient(180deg, #A8E6E6 0%, #B8E6BF 100%);
+    padding-top: 16px;
+  }
+  .end-card {
+    background: var(--white);
+    border-radius: 28px;
+    padding: 24px 20px;
+    width: min(400px, 96vw);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  .end-trophy { font-size: 64px; margin-bottom: 8px; animation: trophy-bounce 1s ease-in-out infinite; }
+  @keyframes trophy-bounce { 0%,100%{transform:translateY(0) rotate(-5deg);} 50%{transform:translateY(-8px) rotate(5deg);} }
+  .end-title { font-size: 24px; font-weight: 900; color: var(--text-dark); margin-bottom: 4px; }
+  .end-sub { font-size: 14px; color: var(--text-mid); margin-bottom: 18px; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .stat-box {
+    background: var(--sky);
+    border-radius: 14px;
+    padding: 12px 10px;
+  }
+  .stat-num { font-size: 28px; font-weight: 900; color: var(--sky-deep); }
+  .stat-label { font-size: 11px; font-weight: 700; color: var(--text-mid); }
+  .report-title { font-size: 14px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; text-align: left; }
+  .report-rows { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+  .report-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+  .report-bar-bg {
+    flex: 1;
+    height: 10px;
+    background: #EEE;
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .report-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    background: var(--green);
+    transition: width 1s ease;
+  }
+  .report-bar-fill.low { background: var(--coral); }
+  .report-bar-fill.mid { background: var(--yellow); }
+
+  /* ===== PARTICLES ===== */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 999;
+    font-size: 20px;
+    animation: particle-fly 0.9s ease-out forwards;
+  }
+  @keyframes particle-fly {
+    0%{transform:translateY(0) scale(1); opacity:1;}
+    100%{transform:translateY(-80px) scale(0.5); opacity:0;}
+  }
+
+  /* Screen shake */
+  @keyframes screen-shake {
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-6px);}
+    40%{transform:translateX(6px);}
+    60%{transform:translateX(-4px);}
+    80%{transform:translateX(4px);}
+  }
+  .shake { animation: screen-shake 0.4s ease; }
+
+  /* scroll inside game card */
+  #screen-game { overflow-y: auto; }
+  .game-card { margin-bottom: 16px; }
+
+  /* Drag ghost */
+  #drag-ghost {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    background: var(--coral-light);
+    border: 2px solid var(--coral);
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    color: var(--text-dark);
+    display: none;
+    transform: translate(-50%, -50%);
+  }
+</style>
+</head>
+<body>
+
+<!-- Clouds background -->
+<div class="cloud" style="width:120px;height:35px;top:8%;animation-duration:22s;animation-delay:0s;"></div>
+<div class="cloud" style="width:80px;height:24px;top:18%;animation-duration:30s;animation-delay:-10s;"></div>
+<div class="cloud" style="width:160px;height:45px;top:5%;animation-duration:26s;animation-delay:-18s;"></div>
+<div class="cloud" style="width:100px;height:30px;top:25%;animation-duration:20s;animation-delay:-5s;"></div>
+
+<!-- Drag ghost -->
+<div id="drag-ghost"></div>
+
+<!-- Mute button -->
+<button id="mute-btn" onclick="toggleMute()" title="Звук">🔊</button>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-mini-title">Испытание</div>
+  <div id="progress-dots"></div>
+  <div id="score-hud">⭐ 0</div>
+</div>
+
+<!-- Slovik Reaction -->
+<div id="slovik-reaction">
+  <div class="reaction-bubble" id="reaction-bubble"></div>
+  <svg class="slovik-svg" id="react-slovik" viewBox="0 0 70 80" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="35" cy="45" rx="28" ry="26" fill="#4ABFBF"/>
+    <ellipse cx="35" cy="44" rx="25" ry="23" fill="#5ECFCF"/>
+    <!-- crown -->
+    <polygon points="20,22 25,14 30,20 35,12 40,20 45,14 50,22" fill="#F5D76E" stroke="#E8845A" stroke-width="1.5"/>
+    <!-- eyes -->
+    <circle cx="26" cy="40" r="7" fill="white"/>
+    <circle cx="44" cy="40" r="7" fill="white"/>
+    <circle cx="27" cy="41" r="4" fill="#2D3A3A" id="eye-l"/>
+    <circle cx="45" cy="41" r="4" fill="#2D3A3A" id="eye-r"/>
+    <circle cx="28" cy="39.5" r="1.5" fill="white"/>
+    <circle cx="46" cy="39.5" r="1.5" fill="white"/>
+    <!-- mouth -->
+    <path id="react-mouth" d="M 28 52 Q 35 58 42 52" stroke="#2D3A3A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- paws -->
+    <ellipse cx="12" cy="52" rx="8" ry="6" fill="#4ABFBF"/>
+    <ellipse cx="58" cy="52" rx="8" ry="6" fill="#4ABFBF"/>
+  </svg>
+</div>
+
+<div id="app">
+
+<!-- START SCREEN -->
+<div id="screen-start" class="screen active">
+  <div class="island-scene">
+    <div class="island-ground">
+      <div class="tree" style="left:18%;"><div class="tree-trunk"></div><div class="tree-top"></div></div>
+      <div class="tree" style="right:18%;"><div class="tree-trunk"></div><div class="tree-top" style="background:#4A8A4A;"></div></div>
+    </div>
+    <div class="slovik" style="position:absolute;bottom:80px;left:50%;transform:translateX(-50%);">
+      <svg class="slovik-svg" viewBox="0 0 70 80" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="35" cy="45" rx="28" ry="26" fill="#4ABFBF"/>
+        <ellipse cx="35" cy="44" rx="25" ry="23" fill="#5ECFCF"/>
+        <polygon points="20,22 25,14 30,20 35,12 40,20 45,14 50,22" fill="#F5D76E" stroke="#E8845A" stroke-width="1.5"/>
+        <circle cx="26" cy="40" r="7" fill="white"/>
+        <circle cx="44" cy="40" r="7" fill="white"/>
+        <circle cx="27" cy="41" r="4" fill="#2D3A3A"/>
+        <circle cx="45" cy="41" r="4" fill="#2D3A3A"/>
+        <circle cx="28" cy="39.5" r="1.5" fill="white"/>
+        <circle cx="46" cy="39.5" r="1.5" fill="white"/>
+        <path d="M 28 52 Q 35 58 42 52" stroke="#2D3A3A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <ellipse cx="12" cy="52" rx="8" ry="6" fill="#4ABFBF"/>
+        <ellipse cx="58" cy="52" rx="8" ry="6" fill="#4ABFBF"/>
+      </svg>
+    </div>
+  </div>
+  <div class="game-title">Остров<br>Речестан</div>
+  <div class="game-subtitle">Помоги Словику найти все слова! 🗺️</div>
+  <button class="btn-primary" onclick="startGame()">Начать приключение</button>
+  <div style="margin-top:14px;font-size:13px;color:var(--cream);text-align:center;font-weight:600;opacity:0.85;">
+    Имя существительное · Одушевлённое/Неодушевлённое<br>Собственное/Нарицательное
+  </div>
+</div>
+
+<!-- MAP SCREEN -->
+<div id="screen-map" class="screen">
+  <div class="map-title">🗺️ Карта острова Речестан</div>
+  <div class="map-score" id="map-score-display">Очки: 0</div>
+  <div class="map-grid" id="map-grid"></div>
+  <div style="margin-top:14px;font-size:12px;color:var(--cream);text-align:center;font-weight:600;opacity:0.8;">
+    Нажми на испытание, чтобы начать!
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="screen-game" class="screen">
+  <div class="game-card" id="game-card-content"></div>
+</div>
+
+<!-- END SCREEN -->
+<div id="screen-end" class="screen">
+  <div class="end-card">
+    <div class="end-trophy">🏆</div>
+    <div class="end-title">Словик говорит: «Ты лучший!»</div>
+    <div class="end-sub" id="end-sub">Все слова острова Речестан найдены!</div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-num" id="stat-score">0</div><div class="stat-label">Очков</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-acc">0%</div><div class="stat-label">Точность</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-hints">0</div><div class="stat-label">Подсказок</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-time">0 мин</div><div class="stat-label">Время</div></div>
+    </div>
+    <div class="report-title">📊 Отчёт для учителя</div>
+    <div class="report-rows" id="report-rows"></div>
+    <button class="btn-primary" onclick="restartGame()" style="font-size:16px;padding:13px 36px;">Сыграть снова</button>
+    <button class="btn-secondary" onclick="showReport()">Подробный отчёт</button>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<!-- Choice modal for game 3 -->
+<div class="choice-modal" id="choice-modal">
+  <div class="choice-sheet">
+    <div class="choice-sheet-label" id="choice-label">Это живое или нет?</div>
+    <div class="choice-btns">
+      <button class="choice-btn who" onclick="chooseAnswer('who')">🐾 КТО?</button>
+      <button class="choice-btn what" onclick="chooseAnswer('what')">🌿 ЧТО?</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// STATE
+// =============================================
+const state = {
+  score: 0,
+  totalAnswers: 0,
+  correctAnswers: 0,
+  hintsUsed: 0,
+  startTime: null,
+  currentMini: 0,
+  miniStats: Array(8).fill(null).map(() => ({ correct: 0, wrong: 0, hints: 0 })),
+  completed: Array(8).fill(false),
+  muted: false
+};
+
+// =============================================
+// MINI-GAME DATA
+// =============================================
+const MINIS = [
+  {
+    id: 0,
+    icon: '🦋',
+    title: 'Кто? Что? — Сортируй!',
+    action: 'Сортировка',
+    instruction: 'Перетащи каждое слово в нужную корзину',
+    type: 'sort',
+    words: [
+      { w: 'собака', who: true },
+      { w: 'стол', who: false },
+      { w: 'учитель', who: true },
+      { w: 'книга', who: false },
+      { w: 'кот', who: true },
+      { w: 'дерево', who: false },
+      { w: 'девочка', who: true },
+      { w: 'облако', who: false }
+    ]
+  },
+  {
+    id: 1,
+    icon: '🔠',
+    title: 'Заглавная буква — стражник',
+    action: 'Вспоминание',
+    instruction: 'Все слова написаны ЗАГЛАВНЫМИ буквами. Нажми на те, которые в жизни пишутся с заглавной буквы (имена собственные)',
+    type: 'tap_capitals',
+    words: [
+      { w: 'МОСКВА', real: 'Москва', capital: true },
+      { w: 'ГОРОД', real: 'город', capital: false },
+      { w: 'ВОЛГА', real: 'Волга', capital: true },
+      { w: 'РЕКА', real: 'река', capital: false },
+      { w: 'МУРЗИК', real: 'Мурзик', capital: true },
+      { w: 'КОШКА', real: 'кошка', capital: false },
+      { w: 'РОССИЯ', real: 'Россия', capital: true },
+      { w: 'СТРАНА', real: 'страна', capital: false },
+      { w: 'МАША', real: 'Маша', capital: true },
+      { w: 'ДЕВОЧКА', real: 'девочка', capital: false }
+    ],
+    explain: {
+      'МОСКВА': 'МОСКВА → «Москва» — имя собственное: название города.',
+      'ВОЛГА': 'ВОЛГА → «Волга» — имя собственное: название реки.',
+      'МУРЗИК': 'МУРЗИК → «Мурзик» — имя собственное: кличка кота.',
+      'РОССИЯ': 'РОССИЯ → «Россия» — имя собственное: название страны.',
+      'МАША': 'МАША → «Маша» — имя собственное: имя человека.'
+    }
+  },
+  {
+    id: 2,
+    icon: '🌳',
+    title: 'Волшебный лес',
+    action: 'Применение',
+    instruction: 'Нажми на картинку и выбери: КТО? или ЧТО?',
+    type: 'forest',
+    items: [
+      { emoji: '🐺', name: 'волк', who: true },
+      { emoji: '🌲', name: 'ель', who: false },
+      { emoji: '🦌', name: 'олень', who: true },
+      { emoji: '🍄', name: 'гриб', who: false },
+      { emoji: '🐿️', name: 'белка', who: true },
+      { emoji: '🪵', name: 'пень', who: false }
+    ]
+  },
+  {
+    id: 3,
+    icon: '⚡',
+    title: 'Ловушки Словика',
+    action: 'Применение (ловушки)',
+    instruction: 'Ответь на ДВА вопроса про каждое слово',
+    type: 'traps2',
+    items: [
+      {
+        word: 'кукла',
+        anim: false,   // одушевлённое?
+        own: false,    // собственное?
+        explainAnim: 'Кукла не живая — она неодушевлённое. Спрашиваем «что?».',
+        explainOwn: '«Кукла» — общее название игрушки. Это нарицательное.'
+      },
+      {
+        word: 'Байкал',
+        anim: false,
+        own: true,
+        explainAnim: 'Байкал — озеро, не живое существо. Неодушевлённое («что?»).',
+        explainOwn: '«Байкал» — название конкретного озера. Это собственное имя, пишется с заглавной буквы.'
+      },
+      {
+        word: 'змея',
+        anim: true,
+        own: false,
+        explainAnim: 'Змея — живое существо! Одушевлённое, спрашиваем «кто?».',
+        explainOwn: '«Змея» — общее название животного. Это нарицательное.'
+      },
+      {
+        word: 'солнце',
+        anim: false,
+        own: false,
+        explainAnim: 'Солнце не живое, хотя светит. Неодушевлённое («что?»).',
+        explainOwn: '«Солнце» — общее название небесного тела. Нарицательное.'
+      },
+      {
+        word: 'Мурзик',
+        anim: true,
+        own: true,
+        explainAnim: 'Мурзик — это кот, живое существо. Одушевлённое («кто?»).',
+        explainOwn: '«Мурзик» — кличка конкретного кота. Это собственное имя.'
+      }
+    ]
+  },
+  {
+    id: 4,
+    icon: '🏘️',
+    title: 'Четыре домика',
+    action: 'Сортировка (2 оси)',
+    instruction: 'Перетащи слово в правильный домик',
+    type: 'four_houses',
+    houses: [
+      { id: 'h1', label: 'Собственное\n+\nОдушевлённое', icon: '👑🐾', cls: 'h1', ownAnim: true, words: ['Барсик', 'Дружок', 'Снежинка'] },
+      { id: 'h2', label: 'Собственное\n+\nНеодушевлённое', icon: '👑🪨', cls: 'h2', words: ['Москва', 'Нева', 'Байкал'] },
+      { id: 'h3', label: 'Нарицательное\n+\nОдушевлённое', icon: '📖🐾', cls: 'h3', words: ['кот', 'врач', 'птица'] },
+      { id: 'h4', label: 'Нарицательное\n+\nНеодушевлённое', icon: '📖🪨', cls: 'h4', words: ['стул', 'море', 'книга'] }
+    ],
+    allWords: ['Барсик', 'Москва', 'кот', 'стул', 'Дружок', 'Нева', 'врач', 'море', 'Снежинка', 'Байкал', 'птица', 'книга']
+  },
+  {
+    id: 5,
+    icon: '🔍',
+    title: 'Исправь Словика',
+    action: 'Применение',
+    instruction: 'Словик говорит. Нажми «Верно» или «Ошибка»!',
+    type: 'fix',
+    items: [
+      { statement: '<span class="word-highlight">Лиса</span> — неодушевлённое существительное', correct: false, explain: 'Ошибка! Лиса — живое существо, значит одушевлённое. Спрашиваем «кто?».' },
+      { statement: '<span class="word-highlight">Стол</span> — нарицательное существительное', correct: true, explain: 'Верно! Стол — общее название предмета, значит нарицательное.' },
+      { statement: '<span class="word-highlight">Волга</span> — нарицательное существительное', correct: false, explain: 'Ошибка! Волга — имя собственное: название реки. Пишется с заглавной буквы.' },
+      { statement: '<span class="word-highlight">Дерево</span> — одушевлённое существительное', correct: false, explain: 'Ошибка! Дерево не живое существо. Спрашиваем «что?» — значит неодушевлённое.' },
+      { statement: '<span class="word-highlight">Андрей</span> — имя собственное', correct: true, explain: 'Верно! Андрей — имя человека, это собственное существительное.' },
+      { statement: '<span class="word-highlight">Кошка</span> — собственное существительное', correct: false, explain: 'Ошибка! Кошка — общее название животного, значит нарицательное.' }
+    ]
+  },
+  {
+    id: 6,
+    icon: '📝',
+    title: 'Собери предложение',
+    action: 'Построение',
+    instruction: 'Собери предложение, перетащив слова по порядку',
+    type: 'sentence',
+    sentences: [
+      {
+        words: ['Маша', 'читает', 'интересную', 'книгу', '.'],
+        correct: ['Маша', 'читает', 'интересную', 'книгу', '.'],
+        hint: 'Начни с имени собственного — имени человека',
+        explain: '«Маша» — имя собственное (имя человека), пишется с заглавной буквы.'
+      },
+      {
+        words: ['По', 'Волге', 'плывёт', 'большой', 'корабль', '.'],
+        correct: ['По', 'Волге', 'плывёт', 'большой', 'корабль', '.'],
+        hint: 'Найди имя собственное — название реки',
+        explain: '«Волга» — имя собственное (название реки), пишется с заглавной буквы.'
+      },
+      {
+        words: ['Кот', 'Мурзик', 'спит', 'на', 'диване', '.'],
+        correct: ['Кот', 'Мурзик', 'спит', 'на', 'диване', '.'],
+        hint: 'Кличка кота — имя собственное!',
+        explain: '«Мурзик» — имя собственное (кличка кота). «Кот» — нарицательное. «Диван» — неодушевлённое.'
+      }
+    ]
+  },
+  {
+    id: 7,
+    icon: '💬',
+    title: 'Объясни Словику',
+    action: 'Объяснение',
+    instruction: 'Выбери правильное объяснение',
+    type: 'explain',
+    items: [
+      {
+        word: 'врач',
+        question: 'Почему «врач» — одушевлённое существительное?',
+        options: [
+          'Потому что это важная профессия',
+          'Потому что врач — живой человек, отвечает на вопрос «кто?»',
+          'Потому что слово красивое'
+        ],
+        correct: 1,
+        explain: 'Правильно! Одушевлённые — это живые существа (люди, животные). Спрашиваем «кто?» — кто это? Врач!'
+      },
+      {
+        word: 'Байкал',
+        question: 'Почему «Байкал» — имя собственное?',
+        options: [
+          'Потому что это очень большое озеро',
+          'Потому что Байкал — красивое слово',
+          'Потому что это название конкретного озера, пишется с заглавной буквы'
+        ],
+        correct: 2,
+        explain: 'Верно! Собственные имена — это названия конкретных предметов, мест, людей, кличек. Они пишутся с заглавной буквы.'
+      },
+      {
+        word: 'кукла',
+        question: 'Почему «кукла» — неодушевлённое существительное?',
+        options: [
+          'Потому что кукла не живая, отвечает на вопрос «что?»',
+          'Потому что кукла маленькая',
+          'Потому что кукла похожа на человека, значит одушевлённое'
+        ],
+        correct: 0,
+        explain: 'Верно! Хотя кукла похожа на человека, она не живая. Спрашиваем «что это?» — кукла. Значит, неодушевлённое!'
+      },
+      {
+        word: 'город',
+        question: 'Почему «город» — нарицательное существительное?',
+        options: [
+          'Потому что в городе много людей',
+          'Потому что это общее название для любого города, не конкретного',
+          'Потому что слово начинается с маленькой буквы'
+        ],
+        correct: 1,
+        explain: 'Правильно! Нарицательные — это общие названия: город, река, кошка, человек. А собственные — конкретные: Москва, Волга, Мурзик, Маша.'
+      }
+    ]
+  }
+];
+
+// =============================================
+// MINI NAMES FOR MAP
+// =============================================
+const MINI_NAMES = [
+  'Кто? Что?', 'Заглавные', 'Волшебный лес', 'Ловушки',
+  'Четыре домика', 'Исправь', 'Предложение', 'Объясни'
+];
+
+// =============================================
+// SOUNDS
+// =============================================
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq, dur, type='sine', vol=0.2) {
+  if (state.muted) return;
+  try {
+    const ac = getAudio();
+    const osc = ac.createOscillator();
+    const gain = ac.createGain();
+    osc.connect(gain); gain.connect(ac.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ac.currentTime);
+    gain.gain.setValueAtTime(vol, ac.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+    osc.start(); osc.stop(ac.currentTime + dur);
+  } catch(e){}
+}
+function playCorrect() { playTone(523,0.1); setTimeout(()=>playTone(659,0.1),100); setTimeout(()=>playTone(784,0.2),200); }
+function playWrong() { playTone(220,0.3,'sawtooth',0.1); }
+function playClick() { playTone(440,0.08,'sine',0.1); }
+function toggleMute() {
+  state.muted = !state.muted;
+  document.getElementById('mute-btn').textContent = state.muted ? '🔇' : '🔊';
+}
+
+// =============================================
+// PARTICLES
+// =============================================
+function spawnParticles(x, y, good=true) {
+  const emojis = good ? ['⭐','✨','🌟','💫','🎉'] : ['💨'];
+  for (let i = 0; i < (good?5:2); i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    p.style.left = (x + (Math.random()-0.5)*60) + 'px';
+    p.style.top = (y + (Math.random()-0.5)*30) + 'px';
+    p.style.animationDelay = (Math.random()*0.2) + 's';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 1000);
+  }
+}
+
+// =============================================
+// SLOVIK REACTIONS
+// =============================================
+const reactions = {
+  correct: ['Отлично!🎉', 'Так держать!⭐', 'Молодец!🌟', 'Правильно!✅', 'Умничка!💫'],
+  wrong: ['Попробуй ещё!', 'Подумай ещё раз', 'Не сдавайся!💪', 'Почти!🤔'],
+  hint: ['Вот подсказка!💡', 'Помогу!🦋']
+};
+let reactionTimer = null;
+function showReaction(type) {
+  const bubble = document.getElementById('reaction-bubble');
+  const mouth = document.getElementById('react-mouth');
+  const arr = reactions[type] || reactions.correct;
+  bubble.textContent = arr[Math.floor(Math.random()*arr.length)];
+  bubble.className = 'reaction-bubble show';
+  if (type === 'correct') mouth.setAttribute('d', 'M 28 52 Q 35 60 42 52');
+  else if (type === 'wrong') mouth.setAttribute('d', 'M 28 54 Q 35 48 42 54');
+  else mouth.setAttribute('d', 'M 28 52 Q 35 56 42 52');
+  clearTimeout(reactionTimer);
+  reactionTimer = setTimeout(()=>{ bubble.className = 'reaction-bubble'; }, 2000);
+}
+
+// =============================================
+// SCREEN NAVIGATION
+// =============================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  const hud = document.getElementById('hud');
+  if (id === 'game' || id === 'map') hud.classList.add('visible');
+  else hud.classList.remove('visible');
+}
+
+// =============================================
+// UPDATE HUD
+// =============================================
+function updateHUD(miniId) {
+  document.getElementById('hud-mini-title').textContent = MINIS[miniId].title;
+  document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+  const dots = document.getElementById('progress-dots');
+  dots.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (state.completed[i] ? ' done' : (i === miniId ? ' current' : ''));
+    dots.appendChild(d);
+  }
+}
+
+// =============================================
+// START / RESTART
+// =============================================
+function startGame() {
+  playClick();
+  state.startTime = Date.now();
+  state.score = 0;
+  state.totalAnswers = 0;
+  state.correctAnswers = 0;
+  state.hintsUsed = 0;
+  state.completed = Array(8).fill(false);
+  state.miniStats = Array(8).fill(null).map(()=>({correct:0,wrong:0,hints:0}));
+  showScreen('map');
+  buildMap();
+}
+function restartGame() { playClick(); startGame(); }
+
+// =============================================
+// MAP
+// =============================================
+const mapIcons = ['🦋','🔠','🌳','⚡','🏘️','🔍','📝','💬'];
+const mapBg = ['#E8F5FB','#FBF5E8','#E8FBE8','#FBE8E8','#EEE8FB','#FBF0E8','#E8EEF5','#F5E8FB'];
+
+function buildMap() {
+  document.getElementById('map-score-display').textContent = 'Очки: ' + state.score;
+  const grid = document.getElementById('map-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const cell = document.createElement('div');
+    const isDone = state.completed[i];
+    const isFirst = !isDone && (i === 0 || state.completed[i-1] || state.completed.some((c,j)=>c && j<i));
+    const isAvail = !isDone && (i === 0 || state.completed.slice(0,i).some(Boolean) || (i > 0 && state.completed[i-1]));
+    cell.className = 'map-cell ' + (isDone ? 'done' : (isAvail ? (i === state.completed.findIndex((c,j)=>!c) ? 'current' : 'available') : 'locked'));
+    cell.style.background = isDone ? '' : mapBg[i];
+    cell.innerHTML = `<span class="cell-num">${i+1}</span><span class="cell-icon">${mapIcons[i]}</span><span>${MINI_NAMES[i]}</span>`;
+    if (!isDone && isAvail) cell.onclick = () => { playClick(); launchMini(i); };
+    else if (isDone) cell.onclick = () => { playClick(); launchMini(i); };
+    grid.appendChild(cell);
+  }
+}
+
+// =============================================
+// LAUNCH MINI
+// =============================================
+function launchMini(id) {
+  state.currentMini = id;
+  updateHUD(id);
+  showScreen('game');
+  renderMini(id);
+}
+
+// =============================================
+// RENDER MINI-GAME
+// =============================================
+function renderMini(id) {
+  const mini = MINIS[id];
+  const card = document.getElementById('game-card-content');
+  card.innerHTML = '';
+
+  // Header
+  card.innerHTML += `
+    <div class="mini-header">
+      <div class="mini-icon-wrap">${mini.icon}</div>
+      <div class="mini-title-wrap">
+        <div class="mini-num">ИСПЫТАНИЕ ${id+1} / 8 · ${mini.action}</div>
+        <div class="mini-title">${mini.title}</div>
+      </div>
+    </div>
+    <div class="instruction-box"><span class="inst-icon">👆</span>${mini.instruction}</div>
+  `;
+
+  // Content area
+  const content = document.createElement('div');
+  content.id = 'mini-content';
+  card.appendChild(content);
+
+  // Feedback
+  const fb = document.createElement('div');
+  fb.className = 'feedback-box';
+  fb.id = 'feedback';
+  card.appendChild(fb);
+
+  // Hint btn
+  const hintBtn = document.createElement('button');
+  hintBtn.className = 'hint-btn';
+  hintBtn.id = 'hint-btn';
+  hintBtn.textContent = '💡 Подсказка';
+  hintBtn.onclick = () => showHint(id);
+  hintBtn.style.display = 'none';
+  card.appendChild(hintBtn);
+
+  // Next btn
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next-btn';
+  nextBtn.id = 'next-btn';
+  nextBtn.textContent = id < 7 ? 'Следующее испытание →' : '🎉 Завершить!';
+  nextBtn.onclick = () => finishMini(id);
+  card.appendChild(nextBtn);
+
+  // Build specific game
+  switch(mini.type) {
+    case 'sort': buildSort(mini, content); break;
+    case 'tap_capitals': buildTapCapitals(mini, content); break;
+    case 'forest': buildForest(mini, content); break;
+    case 'traps': buildTraps(mini, content); break;
+    case 'traps2': buildTraps(mini, content); break;
+    case 'four_houses': buildFourHouses(mini, content); break;
+    case 'fix': buildFix(mini, content); break;
+    case 'sentence': buildSentence(mini, content); break;
+    case 'explain': buildExplain(mini, content); break;
+  }
+}
+
+// =============================================
+// HELPERS
+// =============================================
+function showFeedback(type, text) {
+  const fb = document.getElementById('feedback');
+  if (!fb) return;
+  fb.className = 'feedback-box ' + type;
+  fb.innerHTML = text;
+  fb.style.display = 'block';
+}
+function showNextBtn() {
+  const n = document.getElementById('next-btn');
+  if (n) n.classList.add('visible');
+}
+function showHintBtn() {
+  const h = document.getElementById('hint-btn');
+  if (h) h.style.display = 'inline-block';
+}
+function hideHintBtn() {
+  const h = document.getElementById('hint-btn');
+  if (h) h.style.display = 'none';
+}
+
+// =============================================
+// FINISH MINI
+// =============================================
+function finishMini(id) {
+  playClick();
+  state.completed[id] = true;
+  if (state.completed.every(Boolean)) {
+    showEndScreen();
+  } else {
+    showScreen('map');
+    buildMap();
+    showReaction('correct');
+  }
+}
+
+// =============================================
+// GAME 1: SORT
+// =============================================
+let dragWord = null;
+let dragWordEl = null;
+
+function buildSort(mini, container) {
+  const pool = document.createElement('div');
+  pool.className = 'word-cards-pool';
+  pool.id = 'sort-pool';
+
+  const shuffled = [...mini.words].sort(()=>Math.random()-0.5);
+  shuffled.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+    card.textContent = item.w;
+    card.dataset.word = item.w;
+    card.dataset.who = item.who ? '1' : '0';
+    setupDrag(card, item);
+    pool.appendChild(card);
+  });
+
+  const bins = document.createElement('div');
+  bins.className = 'sort-bins';
+
+  ['who','what'].forEach(type => {
+    const bin = document.createElement('div');
+    bin.className = 'sort-bin ' + type;
+    bin.id = 'bin-' + type;
+    bin.innerHTML = `
+      <div class="sort-bin-label">${type==='who'?'🐾 КТО?':'🪨 ЧТО?'}</div>
+      <div class="sort-bin-words" id="bin-words-${type}"></div>
+    `;
+    setupDropZone(bin, type);
+    bins.appendChild(bin);
+  });
+
+  container.appendChild(pool);
+  container.appendChild(bins);
+
+  // track sort state
+  container._sortState = { placed: 0, total: mini.words.length, wrong: 0 };
+}
+
+function setupDrag(card, item) {
+  // Touch drag
+  card.addEventListener('touchstart', e => {
+    e.preventDefault();
+    dragWord = item;
+    dragWordEl = card;
+    card.classList.add('dragging');
+    const ghost = document.getElementById('drag-ghost');
+    ghost.textContent = item.w;
+    ghost.style.display = 'block';
+  }, {passive:false});
+
+  card.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const ghost = document.getElementById('drag-ghost');
+    ghost.style.left = t.clientX + 'px';
+    ghost.style.top = t.clientY + 'px';
+    // highlight drop zone
+    document.querySelectorAll('.sort-bin,.house').forEach(b=>b.classList.remove('drag-over'));
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const bin = el?.closest('.sort-bin, .house');
+    if (bin) bin.classList.add('drag-over');
+  }, {passive:false});
+
+  card.addEventListener('touchend', e => {
+    e.preventDefault();
+    const ghost = document.getElementById('drag-ghost');
+    ghost.style.display = 'none';
+    const t = e.changedTouches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const bin = el?.closest('.sort-bin');
+    const house = el?.closest('.house');
+    document.querySelectorAll('.sort-bin,.house').forEach(b=>b.classList.remove('drag-over'));
+    if (bin && dragWordEl) handleSortDrop(bin, dragWordEl, dragWord);
+    else if (house && dragWordEl) handleHouseDrop(house, dragWordEl, dragWord);
+    if (dragWordEl) dragWordEl.classList.remove('dragging');
+    dragWord = null; dragWordEl = null;
+  });
+
+  // Mouse drag
+  card.addEventListener('mousedown', e => {
+    dragWord = item;
+    dragWordEl = card;
+    card.classList.add('dragging');
+    const ghost = document.getElementById('drag-ghost');
+    ghost.textContent = item.w || item;
+    ghost.style.display = 'block';
+    ghost.style.left = e.clientX + 'px';
+    ghost.style.top = e.clientY + 'px';
+  });
+}
+
+document.addEventListener('mousemove', e => {
+  if (!dragWordEl) return;
+  const ghost = document.getElementById('drag-ghost');
+  ghost.style.left = e.clientX + 'px';
+  ghost.style.top = e.clientY + 'px';
+  document.querySelectorAll('.sort-bin,.house,.sentence-drop-zone').forEach(b=>b.classList.remove('drag-over'));
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const bin = el?.closest('.sort-bin,.house,.sentence-drop-zone');
+  if (bin) bin.classList.add('drag-over');
+});
+
+document.addEventListener('mouseup', e => {
+  if (!dragWordEl) return;
+  const ghost = document.getElementById('drag-ghost');
+  ghost.style.display = 'none';
+  const el = document.elementFromPoint(e.clientX, e.clientY);
+  const bin = el?.closest('.sort-bin');
+  const house = el?.closest('.house');
+  const sentDrop = el?.closest('.sentence-drop-zone');
+  document.querySelectorAll('.sort-bin,.house,.sentence-drop-zone').forEach(b=>b.classList.remove('drag-over'));
+  if (bin && dragWordEl) handleSortDrop(bin, dragWordEl, dragWord);
+  else if (house && dragWordEl) handleHouseDrop(house, dragWordEl, dragWord);
+  else if (sentDrop && dragWordEl) handleSentenceDrop(sentDrop, dragWordEl);
+  if (dragWordEl) dragWordEl.classList.remove('dragging');
+  dragWord = null; dragWordEl = null;
+});
+
+function handleSortDrop(bin, cardEl, item) {
+  if (!item || cardEl.classList.contains('placed')) return;
+  const isWho = item.who;
+  const binType = bin.id === 'bin-who' ? 'who' : 'what';
+  const correct = (isWho && binType === 'who') || (!isWho && binType === 'what');
+  const content = cardEl.closest('#mini-content') || document.getElementById('mini-content');
+  const s = content?._sortState || document.getElementById('sort-pool')?.parentElement?._sortState;
+
+  state.totalAnswers++;
+  if (correct) {
+    state.correctAnswers++;
+    state.score += 10;
+    state.miniStats[state.currentMini].correct++;
+    playCorrect();
+    spawnParticles(bin.getBoundingClientRect().left + 40, bin.getBoundingClientRect().top + 40);
+    showReaction('correct');
+    const pw = document.createElement('span');
+    pw.className = 'placed-word';
+    pw.textContent = item.w;
+    document.getElementById('bin-words-' + binType).appendChild(pw);
+    cardEl.classList.add('placed');
+    showFeedback('correct', `✅ <b>${item.w}</b> — верно! ${isWho ? 'Живое существо, спрашиваем «кто?»' : 'Неживой предмет, спрашиваем «что?»'}`);
+    // check if all placed
+    const pool = document.getElementById('sort-pool');
+    const remaining = pool.querySelectorAll('.word-card:not(.placed)').length;
+    if (remaining === 0) {
+      document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+      showNextBtn();
+    }
+  } else {
+    state.miniStats[state.currentMini].wrong++;
+    playWrong();
+    showReaction('wrong');
+    cardEl.classList.remove('dragging');
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'), 400);
+    showFeedback('wrong', `❌ Не туда! <b>${item.w}</b> — ${isWho ? 'живое, спрашиваем «кто?»' : 'неживое, спрашиваем «что?»'}`);
+    showHintBtn();
+  }
+  document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+}
+
+// =============================================
+// GAME 2: TAP CAPITALS
+// =============================================
+function buildTapCapitals(mini, container) {
+  const grid = document.createElement('div');
+  grid.className = 'tap-words-grid';
+
+  mini.words.forEach(item => {
+    const w = document.createElement('div');
+    w.className = 'tap-word';
+    w.textContent = item.w;
+    w.dataset.capital = item.capital ? '1' : '0';
+    w.dataset.word = item.w;
+    w.onclick = () => handleCapitalTap(w, item, mini);
+    grid.appendChild(w);
+  });
+
+  container.appendChild(grid);
+  container._tapState = {
+    required: mini.words.filter(w=>w.capital).length,
+    found: 0,
+    mistakes: 0
+  };
+}
+
+let tapCapComplete = false;
+function handleCapitalTap(el, item, mini) {
+  if (el.classList.contains('selected-correct') || el.classList.contains('selected-wrong') || tapCapComplete) return;
+  playClick();
+  state.totalAnswers++;
+  if (item.capital) {
+    state.correctAnswers++;
+    state.score += 10;
+    state.miniStats[state.currentMini].correct++;
+    el.classList.add('selected-correct');
+    playCorrect();
+    spawnParticles(el.getBoundingClientRect().left + 30, el.getBoundingClientRect().top);
+    showReaction('correct');
+    const explain = mini.explain[item.w] || `«${item.real}» — имя собственное, пишется с заглавной буквы.`;
+    showFeedback('correct', '✅ ' + explain);
+    // check all found
+    const all = document.querySelectorAll('.tap-word[data-capital="1"]');
+    const found = [...all].filter(e=>e.classList.contains('selected-correct')).length;
+    if (found === all.length) {
+      tapCapComplete = true;
+      showNextBtn();
+    }
+  } else {
+    state.miniStats[state.currentMini].wrong++;
+    el.classList.add('selected-wrong');
+    playWrong();
+    showReaction('wrong');
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'), 400);
+    showFeedback('wrong', `❌ «${item.real}» — нарицательное! Это общее название, пишется с маленькой буквы.`);
+    setTimeout(()=>el.classList.remove('selected-wrong'), 800);
+    showHintBtn();
+  }
+  document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+}
+
+// =============================================
+// GAME 3: FOREST
+// =============================================
+let currentForestItem = null;
+let forestAnswered = 0;
+
+function buildForest(mini, container) {
+  tapCapComplete = false;
+  forestAnswered = 0;
+  const grid = document.createElement('div');
+  grid.className = 'forest-scene';
+
+  mini.items.forEach((item, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'forest-item';
+    cell.id = 'forest-item-' + i;
+    cell.dataset.idx = i;
+    cell.innerHTML = `<span class="item-emoji">${item.emoji}</span><span class="item-name">${item.name}</span><span class="item-question"></span>`;
+    cell.onclick = () => openChoiceModal(item, i, mini.items.length);
+    grid.appendChild(cell);
+  });
+  container.appendChild(grid);
+}
+
+function openChoiceModal(item, idx, total) {
+  const cell = document.getElementById('forest-item-' + idx);
+  if (cell.classList.contains('answered-who') || cell.classList.contains('answered-what')) return;
+  currentForestItem = { item, idx, total };
+  document.getElementById('choice-label').textContent = `«${item.name}» — кто или что?`;
+  document.getElementById('choice-modal').classList.add('open');
+}
+
+function chooseAnswer(type) {
+  if (!currentForestItem) return;
+  document.getElementById('choice-modal').classList.remove('open');
+  const { item, idx, total } = currentForestItem;
+  const correct = (item.who && type === 'who') || (!item.who && type === 'what');
+  const cell = document.getElementById('forest-item-' + idx);
+  state.totalAnswers++;
+
+  if (correct) {
+    state.correctAnswers++;
+    state.score += 10;
+    state.miniStats[state.currentMini].correct++;
+    cell.classList.add(item.who ? 'answered-who' : 'answered-what');
+    cell.querySelector('.item-question').textContent = item.who ? 'КТО?' : 'ЧТО?';
+    playCorrect();
+    spawnParticles(cell.getBoundingClientRect().left + 30, cell.getBoundingClientRect().top + 30);
+    showReaction('correct');
+    showFeedback('correct', `✅ «${item.name}» — ${item.who ? 'живое существо, КТО?' : 'неживой предмет, ЧТО?'}`);
+    forestAnswered++;
+    if (forestAnswered === total) showNextBtn();
+  } else {
+    state.miniStats[state.currentMini].wrong++;
+    playWrong();
+    showReaction('wrong');
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'), 400);
+    showFeedback('wrong', `❌ «${item.name}» — ${item.who ? 'это живое! Спрашиваем «кто?»' : 'это неживое! Спрашиваем «что?»'}`);
+    showHintBtn();
+  }
+  document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+  currentForestItem = null;
+}
+
+// Close modal on bg tap
+document.getElementById('choice-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+// =============================================
+// GAME 4: TRAPS2 — two independent questions per word
+// =============================================
+let trapIdx = 0;
+function buildTraps(mini, container) {
+  trapIdx = 0;
+  renderTraps2(mini, container, 0);
+}
+
+function renderTraps2(mini, container, idx) {
+  container.innerHTML = '';
+  if (idx >= mini.items.length) {
+    showFeedback('correct', '✅ Все ловушки пройдены! Ты не попался!');
+    showNextBtn(); return;
+  }
+  const item = mini.items[idx];
+  container.innerHTML = `
+    <div class="trap2-counter">${idx+1} / ${mini.items.length}</div>
+    <div class="trap2-word">${item.word}</div>
+
+    <div class="trap2-block" id="trap2-block-anim">
+      <div class="trap2-question">🐾 Вопрос 1: Одушевлённое или неодушевлённое?</div>
+      <div class="trap2-btns">
+        <button class="trap2-btn" id="trap2-anim-yes" onclick="handleTraps2('anim', true, ${idx})">🐾 Одушевлённое<br><span style="font-size:11px;opacity:0.7;">(КТО?)</span></button>
+        <button class="trap2-btn" id="trap2-anim-no"  onclick="handleTraps2('anim', false, ${idx})">🌿 Неодушевлённое<br><span style="font-size:11px;opacity:0.7;">(ЧТО?)</span></button>
+      </div>
+    </div>
+
+    <div class="trap2-block" id="trap2-block-own" style="opacity:0.45;pointer-events:none;">
+      <div class="trap2-question">👑 Вопрос 2: Собственное или нарицательное?</div>
+      <div class="trap2-btns">
+        <button class="trap2-btn" id="trap2-own-yes" onclick="handleTraps2('own', true, ${idx})">👑 Собственное<br><span style="font-size:11px;opacity:0.7;">(имя/название)</span></button>
+        <button class="trap2-btn" id="trap2-own-no"  onclick="handleTraps2('own', false, ${idx})">📖 Нарицательное<br><span style="font-size:11px;opacity:0.7;">(общее слово)</span></button>
+      </div>
+    </div>
+  `;
+  // store current item answers
+  container._trap2state = { animDone: false, ownDone: false, item, idx };
+}
+
+function handleTraps2(type, userVal, idx) {
+  const container = document.getElementById('mini-content');
+  if (!container._trap2state) return;
+  const { item } = container._trap2state;
+  const mini = MINIS[3];
+
+  if (type === 'anim') {
+    if (container._trap2state.animDone) return;
+    container._trap2state.animDone = true;
+    const block = document.getElementById('trap2-block-anim');
+    const yesBtn = document.getElementById('trap2-anim-yes');
+    const noBtn = document.getElementById('trap2-anim-no');
+    // disable both
+    yesBtn.disabled = true; noBtn.disabled = true;
+    const correct = (userVal === item.anim);
+    state.totalAnswers++;
+    if (correct) {
+      state.correctAnswers++;
+      state.score += 10;
+      state.miniStats[state.currentMini].correct++;
+      block.classList.add('answered-correct');
+      (userVal ? yesBtn : noBtn).classList.add('selected-ok');
+      playCorrect();
+      showReaction('correct');
+      showFeedback('correct', '✅ ' + item.explainAnim);
+    } else {
+      state.miniStats[state.currentMini].wrong++;
+      block.classList.add('answered-wrong');
+      (userVal ? yesBtn : noBtn).classList.add('selected-err');
+      // reveal correct
+      (item.anim ? yesBtn : noBtn).classList.add('reveal-ok');
+      playWrong();
+      showReaction('wrong');
+      document.body.classList.add('shake');
+      setTimeout(()=>document.body.classList.remove('shake'), 400);
+      showFeedback('wrong', '❌ ' + item.explainAnim);
+      showHintBtn();
+    }
+    // unlock question 2
+    const block2 = document.getElementById('trap2-block-own');
+    block2.style.opacity = '1';
+    block2.style.pointerEvents = 'auto';
+    document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+  }
+
+  if (type === 'own') {
+    if (!container._trap2state.animDone) return;
+    if (container._trap2state.ownDone) return;
+    container._trap2state.ownDone = true;
+    const block = document.getElementById('trap2-block-own');
+    const yesBtn = document.getElementById('trap2-own-yes');
+    const noBtn = document.getElementById('trap2-own-no');
+    yesBtn.disabled = true; noBtn.disabled = true;
+    const correct = (userVal === item.own);
+    state.totalAnswers++;
+    if (correct) {
+      state.correctAnswers++;
+      state.score += 10;
+      state.miniStats[state.currentMini].correct++;
+      block.classList.add('answered-correct');
+      (userVal ? yesBtn : noBtn).classList.add('selected-ok');
+      playCorrect();
+      showReaction('correct');
+      showFeedback('correct', '✅ ' + item.explainOwn);
+    } else {
+      state.miniStats[state.currentMini].wrong++;
+      block.classList.add('answered-wrong');
+      (userVal ? yesBtn : noBtn).classList.add('selected-err');
+      (item.own ? yesBtn : noBtn).classList.add('reveal-ok');
+      playWrong();
+      showReaction('wrong');
+      document.body.classList.add('shake');
+      setTimeout(()=>document.body.classList.remove('shake'), 400);
+      showFeedback('wrong', '❌ ' + item.explainOwn);
+      showHintBtn();
+    }
+    document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+    // Move to next word after delay
+    setTimeout(() => {
+      document.getElementById('feedback').style.display = 'none';
+      hideHintBtn();
+      if (idx + 1 < mini.items.length) {
+        renderTraps2(mini, container, idx + 1);
+      } else {
+        showFeedback('correct', '✅ Все ловушки пройдены! Словик доволен!');
+        showNextBtn();
+      }
+    }, 2000);
+  }
+}
+
+function handleTrapClick() {} // legacy stub — not used
+
+// =============================================
+// GAME 5: FOUR HOUSES
+// =============================================
+let houseDragItem = null;
+let houseDragEl = null;
+
+function buildFourHouses(mini, container) {
+  const houses = document.createElement('div');
+  houses.className = 'four-houses';
+  mini.houses.forEach(h => {
+    const house = document.createElement('div');
+    house.className = 'house ' + h.cls;
+    house.id = 'house-' + h.id;
+    house.dataset.id = h.id;
+    house.innerHTML = `
+      <span class="house-icon">${h.icon}</span>
+      <span class="house-label">${h.label.replace(/\n/g,'<br>')}</span>
+      <div class="house-words" id="hw-${h.id}"></div>
+    `;
+    setupDropZone(house, h.id);
+    houses.appendChild(house);
+  });
+
+  const wordPool = document.createElement('div');
+  wordPool.className = 'word-cards-pool';
+  wordPool.id = 'house-pool';
+  const shuffled = [...mini.allWords].sort(()=>Math.random()-0.5);
+  shuffled.forEach(w => {
+    const card = document.createElement('div');
+    card.className = 'word-card';
+    card.textContent = w;
+    card.dataset.word = w;
+    setupHouseDrag(card, w, mini);
+    wordPool.appendChild(card);
+  });
+
+  container._houseState = { placed: 0, total: mini.allWords.length };
+  container._mini = mini;
+  container.appendChild(houses);
+  container.appendChild(wordPool);
+}
+
+function setupHouseDrag(card, word, mini) {
+  card.addEventListener('touchstart', e => {
+    e.preventDefault();
+    houseDragItem = { word, mini };
+    houseDragEl = card;
+    card.classList.add('dragging');
+    const ghost = document.getElementById('drag-ghost');
+    ghost.textContent = word;
+    ghost.style.display = 'block';
+  }, {passive:false});
+
+  card.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const ghost = document.getElementById('drag-ghost');
+    ghost.style.left = t.clientX+'px';
+    ghost.style.top = t.clientY+'px';
+    document.querySelectorAll('.house').forEach(h=>h.classList.remove('drag-over'));
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const h = el?.closest('.house');
+    if (h) h.classList.add('drag-over');
+  }, {passive:false});
+
+  card.addEventListener('touchend', e => {
+    e.preventDefault();
+    const ghost = document.getElementById('drag-ghost');
+    ghost.style.display = 'none';
+    const t = e.changedTouches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    const h = el?.closest('.house');
+    document.querySelectorAll('.house').forEach(h=>h.classList.remove('drag-over'));
+    if (h && houseDragEl) handleHouseDrop(h, houseDragEl, houseDragItem);
+    if (houseDragEl) houseDragEl.classList.remove('dragging');
+    houseDragItem = null; houseDragEl = null;
+  });
+
+  card.addEventListener('mousedown', e => {
+    dragWord = { word, mini };
+    dragWordEl = card;
+    houseDragItem = { word, mini };
+    houseDragEl = card;
+    card.classList.add('dragging');
+    const ghost = document.getElementById('drag-ghost');
+    ghost.textContent = word;
+    ghost.style.display = 'block';
+    ghost.style.left = e.clientX+'px';
+    ghost.style.top = e.clientY+'px';
+  });
+}
+
+function setupDropZone(el, type) {
+  el.addEventListener('dragover', e=>e.preventDefault());
+}
+
+function handleHouseDrop(houseEl, cardEl, item) {
+  if (!item || cardEl.classList.contains('placed')) return;
+  const houseId = houseEl.dataset.id;
+  const mini = MINIS[4];
+  const correctHouse = mini.houses.find(h => h.words.includes(item.word));
+  if (!correctHouse) return;
+
+  state.totalAnswers++;
+  if (correctHouse.id === houseId) {
+    state.correctAnswers++;
+    state.score += 12;
+    state.miniStats[state.currentMini].correct++;
+    cardEl.classList.add('placed');
+    playCorrect();
+    spawnParticles(houseEl.getBoundingClientRect().left+40, houseEl.getBoundingClientRect().top+40);
+    showReaction('correct');
+    const hw = document.createElement('span');
+    hw.className = 'hw';
+    hw.textContent = item.word;
+    document.getElementById('hw-' + houseId).appendChild(hw);
+    const pool = document.getElementById('house-pool');
+    const remaining = pool?.querySelectorAll('.word-card:not(.placed)').length || 0;
+    showFeedback('correct', `✅ «${item.word}» — в правильном домике!`);
+    if (remaining <= 1) { showNextBtn(); }
+  } else {
+    state.miniStats[state.currentMini].wrong++;
+    playWrong();
+    showReaction('wrong');
+    cardEl.classList.remove('dragging');
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'),400);
+    const ch = mini.houses.find(h=>h.id===correctHouse.id);
+    showFeedback('wrong', `❌ «${item.word}» не туда! Правильный домик: ${ch.icon} ${ch.label.replace(/\n/g,' ')}`);
+    showHintBtn();
+  }
+  document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+}
+
+// =============================================
+// GAME 6: FIX
+// =============================================
+let fixIdx = 0;
+function buildFix(mini, container) {
+  fixIdx = 0;
+  renderFix(mini, container, 0);
+}
+function renderFix(mini, container, idx) {
+  container.innerHTML = '';
+  if (idx >= mini.items.length) {
+    showFeedback('correct', '✅ Все ошибки найдены! Словик исправился!');
+    showNextBtn(); return;
+  }
+  const item = mini.items[idx];
+  container.innerHTML = `
+    <div style="font-size:12px;color:var(--text-mid);font-weight:700;text-align:center;margin-bottom:8px;">${idx+1} / ${mini.items.length}</div>
+    <div class="fix-statement">Словик говорит:<br>${item.statement}</div>
+    <div class="fix-btns">
+      <button class="fix-btn verno" onclick="handleFix(true, ${idx})">✅ Верно!</button>
+      <button class="fix-btn oshibka" onclick="handleFix(false, ${idx})">❌ Ошибка!</button>
+    </div>
+  `;
+}
+function handleFix(userSaysCorrect, idx) {
+  const mini = MINIS[5];
+  const item = mini.items[idx];
+  const correct = userSaysCorrect === item.correct;
+  state.totalAnswers++;
+  const btns = document.querySelectorAll('.fix-btn');
+  btns.forEach(b=>b.style.pointerEvents='none');
+  if (correct) {
+    state.correctAnswers++;
+    state.score += 12;
+    state.miniStats[state.currentMini].correct++;
+    playCorrect();
+    spawnParticles(window.innerWidth/2, window.innerHeight/2);
+    showReaction('correct');
+    showFeedback('correct', '✅ ' + item.explain);
+  } else {
+    state.miniStats[state.currentMini].wrong++;
+    playWrong();
+    showReaction('wrong');
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'),400);
+    showFeedback('wrong', '❌ ' + item.explain);
+    showHintBtn();
+  }
+  document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+  setTimeout(()=>{
+    if (idx+1 < mini.items.length) {
+      document.getElementById('feedback').style.display = 'none';
+      hideHintBtn();
+      renderFix(mini, document.getElementById('mini-content'), idx+1);
+    } else {
+      showFeedback('correct','✅ Все задания выполнены!');
+      showNextBtn();
+    }
+  }, 1800);
+}
+
+// =============================================
+// GAME 7: SENTENCE
+// =============================================
+let sentIdx = 0;
+let sentDropZone = null;
+let sentPoolEl = null;
+let sentDragEl = null;
+let sentPlaced = [];
+
+function buildSentence(mini, container) {
+  sentIdx = 0;
+  renderSentence(mini, container, 0);
+}
+function renderSentence(mini, container, idx) {
+  container.innerHTML = '';
+  sentPlaced = [];
+  if (idx >= mini.sentences.length) {
+    showFeedback('correct','✅ Все предложения собраны!');
+    showNextBtn(); return;
+  }
+  const s = mini.sentences[idx];
+  const shuffled = [...s.words].sort(()=>Math.random()-0.5);
+
+  container.innerHTML = `
+    <div style="font-size:12px;color:var(--text-mid);font-weight:700;text-align:center;margin-bottom:6px;">${idx+1} / ${mini.sentences.length}</div>
+    <div class="sentence-target">💡 Собери правильное предложение!</div>
+    <div class="sentence-drop-zone" id="sent-drop"></div>
+    <div class="word-pool-sentence" id="sent-pool"></div>
+    <button onclick="checkSentence(${idx})" style="margin-top:10px;" class="btn-primary" id="check-sent-btn">Проверить ✅</button>
+  `;
+
+  sentDropZone = document.getElementById('sent-drop');
+  sentPoolEl = document.getElementById('sent-pool');
+
+  shuffled.forEach(w => {
+    const wEl = document.createElement('div');
+    wEl.className = 'sentence-word in-pool';
+    wEl.textContent = w;
+    wEl.dataset.word = w;
+    setupSentDrag(wEl);
+    sentPoolEl.appendChild(wEl);
+  });
+
+  setupSentDropZone();
+}
+
+function setupSentDrag(el) {
+  el.addEventListener('click', () => {
+    if (el.parentElement === sentPoolEl) {
+      // move to drop zone
+      el.classList.remove('in-pool');
+      sentDropZone.appendChild(el);
+    } else {
+      // move back
+      el.classList.add('in-pool');
+      sentPoolEl.appendChild(el);
+    }
+  });
+  el.addEventListener('mousedown', e => {
+    sentDragEl = el;
+    dragWordEl = el;
+    el.classList.add('dragging');
+    const ghost = document.getElementById('drag-ghost');
+    ghost.textContent = el.textContent;
+    ghost.style.display = 'block';
+    ghost.style.left = e.clientX+'px';
+    ghost.style.top = e.clientY+'px';
+  });
+  el.addEventListener('touchstart', e => {
+    e.preventDefault();
+    sentDragEl = el;
+    dragWordEl = el;
+    el.classList.add('dragging');
+    const ghost = document.getElementById('drag-ghost');
+    ghost.textContent = el.textContent;
+    ghost.style.display = 'block';
+  }, {passive:false});
+  el.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const t = e.touches[0];
+    const ghost = document.getElementById('drag-ghost');
+    ghost.style.left = t.clientX+'px';
+    ghost.style.top = t.clientY+'px';
+    document.querySelectorAll('.sentence-drop-zone').forEach(d=>d.classList.remove('drag-over'));
+    const target = document.elementFromPoint(t.clientX, t.clientY)?.closest('.sentence-drop-zone, .word-pool-sentence');
+    if (target) target.classList.add('drag-over');
+  }, {passive:false});
+  el.addEventListener('touchend', e => {
+    e.preventDefault();
+    const ghost = document.getElementById('drag-ghost');
+    ghost.style.display = 'none';
+    const t = e.changedTouches[0];
+    const target = document.elementFromPoint(t.clientX, t.clientY);
+    const dz = target?.closest('.sentence-drop-zone');
+    const pool = target?.closest('.word-pool-sentence');
+    document.querySelectorAll('.sentence-drop-zone,.word-pool-sentence').forEach(d=>d.classList.remove('drag-over'));
+    if (dz && sentDragEl) handleSentenceDrop(dz, sentDragEl);
+    else if (pool && sentDragEl) { sentDragEl.classList.add('in-pool'); pool.appendChild(sentDragEl); }
+    if (sentDragEl) sentDragEl.classList.remove('dragging');
+    sentDragEl = null; dragWordEl = null;
+  });
+}
+
+function handleSentenceDrop(dz, el) {
+  if (!el) return;
+  el.classList.remove('in-pool');
+  el.classList.remove('dragging');
+  dz.appendChild(el);
+}
+
+function setupSentDropZone() {
+  sentDropZone.addEventListener('mouseup', e => {
+    if (dragWordEl) handleSentenceDrop(sentDropZone, dragWordEl);
+  });
+}
+
+function checkSentence(idx) {
+  const mini = MINIS[6];
+  const s = mini.sentences[idx];
+  const placedWords = [...sentDropZone.querySelectorAll('.sentence-word')].map(e=>e.textContent);
+  if (placedWords.length !== s.correct.length) {
+    showFeedback('hint','💡 Перетащи все слова в поле!'); return;
+  }
+  const correct = placedWords.join(' ') === s.correct.join(' ');
+  state.totalAnswers++;
+  if (correct) {
+    state.correctAnswers++;
+    state.score += 15;
+    state.miniStats[state.currentMini].correct++;
+    playCorrect();
+    spawnParticles(window.innerWidth/2, 200);
+    showReaction('correct');
+    showFeedback('correct', '✅ ' + s.explain);
+    document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+    setTimeout(()=>{
+      if (idx+1 < mini.sentences.length) {
+        document.getElementById('feedback').style.display='none';
+        renderSentence(mini, document.getElementById('mini-content'), idx+1);
+      } else {
+        showNextBtn();
+      }
+    }, 2000);
+  } else {
+    state.miniStats[state.currentMini].wrong++;
+    playWrong();
+    showReaction('wrong');
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'),400);
+    showFeedback('wrong', `❌ Порядок неверный! Подсказка: ${s.hint}`);
+    showHintBtn();
+    document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+  }
+}
+
+// =============================================
+// GAME 8: EXPLAIN
+// =============================================
+let explainIdx = 0;
+function buildExplain(mini, container) {
+  explainIdx = 0;
+  renderExplain(mini, container, 0);
+}
+function renderExplain(mini, container, idx) {
+  container.innerHTML = '';
+  if (idx >= mini.items.length) {
+    showFeedback('correct','✅ Отличные объяснения! Словик всё понял!');
+    showNextBtn(); return;
+  }
+  const item = mini.items[idx];
+  const letters = ['А','Б','В'];
+  container.innerHTML = `
+    <div style="font-size:12px;color:var(--text-mid);font-weight:700;text-align:center;margin-bottom:6px;">${idx+1} / ${mini.items.length}</div>
+    <div class="explain-word">${item.word}</div>
+    <div class="explain-question">${item.question}</div>
+    <div class="explain-options" id="explain-opts"></div>
+  `;
+  const opts = document.getElementById('explain-opts');
+  item.options.forEach((opt, oi) => {
+    const btn = document.createElement('div');
+    btn.className = 'explain-option';
+    btn.innerHTML = `<span class="opt-letter">${letters[oi]}</span>${opt}`;
+    btn.onclick = () => handleExplain(btn, oi, item, mini, container, idx);
+    opts.appendChild(btn);
+  });
+}
+function handleExplain(btn, oi, item, mini, container, idx) {
+  document.querySelectorAll('.explain-option').forEach(o=>o.style.pointerEvents='none');
+  state.totalAnswers++;
+  if (oi === item.correct) {
+    state.correctAnswers++;
+    state.score += 20;
+    state.miniStats[state.currentMini].correct++;
+    btn.classList.add('correct-pick');
+    playCorrect();
+    spawnParticles(window.innerWidth/2, 200);
+    showReaction('correct');
+    showFeedback('correct', '✅ ' + item.explain);
+  } else {
+    state.miniStats[state.currentMini].wrong++;
+    btn.classList.add('wrong-pick');
+    document.querySelectorAll('.explain-option')[item.correct].classList.add('reveal-correct');
+    playWrong();
+    showReaction('wrong');
+    document.body.classList.add('shake');
+    setTimeout(()=>document.body.classList.remove('shake'),400);
+    showFeedback('wrong', '❌ ' + item.explain);
+    showHintBtn();
+  }
+  document.getElementById('score-hud').textContent = '⭐ ' + state.score;
+  setTimeout(()=>{
+    if (idx+1 < mini.items.length) {
+      document.getElementById('feedback').style.display='none';
+      hideHintBtn();
+      renderExplain(mini, document.getElementById('mini-content'), idx+1);
+    } else {
+      showNextBtn();
+    }
+  }, 2200);
+}
+
+// =============================================
+// HINT SYSTEM
+// =============================================
+const hints = [
+  [ // game 1
+    'Живые существа (люди, животные) — КТО? Неживые предметы — ЧТО?',
+    'Примеры КТО?: кот, девочка, учитель. Примеры ЧТО?: стол, дерево, облако.',
+    'Задай вопрос: это живое? Если да — «кто?», если нет — «что?»'
+  ],
+  [ // game 2
+    'Имена собственные — это имена людей, клички животных, названия городов, рек, стран.',
+    'Москва, Волга, Мурзик, Маша — все это имена собственные.',
+    'Имена собственные пишутся с ЗАГЛАВНОЙ буквы!'
+  ],
+  [ // game 3
+    'Живые — одушевлённые (КТО?): звери, птицы, насекомые.',
+    'Волк, олень, белка — живые. Ель, гриб, камень — неживые.',
+    'Спроси: оно само движется, дышит, растёт как живое? Животные — живые!'
+  ],
+  [ // game 4
+    'Неживые предметы — неодушевлённые, даже если похожи на живых (кукла, робот).',
+    'Имя собственное пишется с заглавной буквы: Байкал, Москва.',
+    'Кукла — неодушевлённое (что?). Змея — одушевлённое (кто?). Солнце — неодушевлённое.'
+  ],
+  [ // game 5
+    'Вспомни: собственное = конкретное имя/название. Нарицательное = общее название.',
+    'Барсик, Дружок — клички (собственные). Кот, птица — общие названия (нарицательные).',
+    'Москва, Нева, Байкал — названия мест (собственные + неодушевлённые).'
+  ],
+  [ // game 6
+    'Проверь: лиса — живое существо, значит одушевлённое.',
+    'Волга — название реки, это имя собственное (заглавная буква!)',
+    'Кошка — общее название, нарицательное. Андрей — имя человека, собственное.'
+  ],
+  [ // game 7
+    'Найди имя собственное — оно пишется с заглавной буквы.',
+    'Предложение начинается с заглавной буквы. Имена людей, клички — тоже заглавные.',
+    'Попробуй поставить сначала подлежащее (кто? что?), потом сказуемое (что делает?).'
+  ],
+  [ // game 8
+    'Одушевлённые = живые существа (люди, животные). Спрашиваем «кто?».',
+    'Собственные = конкретные названия с заглавной буквы. Нарицательные = общие.',
+    'Неодушевлённое — не живое, даже если похоже на живое (кукла, снеговик).'
+  ]
+];
+let hintLevel = [0,0,0,0,0,0,0,0];
+
+function showHint(miniId) {
+  const level = hintLevel[miniId];
+  const hintArr = hints[miniId];
+  state.hintsUsed++;
+  state.miniStats[miniId].hints++;
+  if (level < hintArr.length) {
+    showFeedback('hint', '💡 Подсказка ' + (level+1) + ': ' + hintArr[level]);
+    hintLevel[miniId]++;
+    if (hintLevel[miniId] >= hintArr.length) hideHintBtn();
+  }
+}
+
+// =============================================
+// END SCREEN
+// =============================================
+function showEndScreen() {
+  const elapsed = Math.round((Date.now() - state.startTime) / 60000);
+  const acc = state.totalAnswers > 0 ? Math.round(state.correctAnswers/state.totalAnswers*100) : 100;
+  document.getElementById('stat-score').textContent = state.score;
+  document.getElementById('stat-acc').textContent = acc + '%';
+  document.getElementById('stat-hints').textContent = state.hintsUsed;
+  document.getElementById('stat-time').textContent = elapsed + ' мин';
+  document.getElementById('end-sub').textContent = acc >= 80 ? 'Все слова острова Речестан найдены! Словик счастлив! 🎉' : 'Хорошее начало! Словик верит в тебя! 💪';
+
+  // Report
+  const rows = document.getElementById('report-rows');
+  rows.innerHTML = '';
+  const mNames = ['Кто?/Что?','Заглавные','Волшебный лес','Ловушки','Четыре домика','Исправь','Предложение','Объясни'];
+  state.miniStats.forEach((s, i) => {
+    const total = s.correct + s.wrong;
+    const pct = total > 0 ? Math.round(s.correct/total*100) : 0;
+    const row = document.createElement('div');
+    row.className = 'report-row';
+    const cls = pct >= 80 ? '' : pct >= 50 ? 'mid' : 'low';
+    row.innerHTML = `
+      <span style="width:90px;font-size:11px;">${mNames[i]}</span>
+      <div class="report-bar-bg"><div class="report-bar-fill ${cls}" style="width:0%" data-w="${pct}"></div></div>
+      <span style="width:30px;text-align:right;">${pct}%</span>
+    `;
+    rows.appendChild(row);
+  });
+  showScreen('end');
+  setTimeout(()=>{
+    document.querySelectorAll('.report-bar-fill').forEach(bar=>{
+      bar.style.width = bar.dataset.w + '%';
+    });
+  }, 300);
+}
+
+function showReport() {
+  playClick();
+  // Already shown inline — scroll to it
+  document.querySelector('.report-title').scrollIntoView({behavior:'smooth'});
+}
+
+// =============================================
+// INIT
+// =============================================
+// Reset hintLevel on each mini
+const origLaunch = launchMini;
+window.launchMini = function(id) {
+  tapCapComplete = false;
+  hintLevel = [0,0,0,0,0,0,0,0];
+  origLaunch(id);
+};
+
+</script>
+</body>
+</html>
