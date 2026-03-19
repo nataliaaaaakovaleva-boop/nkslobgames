@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Морской Счёт — Приключения Осьминожки Оки</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap');
+
+  :root {
+    --ocean-deep: #1a4a5c;
+    --ocean-mid: #2a7f8f;
+    --ocean-light: #4fb3c8;
+    --ocean-pale: #d6f0f5;
+    --gold: #e8a030;
+    --gold-dark: #c47818;
+    --gold-light: #ffd070;
+    --oka-purple: #b08fd0;
+    --oka-light: #d4b8f0;
+    --coral: #e87050;
+    --coral-light: #ffa080;
+    --text-dark: #1a2e3b;
+    --text-mid: #2d5060;
+    --white: #ffffff;
+    --card-bg: #e8f7fb;
+    --success: #4caf7d;
+    --error: #e87050;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(180deg, #0d2d3d 0%, #1a4a5c 30%, #2a7f8f 70%, #3aafcc 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* ===== CANVAS BACKGROUND ===== */
+  #bgCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== MAIN CONTAINER ===== */
+  #app {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    display: none;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .screen.active { display: flex; }
+
+  /* ===== START SCREEN ===== */
+  #startScreen {
+    text-align: center;
+    gap: 20px;
+  }
+
+  .oka-mascot {
+    font-size: 80px;
+    animation: float 3s ease-in-out infinite;
+    display: block;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.3));
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(-3deg); }
+    50% { transform: translateY(-15px) rotate(3deg); }
+  }
+
+  .game-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(28px, 5vw, 52px);
+    color: var(--gold-light);
+    text-shadow: 0 3px 12px rgba(0,0,0,0.5), 0 0 30px rgba(232,160,48,0.4);
+    line-height: 1.1;
+  }
+
+  .game-subtitle {
+    font-size: clamp(14px, 2.5vw, 20px);
+    color: var(--ocean-pale);
+    font-weight: 600;
+    opacity: 0.9;
+  }
+
+  .mission-card {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 20px;
+    padding: 16px 28px;
+    color: var(--white);
+    font-size: clamp(13px, 2vw, 17px);
+    max-width: 520px;
+    line-height: 1.5;
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--white);
+    border: none;
+    border-radius: 50px;
+    padding: 16px 48px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(18px, 3vw, 26px);
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(232,160,48,0.5), 0 2px 0 rgba(0,0,0,0.2);
+    transition: transform 0.15s, box-shadow 0.15s;
+    letter-spacing: 1px;
+  }
+  .btn-start:hover {
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 10px 32px rgba(232,160,48,0.7);
+  }
+  .btn-start:active { transform: translateY(0) scale(0.97); }
+
+  /* ===== PROGRESS BAR ===== */
+  #progressBar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(13, 45, 61, 0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+  }
+
+  .progress-oka { font-size: 28px; animation: float 3s ease-in-out infinite; }
+
+  .palace-track {
+    flex: 1;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .palace-block {
+    flex: 1;
+    height: 14px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .palace-block.done {
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(232,160,48,0.6);
+  }
+
+  .palace-block.active-game {
+    background: rgba(176,143,208,0.5);
+    border-color: var(--oka-purple);
+    animation: pulse-block 1s ease-in-out infinite;
+  }
+
+  @keyframes pulse-block {
+    0%, 100% { box-shadow: 0 0 4px rgba(176,143,208,0.4); }
+    50% { box-shadow: 0 0 12px rgba(176,143,208,0.9); }
+  }
+
+  .score-display {
+    font-family: 'Fredoka One', cursive;
+    color: var(--gold-light);
+    font-size: 20px;
+    min-width: 70px;
+    text-align: right;
+  }
+
+  .sound-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    width: 36px; height: 36px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+  .sound-btn:hover { background: rgba(255,255,255,0.25); }
+
+  /* ===== GAME SCREEN ===== */
+  #gameScreen {
+    padding-top: 70px;
+    gap: 16px;
+  }
+
+  .game-header {
+    text-align: center;
+  }
+
+  .game-name {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(20px, 4vw, 32px);
+    color: var(--gold-light);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  .game-instruction {
+    color: var(--ocean-pale);
+    font-size: clamp(13px, 2vw, 17px);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  /* ===== CARD ===== */
+  .game-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 24px;
+    padding: 28px;
+    width: 100%;
+    max-width: 680px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.3), 0 0 0 3px rgba(255,255,255,0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    min-height: 300px;
+    justify-content: center;
+  }
+
+  /* ===== MATH DISPLAY ===== */
+  .math-expr {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(36px, 8vw, 72px);
+    color: var(--text-dark);
+    text-align: center;
+    line-height: 1;
+  }
+
+  .math-expr .blank {
+    color: var(--ocean-mid);
+    border-bottom: 4px solid var(--ocean-mid);
+    min-width: 60px;
+    display: inline-block;
+    text-align: center;
+  }
+
+  /* ===== ANSWER BUTTONS ===== */
+  .answers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .ans-btn {
+    background: linear-gradient(135deg, var(--ocean-pale), #c8e8f0);
+    border: 3px solid var(--ocean-light);
+    border-radius: 16px;
+    padding: 16px 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(22px, 5vw, 36px);
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 4px 0 rgba(79,179,200,0.4);
+  }
+  .ans-btn:hover {
+    background: linear-gradient(135deg, #c8e8f0, var(--ocean-pale));
+    transform: translateY(-3px);
+    border-color: var(--ocean-mid);
+    box-shadow: 0 7px 0 rgba(42,127,143,0.4);
+  }
+  .ans-btn:active { transform: translateY(0); box-shadow: none; }
+  .ans-btn.correct {
+    background: linear-gradient(135deg, #a8e6c0, #70d090);
+    border-color: var(--success);
+    animation: bounce-correct 0.4s ease;
+  }
+  .ans-btn.wrong {
+    background: linear-gradient(135deg, #ffc8b8, #f09070);
+    border-color: var(--error);
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes bounce-correct {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+
+  /* ===== HINT BUBBLE ===== */
+  .hint-bubble {
+    background: linear-gradient(135deg, #fffde8, #fff8c0);
+    border: 3px solid var(--gold);
+    border-radius: 16px;
+    padding: 12px 18px;
+    font-size: clamp(13px, 2vw, 16px);
+    color: var(--text-dark);
+    font-weight: 700;
+    text-align: center;
+    max-width: 420px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .hint-bubble.visible { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== FEEDBACK OVERLAY ===== */
+  #feedback {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 200;
+    text-align: center;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  #feedback.show { transform: translate(-50%, -50%) scale(1); }
+
+  .feedback-emoji { font-size: 80px; display: block; }
+  .feedback-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 32px;
+    color: var(--white);
+    text-shadow: 0 3px 12px rgba(0,0,0,0.5);
+    margin-top: 8px;
+  }
+
+  /* ===== GAME 2: FIND THE ERROR ===== */
+  .fish-says {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .fish-icon { font-size: 56px; animation: float 2.5s ease-in-out infinite; }
+
+  .fish-speech {
+    background: var(--ocean-pale);
+    border: 3px solid var(--ocean-light);
+    border-radius: 16px;
+    padding: 16px 24px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(26px, 5vw, 42px);
+    color: var(--text-dark);
+    position: relative;
+  }
+
+  .judge-btns {
+    display: flex;
+    gap: 16px;
+  }
+
+  .judge-btn {
+    padding: 14px 32px;
+    border-radius: 50px;
+    border: none;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(16px, 3vw, 22px);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .judge-btn.yes {
+    background: linear-gradient(135deg, #70d090, #4caf7d);
+    color: white;
+    box-shadow: 0 4px 0 rgba(60,150,90,0.5);
+  }
+  .judge-btn.no {
+    background: linear-gradient(135deg, #f09070, var(--coral));
+    color: white;
+    box-shadow: 0 4px 0 rgba(180,70,50,0.5);
+  }
+  .judge-btn:hover { transform: translateY(-3px); }
+  .judge-btn:active { transform: translateY(0); }
+
+  /* ===== GAME 3: SORTING ===== */
+  .sort-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .shells-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .shell-card {
+    background: linear-gradient(135deg, #ffe8c0, #ffd070);
+    border: 3px solid var(--gold);
+    border-radius: 50px;
+    padding: 12px 20px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(18px, 3.5vw, 26px);
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 0 rgba(180,100,0,0.3);
+  }
+  .shell-card:hover { transform: translateY(-4px) scale(1.05); }
+  .shell-card.selected { border-color: var(--ocean-mid); background: linear-gradient(135deg, #c8e8f8, var(--ocean-pale)); }
+  .shell-card.placed { opacity: 0.4; pointer-events: none; }
+
+  .buckets-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .bucket {
+    background: rgba(255,255,255,0.9);
+    border: 3px dashed var(--ocean-light);
+    border-radius: 16px;
+    padding: 14px 18px;
+    min-width: 90px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Fredoka One', cursive;
+  }
+
+  .bucket-label {
+    font-size: clamp(20px, 4vw, 30px);
+    color: var(--ocean-mid);
+  }
+
+  .bucket-content {
+    font-size: clamp(13px, 2vw, 16px);
+    color: var(--text-mid);
+    font-weight: 700;
+    min-height: 20px;
+  }
+
+  .bucket:hover, .bucket.drag-over {
+    border-color: var(--gold);
+    background: rgba(232,160,48,0.1);
+    transform: scale(1.05);
+  }
+
+  .bucket.correct-bucket {
+    border-color: var(--success);
+    border-style: solid;
+    background: rgba(70,200,120,0.1);
+  }
+
+  /* ===== GAME 4: MISSING FACTOR ===== */
+  .missing-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(30px, 6vw, 60px);
+    color: var(--text-dark);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .missing-input {
+    width: 70px;
+    height: 70px;
+    border-radius: 16px;
+    border: 4px solid var(--ocean-mid);
+    background: var(--ocean-pale);
+    font-family: 'Fredoka One', cursive;
+    font-size: 36px;
+    color: var(--ocean-mid);
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .missing-input:focus { border-color: var(--gold); }
+
+  /* ===== GAME 5: WORD PROBLEM ===== */
+  .task-card {
+    background: linear-gradient(135deg, var(--ocean-pale), #c0e4f0);
+    border: 3px solid var(--ocean-light);
+    border-radius: 20px;
+    padding: 20px 24px;
+    font-size: clamp(15px, 2.5vw, 20px);
+    color: var(--text-dark);
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+    max-width: 500px;
+  }
+
+  .task-emoji { font-size: 40px; margin-bottom: 8px; display: block; }
+
+  /* ===== GAME 6: TOURNAMENT ===== */
+  .tournament-layout {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 600px;
+    justify-content: center;
+  }
+
+  .player-side, .enemy-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .player-avatar { font-size: 48px; animation: float 3s ease-in-out infinite; }
+  .enemy-avatar { font-size: 48px; animation: float 3s ease-in-out infinite reverse; }
+
+  .hp-bar-wrap {
+    width: 100%;
+    max-width: 120px;
+    height: 16px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+
+  .hp-bar {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.5s ease;
+  }
+
+  .player-hp { background: linear-gradient(90deg, #70d090, var(--gold-light)); }
+  .enemy-hp { background: linear-gradient(90deg, var(--coral), #ff8060); }
+
+  .vs-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: 32px;
+    color: var(--gold-light);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  }
+
+  .player-name {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--white);
+  }
+
+  .timer-bar {
+    width: 100%;
+    max-width: 400px;
+    height: 10px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .timer-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 5px;
+    transition: width 0.1s linear;
+  }
+
+  /* ===== TRANSITION SCREEN ===== */
+  #transitionScreen {
+    text-align: center;
+    gap: 20px;
+  }
+
+  .transition-icon { font-size: 90px; animation: float 2s ease-in-out infinite; }
+
+  .transition-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(24px, 5vw, 40px);
+    color: var(--gold-light);
+    text-shadow: 0 3px 12px rgba(0,0,0,0.5);
+  }
+
+  .transition-sub {
+    color: var(--ocean-pale);
+    font-size: clamp(14px, 2.5vw, 19px);
+    font-weight: 600;
+    max-width: 420px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .palace-visual {
+    font-size: 40px;
+    letter-spacing: 4px;
+  }
+
+  /* ===== END SCREEN ===== */
+  #endScreen {
+    gap: 16px;
+    text-align: center;
+    padding-top: 70px;
+    overflow-y: auto;
+  }
+
+  .end-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(26px, 5vw, 44px);
+    color: var(--gold-light);
+    text-shadow: 0 3px 12px rgba(0,0,0,0.5);
+  }
+
+  .report-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 24px;
+    padding: 24px;
+    width: 100%;
+    max-width: 640px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+  }
+
+  .report-title {
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    color: var(--ocean-mid);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .report-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .report-item {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .report-game-name {
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--text-mid);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .report-stat {
+    font-family: 'Fredoka One', cursive;
+    font-size: 28px;
+    color: var(--text-dark);
+  }
+
+  .report-stat.good { color: var(--success); }
+  .report-stat.ok { color: var(--gold-dark); }
+  .report-stat.bad { color: var(--error); }
+
+  .report-detail {
+    font-size: 12px;
+    color: var(--text-mid);
+    font-weight: 600;
+  }
+
+  .total-bar {
+    background: linear-gradient(135deg, var(--ocean-pale), #c0e4f0);
+    border: 2px solid var(--ocean-light);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .total-label {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-dark);
+  }
+
+  .total-score {
+    font-family: 'Fredoka One', cursive;
+    font-size: 32px;
+    color: var(--ocean-mid);
+  }
+
+  .next-step {
+    background: linear-gradient(135deg, #fffde8, #fff0c0);
+    border: 2px solid var(--gold);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-top: 8px;
+    text-align: left;
+  }
+
+  .next-step-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--gold-dark);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .btn-restart {
+    background: linear-gradient(135deg, var(--oka-purple), #8060b0);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 40px;
+    font-family: 'Fredoka One', cursive;
+    font-size: 22px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(176,143,208,0.5);
+    transition: transform 0.15s;
+    margin-top: 8px;
+  }
+  .btn-restart:hover { transform: translateY(-3px) scale(1.04); }
+
+  /* ===== PEARLS ANIMATION ===== */
+  .pearl {
+    position: fixed;
+    font-size: 24px;
+    pointer-events: none;
+    z-index: 300;
+    animation: fly-pearl 1s ease-out forwards;
+  }
+
+  @keyframes fly-pearl {
+    0% { transform: scale(1) translateY(0); opacity: 1; }
+    100% { transform: scale(2) translateY(-100px); opacity: 0; }
+  }
+
+  /* ===== PROGRESS DOTS (game internal) ===== */
+  .progress-dots {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 2px solid rgba(255,255,255,0.5);
+    transition: all 0.3s;
+  }
+  .dot.done { background: var(--gold); border-color: var(--gold-light); }
+  .dot.current { background: var(--oka-purple); border-color: var(--oka-light); }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 480px) {
+    .answers-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .game-card { padding: 18px; }
+    .report-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div id="app">
+  <!-- START SCREEN -->
+  <div id="startScreen" class="screen active">
+    <span class="oka-mascot">🐙</span>
+    <div class="game-title">Морской Счёт</div>
+    <div class="game-subtitle">Приключения Осьминожки Оки 🌊</div>
+    <div class="mission-card">
+      🦑 Злой Мурена разрушил дворец Подводного царства!<br>
+      Помоги Оке пройти <strong>6 испытаний</strong> и восстановить дворец,<br>
+      решая примеры на умножение!
+    </div>
+    <button class="btn-start" onclick="startGame()">🌊 Начать приключение!</button>
+  </div>
+
+  <!-- PROGRESS BAR (visible during game) -->
+  <div id="progressBar" style="display:none;">
+    <span class="progress-oka">🐙</span>
+    <div class="palace-track" id="palaceTrack"></div>
+    <div class="score-display" id="scoreDisplay">⭐ 0</div>
+    <button class="sound-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="screen">
+    <div class="game-header">
+      <div class="game-name" id="gameName"></div>
+      <div class="game-instruction" id="gameInstruction"></div>
+    </div>
+
+    <div class="game-card" id="gameCard">
+      <!-- Dynamic content injected here -->
+    </div>
+
+    <div class="hint-bubble" id="hintBubble"></div>
+    <div class="progress-dots" id="progressDots"></div>
+  </div>
+
+  <!-- TRANSITION SCREEN -->
+  <div id="transitionScreen" class="screen">
+    <div class="transition-icon" id="transIcon">🎉</div>
+    <div class="transition-title" id="transTitle"></div>
+    <div class="transition-sub" id="transSub"></div>
+    <div class="palace-visual" id="palaceVisual"></div>
+    <button class="btn-start" onclick="nextGame()" style="margin-top:8px;">Дальше →</button>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="endScreen" class="screen">
+    <span style="font-size:72px; animation: float 3s ease-in-out infinite; display:block;">🏰</span>
+    <div class="end-title">🎉 Дворец восстановлен!</div>
+    <div class="report-card">
+      <div class="report-title">📊 Отчёт для учителя</div>
+      <div class="report-grid" id="reportGrid"></div>
+      <div class="total-bar">
+        <div class="total-label">Итого за урок</div>
+        <div class="total-score" id="totalScore"></div>
+      </div>
+      <div class="next-step" id="nextStep"></div>
+    </div>
+    <button class="btn-restart" onclick="restartGame()">🐙 Играть ещё раз</button>
+  </div>
+
+  <!-- FEEDBACK OVERLAY -->
+  <div id="feedback">
+    <span class="feedback-emoji" id="feedbackEmoji"></span>
+    <div class="feedback-text" id="feedbackText"></div>
+  </div>
+</div>
+
+<script>
+// ===== BACKGROUND CANVAS =====
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+const bubbles = [];
+const fishBg = [];
+
+function resizeCanvas() {
+  bgCanvas.width = window.innerWidth;
+  bgCanvas.height = window.innerHeight;
+}
+
+function initBubbles() {
+  for (let i = 0; i < 25; i++) {
+    bubbles.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: 3 + Math.random() * 10,
+      speed: 0.3 + Math.random() * 0.7,
+      opacity: 0.1 + Math.random() * 0.25,
+      drift: (Math.random() - 0.5) * 0.5
+    });
+  }
+  for (let i = 0; i < 8; i++) {
+    fishBg.push({
+      x: Math.random() * window.innerWidth,
+      y: 80 + Math.random() * (window.innerHeight - 160),
+      speed: 0.4 + Math.random() * 0.6,
+      dir: Math.random() > 0.5 ? 1 : -1,
+      emoji: ['🐠','🐟','🐡','🦈'][Math.floor(Math.random()*4)],
+      size: 18 + Math.random() * 14,
+      y0: 0,
+      amp: 20 + Math.random() * 30,
+      freq: 0.01 + Math.random() * 0.02
+    });
+    fishBg[fishBg.length-1].y0 = fishBg[fishBg.length-1].y;
+  }
+}
+
+let t = 0;
+function drawBg() {
+  bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+
+  // Light rays
+  for (let i = 0; i < 5; i++) {
+    const grd = bgCtx.createLinearGradient(
+      bgCanvas.width * (0.1 + i * 0.2), 0,
+      bgCanvas.width * (0.15 + i * 0.2), bgCanvas.height * 0.7
+    );
+    grd.addColorStop(0, 'rgba(255,255,200,0.06)');
+    grd.addColorStop(1, 'rgba(255,255,200,0)');
+    bgCtx.fillStyle = grd;
+    bgCtx.beginPath();
+    bgCtx.moveTo(bgCanvas.width * (0.1 + i * 0.2), 0);
+    bgCtx.lineTo(bgCanvas.width * (0.05 + i * 0.2), bgCanvas.height * 0.7);
+    bgCtx.lineTo(bgCanvas.width * (0.25 + i * 0.2), bgCanvas.height * 0.7);
+    bgCtx.closePath();
+    bgCtx.fill();
+  }
+
+  // Bubbles
+  bubbles.forEach(b => {
+    b.y -= b.speed;
+    b.x += Math.sin(t * 0.05 + b.x) * b.drift;
+    if (b.y < -20) { b.y = bgCanvas.height + 20; b.x = Math.random() * bgCanvas.width; }
+    bgCtx.beginPath();
+    bgCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    bgCtx.strokeStyle = `rgba(180,230,255,${b.opacity})`;
+    bgCtx.lineWidth = 1.5;
+    bgCtx.stroke();
+    bgCtx.fillStyle = `rgba(200,240,255,${b.opacity * 0.3})`;
+    bgCtx.fill();
+  });
+
+  // Fish
+  bgCtx.save();
+  fishBg.forEach(f => {
+    f.x += f.speed * f.dir;
+    f.y = f.y0 + Math.sin(t * f.freq + f.x * 0.01) * f.amp;
+    if (f.x > bgCanvas.width + 50) f.x = -50;
+    if (f.x < -50) f.x = bgCanvas.width + 50;
+    bgCtx.font = `${f.size}px serif`;
+    bgCtx.save();
+    if (f.dir < 0) {
+      bgCtx.scale(-1, 1);
+      bgCtx.fillText(f.emoji, -f.x - f.size, f.y);
+    } else {
+      bgCtx.fillText(f.emoji, f.x, f.y);
+    }
+    bgCtx.restore();
+  });
+  bgCtx.restore();
+
+  t++;
+  requestAnimationFrame(drawBg);
+}
+
+resizeCanvas();
+initBubbles();
+drawBg();
+window.addEventListener('resize', resizeCanvas);
+
+// ===== GAME STATE =====
+let soundEnabled = true;
+let score = 0;
+let currentGame = 0;
+let hintLevel = 0;
+let wrongCount = 0;
+let questionIndex = 0;
+let selectedShell = null;
+let transTimeout = null;
+
+const gameStats = Array(6).fill(null).map(() => ({
+  correct: 0, wrong: 0, hints: 0, total: 0
+}));
+
+// ===== AUDIO =====
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+
+function getAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+function playTone(freq, type, dur, vol = 0.3) {
+  if (!soundEnabled) return;
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start();
+    osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+
+function playCorrect() {
+  playTone(523, 'sine', 0.15);
+  setTimeout(() => playTone(659, 'sine', 0.15), 100);
+  setTimeout(() => playTone(784, 'sine', 0.25), 200);
+}
+
+function playWrong() {
+  playTone(220, 'sawtooth', 0.3, 0.2);
+}
+
+function playWin() {
+  [523,659,784,1047].forEach((f,i) => setTimeout(() => playTone(f,'sine',0.3),i*120));
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('soundBtn').textContent = soundEnabled ? '🔊' : '🔇';
+}
+
+// ===== PALACE BLOCKS =====
+function buildPalace() {
+  const track = document.getElementById('palaceTrack');
+  track.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const b = document.createElement('div');
+    b.className = 'palace-block';
+    b.id = `palace-${i}`;
+    track.appendChild(b);
+  }
+}
+
+function updatePalace() {
+  for (let i = 0; i < 6; i++) {
+    const b = document.getElementById(`palace-${i}`);
+    if (!b) continue;
+    b.className = 'palace-block';
+    if (i < currentGame) b.classList.add('done');
+    else if (i === currentGame) b.classList.add('active-game');
+  }
+}
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  score = 0;
+  currentGame = 0;
+  gameStats.forEach(s => { s.correct=0; s.wrong=0; s.hints=0; s.total=0; });
+  document.getElementById('progressBar').style.display = 'flex';
+  buildPalace();
+  updatePalace();
+  loadGame(0);
+  showScreen('gameScreen');
+}
+
+function restartGame() {
+  document.getElementById('progressBar').style.display = 'none';
+  showScreen('startScreen');
+}
+
+// ===== FEEDBACK =====
+function showFeedback(emoji, text, good) {
+  const fb = document.getElementById('feedback');
+  document.getElementById('feedbackEmoji').textContent = emoji;
+  document.getElementById('feedbackText').textContent = text;
+  fb.classList.add('show');
+  setTimeout(() => fb.classList.remove('show'), 900);
+
+  if (good) spawnPearls();
+}
+
+function spawnPearls() {
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      const p = document.createElement('div');
+      p.className = 'pearl';
+      p.textContent = ['🌟','💎','🪸','🐚','✨'][Math.floor(Math.random()*5)];
+      p.style.left = (30 + Math.random() * 40) + 'vw';
+      p.style.top = (40 + Math.random() * 30) + 'vh';
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 1000);
+    }, i * 120);
+  }
+}
+
+function showHint(text) {
+  const h = document.getElementById('hintBubble');
+  h.textContent = '💡 ' + text;
+  h.classList.add('visible');
+}
+
+function hideHint() {
+  document.getElementById('hintBubble').classList.remove('visible');
+}
+
+function addScore(pts) {
+  score += pts;
+  document.getElementById('scoreDisplay').textContent = `⭐ ${score}`;
+}
+
+// ===== PROGRESS DOTS =====
+function buildDots(total, current) {
+  const el = document.getElementById('progressDots');
+  el.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i < current ? ' done' : i === current ? ' current' : '');
+    el.appendChild(d);
+  }
+}
+
+// ===== TRANSITION =====
+const transitionData = [
+  { icon:'🌟', title:'Жемчуга нанизаны!', sub:'Краб Клешня счастлив! Ты отлично знаешь таблицу умножения!', palace:'🪸' },
+  { icon:'🐟', title:'Рыбка исправлена!', sub:'Рыбка Немо больше не ошибается. Ты внимательный математик!', palace:'🪸🪸' },
+  { icon:'🐚', title:'Раковины разложены!', sub:'Все ракушки на своих местах. Дворец становится красивее!', palace:'🪸🪸🏯' },
+  { icon:'🦀', title:'Пропажа найдена!', sub:'Множители найдены! Капитан Кальмар доволен!', palace:'🪸🪸🏯🏯' },
+  { icon:'🦑', title:'Задача решена!', sub:'Капитан Кальмар ставит тебе оценку «Отлично»!', palace:'🪸🪸🏯🏯🏰' },
+  { icon:'🏆', title:'', sub:'', palace:'🏆' }
+];
+
+function showTransition(gameIdx) {
+  const d = transitionData[gameIdx];
+  document.getElementById('transIcon').textContent = d.icon;
+  document.getElementById('transTitle').textContent = d.title;
+  document.getElementById('transSub').textContent = d.sub;
+  document.getElementById('palaceVisual').textContent = d.palace;
+  showScreen('transitionScreen');
+  playWin();
+}
+
+function nextGame() {
+  currentGame++;
+  if (currentGame >= 6) {
+    showEndScreen();
+    return;
+  }
+  updatePalace();
+  loadGame(currentGame);
+  showScreen('gameScreen');
+}
+
+// ===== LOAD GAME =====
+function loadGame(idx) {
+  hintLevel = 0;
+  wrongCount = 0;
+  questionIndex = 0;
+  selectedShell = null;
+  hideHint();
+
+  const games = [g1_init, g2_init, g3_init, g4_init, g5_init, g6_init];
+  games[idx]();
+}
+
+// =============================================
+// GAME 1: Pearl Necklace — quick recall
+// =============================================
+const g1_questions = [];
+function generateG1Questions() {
+  g1_questions.length = 0;
+  const pairs = [];
+  for (let a = 2; a <= 5; a++) {
+    for (let b = 2; b <= 9; b++) {
+      pairs.push([a, b]);
+    }
+  }
+  // shuffle and take 8
+  pairs.sort(() => Math.random() - 0.5);
+  for (let i = 0; i < 8; i++) {
+    const [a, b] = pairs[i];
+    const ans = a * b;
+    const wrongs = new Set();
+    while (wrongs.size < 2) {
+      const w = ans + [-3,-2,-1,1,2,3][Math.floor(Math.random()*6)];
+      if (w > 0 && w !== ans) wrongs.add(w);
+    }
+    const opts = [ans, ...wrongs].sort(() => Math.random() - 0.5);
+    g1_questions.push({ a, b, ans, opts });
+  }
+}
+
+function g1_init() {
+  generateG1Questions();
+  document.getElementById('gameName').textContent = '🌟 Жемчуга для ожерелья';
+  document.getElementById('gameInstruction').textContent = 'Реши пример — Краб нанижет жемчужину!';
+  gameStats[0].total = g1_questions.length;
+  g1_render();
+}
+
+function g1_render() {
+  const q = g1_questions[questionIndex];
+  buildDots(g1_questions.length, questionIndex);
+  document.getElementById('gameCard').innerHTML = `
+    <div style="font-size:40px; animation: float 3s ease-in-out infinite;">🦀</div>
+    <div class="math-expr">${q.a} × ${q.b} = ?</div>
+    <div class="answers-grid">
+      ${q.opts.map(o => `<button class="ans-btn" onclick="g1_answer(${o}, this)">${o}</button>`).join('')}
+    </div>
+  `;
+}
+
+function g1_answer(val, btn) {
+  const q = g1_questions[questionIndex];
+  const btns = document.querySelectorAll('.ans-btn');
+  btns.forEach(b => b.disabled = true);
+
+  if (val === q.ans) {
+    btn.classList.add('correct');
+    gameStats[0].correct++;
+    const pts = hintLevel === 0 ? 10 : hintLevel === 1 ? 7 : 4;
+    addScore(pts);
+    playCorrect();
+    showFeedback('🌟', 'Правильно!', true);
+    hideHint();
+    hintLevel = 0;
+    wrongCount = 0;
+    setTimeout(() => {
+      questionIndex++;
+      if (questionIndex >= g1_questions.length) {
+        showTransition(0);
+      } else {
+        g1_render();
+      }
+    }, 900);
+  } else {
+    btn.classList.add('wrong');
+    gameStats[0].wrong++;
+    wrongCount++;
+    playWrong();
+    showFeedback('💦', 'Попробуй ещё!', false);
+    if (wrongCount === 1) {
+      gameStats[0].hints++;
+      showHint(`Подсказка: ${q.a} × ${q.b} = ${q.b} + ${q.b}${q.a > 2 ? ' + ...' : ''}`);
+    } else if (wrongCount === 2) {
+      showHint(`Ответ близко! Правильный ответ: ${q.ans}`);
+    }
+    setTimeout(() => {
+      btns.forEach(b => { b.classList.remove('wrong'); b.disabled = false; });
+    }, 700);
+  }
+}
+
+// =============================================
+// GAME 2: Find the Error
+// =============================================
+const g2_questions = [];
+function generateG2Questions() {
+  g2_questions.length = 0;
+  const examples = [];
+  for (let a = 2; a <= 5; a++) {
+    for (let b = 2; b <= 9; b++) {
+      examples.push([a, b, a * b]);
+    }
+  }
+  examples.sort(() => Math.random() - 0.5);
+  for (let i = 0; i < 8; i++) {
+    const [a, b, correct] = examples[i];
+    const isWrong = Math.random() > 0.45;
+    const shown = isWrong ? correct + [-2,-1,1,2][Math.floor(Math.random()*4)] : correct;
+    g2_questions.push({ a, b, shown: Math.max(1, shown), correct, isWrong });
+  }
+}
+
+function g2_init() {
+  generateG2Questions();
+  document.getElementById('gameName').textContent = '🐠 Исправь ошибку Рыбки';
+  document.getElementById('gameInstruction').textContent = 'Рыбка Немо решила пример. Она права?';
+  gameStats[1].total = g2_questions.length;
+  g2_render();
+}
+
+function g2_render() {
+  const q = g2_questions[questionIndex];
+  buildDots(g2_questions.length, questionIndex);
+  document.getElementById('gameCard').innerHTML = `
+    <div class="fish-says">
+      <div class="fish-icon">🐠</div>
+      <div style="font-size:15px; font-weight:700; color: var(--text-mid); margin-bottom:4px;">Рыбка Немо говорит:</div>
+      <div class="fish-speech">${q.a} × ${q.b} = ${q.shown}</div>
+    </div>
+    <div class="judge-btns">
+      <button class="judge-btn yes" onclick="g2_answer(false)">✅ Верно!</button>
+      <button class="judge-btn no" onclick="g2_answer(true)">❌ Ошибка!</button>
+    </div>
+  `;
+}
+
+function g2_answer(saysWrong) {
+  const q = g2_questions[questionIndex];
+  const correct = saysWrong === q.isWrong;
+  document.querySelectorAll('.judge-btn').forEach(b => b.disabled = true);
+
+  if (correct) {
+    gameStats[1].correct++;
+    addScore(hintLevel === 0 ? 10 : 6);
+    playCorrect();
+    const msg = q.isWrong
+      ? `Верно! Правильный ответ: ${q.a} × ${q.b} = ${q.correct}`
+      : 'Верно! Рыбка не ошиблась!';
+    showFeedback('✅', 'Молодец!', true);
+    showHint(msg);
+    hintLevel = 0; wrongCount = 0;
+    setTimeout(() => { hideHint(); questionIndex++; if (questionIndex >= g2_questions.length) showTransition(1); else g2_render(); }, 1200);
+  } else {
+    gameStats[1].wrong++;
+    wrongCount++;
+    playWrong();
+    showFeedback('🤔', 'Подумай ещё!', false);
+    gameStats[1].hints++;
+    const hint = q.isWrong
+      ? `Подумай: ${q.a} × ${q.b} = ? Рыбка написала ${q.shown}`
+      : `${q.a} × ${q.b} действительно равно ${q.correct}!`;
+    showHint(hint);
+    setTimeout(() => {
+      document.querySelectorAll('.judge-btn').forEach(b => b.disabled = false);
+    }, 800);
+  }
+}
+
+// =============================================
+// GAME 3: Shell Sorting
+// =============================================
+let g3_shells, g3_buckets, g3_current;
+
+function g3_init() {
+  document.getElementById('gameName').textContent = '🐚 Сортировка раковин';
+  document.getElementById('gameInstruction').textContent = 'Выбери пример, потом нажми на раковину с правильным ответом!';
+  gameStats[2].total = 8;
+  g3_newRound();
+}
+
+function g3_newRound() {
+  const all = [];
+  for (let a = 2; a <= 5; a++)
+    for (let b = 2; b <= 9; b++)
+      all.push([a, b, a*b]);
+  all.sort(() => Math.random() - 0.5);
+
+  // Берём примеры так, чтобы у них было ровно 3 уникальных ответа —
+  // тогда каждому примеру гарантированно найдётся раковина.
+  let chosen = [];
+  let usedAnswers = [];
+  for (const item of all) {
+    const [a, b, ans] = item;
+    if (!usedAnswers.includes(ans)) {
+      if (usedAnswers.length < 3) usedAnswers.push(ans);
+    }
+    if (usedAnswers.includes(ans)) {
+      chosen.push([a, b, ans]);
+    }
+    if (chosen.length >= 4 && usedAnswers.length === 3) break;
+  }
+  // Если вдруг не набралось 4 — просто берём первые 4 и перестраиваем ответы
+  if (chosen.length < 4) chosen = all.slice(0, 4);
+
+  g3_shells = chosen.slice(0, 4).map(([a,b,ans]) => ({ expr:`${a}×${b}`, ans, placed:false }));
+
+  // Раковины = ровно уникальные ответы из выбранных примеров (не более 4)
+  usedAnswers = [...new Set(g3_shells.map(s => s.ans))];
+  // Если уникальных ответов меньше 3 — добавляем «ложные» раковины
+  while (usedAnswers.length < 3) {
+    const base = usedAnswers[0];
+    const candidates = [-4,-3,-2,-1,1,2,3,4];
+    candidates.sort(() => Math.random()-0.5);
+    for (const d of candidates) {
+      const w = base + d;
+      if (w > 0 && !usedAnswers.includes(w)) { usedAnswers.push(w); break; }
+    }
+  }
+
+  g3_buckets = usedAnswers.sort((a,b)=>a-b).map(v => ({ val:v, items:[] }));
+  g3_current = null;
+  g3_render();
+}
+
+function g3_render() {
+  buildDots(8, gameStats[2].correct + gameStats[2].wrong);
+  document.getElementById('gameCard').innerHTML = `
+    <div class="sort-container">
+      <div style="font-size:14px; font-weight:800; color: var(--text-mid);">Выбери пример:</div>
+      <div class="shells-row" id="shellsRow">
+        ${g3_shells.map((s,i) => s.placed ? `<div class="shell-card placed">${s.expr}</div>` :
+          `<button class="shell-card ${g3_current===i?'selected':''}" onclick="g3_selectShell(${i})">${s.expr}</button>`
+        ).join('')}
+      </div>
+      <div style="font-size:14px; font-weight:800; color: var(--text-mid); margin-top:8px;">Положи в раковину с ответом:</div>
+      <div class="buckets-row">
+        ${g3_buckets.map((b,i) =>
+          `<div class="bucket ${b.items.length > 0 ? 'correct-bucket' : ''}" onclick="g3_placeToBucket(${i})">
+            <div class="bucket-label">🐚</div>
+            <div style="font-weight:900; font-size:22px; color: var(--ocean-mid);">${b.val}</div>
+            <div class="bucket-content">${b.items.join(', ')}</div>
+          </div>`
+        ).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function g3_selectShell(i) {
+  g3_current = i;
+  g3_render();
+}
+
+function g3_placeToBucket(bi) {
+  if (g3_current === null) {
+    showHint('Сначала выбери пример!');
+    return;
+  }
+  const shell = g3_shells[g3_current];
+  const bucket = g3_buckets[bi];
+
+  if (bucket.val === shell.ans) {
+    shell.placed = true;
+    bucket.items.push(shell.expr);
+    gameStats[2].correct++;
+    addScore(10);
+    playCorrect();
+    showFeedback('🐚', 'В нужную раковину!', true);
+    g3_current = null;
+    const remaining = g3_shells.filter(s => !s.placed);
+    if (remaining.length === 0) {
+      setTimeout(() => showTransition(2), 700);
+    } else {
+      g3_render();
+    }
+  } else {
+    gameStats[2].wrong++;
+    gameStats[2].hints++;
+    playWrong();
+    showFeedback('🌊', 'Не та раковина!', false);
+    showHint(`${shell.expr} = ${shell.ans}. Ищи раковину с числом ${shell.ans}!`);
+    setTimeout(() => hideHint(), 2000);
+    g3_render();
+  }
+}
+
+// =============================================
+// GAME 4: Missing Factor
+// =============================================
+const g4_questions = [];
+function generateG4() {
+  g4_questions.length = 0;
+  const pairs = [];
+  for (let a = 2; a <= 5; a++)
+    for (let b = 2; b <= 9; b++)
+      pairs.push([a, b]);
+  pairs.sort(() => Math.random() - 0.5);
+  for (let i = 0; i < 8; i++) {
+    const [a, b] = pairs[i];
+    const showFirst = Math.random() > 0.5;
+    g4_questions.push({
+      a, b, ans: a*b,
+      showFirst,
+      expr: showFirst ? `? × ${b} = ${a*b}` : `${a} × ? = ${a*b}`,
+      missing: showFirst ? a : b
+    });
+  }
+}
+
+function g4_init() {
+  generateG4();
+  document.getElementById('gameName').textContent = '🦀 Найди пропавший множитель';
+  document.getElementById('gameInstruction').textContent = 'Найди пропущенное число!';
+  gameStats[3].total = g4_questions.length;
+  g4_render();
+}
+
+function g4_render() {
+  const q = g4_questions[questionIndex];
+  buildDots(g4_questions.length, questionIndex);
+
+  const wrongs = new Set();
+  while (wrongs.size < 2) {
+    const w = q.missing + [-2,-1,1,2][Math.floor(Math.random()*4)];
+    if (w > 0 && w !== q.missing) wrongs.add(w);
+  }
+  const opts = [q.missing, ...wrongs].sort(() => Math.random() - 0.5);
+
+  document.getElementById('gameCard').innerHTML = `
+    <div style="font-size:42px; animation:float 3s ease-in-out infinite;">🦀</div>
+    <div class="math-expr" style="color: var(--ocean-mid);">${q.expr.replace('?', '<span class="blank">?</span>')}</div>
+    <div class="answers-grid">
+      ${opts.map(o => `<button class="ans-btn" onclick="g4_answer(${o}, this)">${o}</button>`).join('')}
+    </div>
+  `;
+  // re-set innerHTML parses HTML so blank is now rendered
+}
+
+function g4_answer(val, btn) {
+  const q = g4_questions[questionIndex];
+  const btns = document.querySelectorAll('.ans-btn');
+  btns.forEach(b => b.disabled = true);
+
+  if (val === q.missing) {
+    btn.classList.add('correct');
+    gameStats[3].correct++;
+    addScore(hintLevel === 0 ? 12 : 7);
+    playCorrect();
+    showFeedback('🔑', 'Нашёл!', true);
+    hideHint();
+    hintLevel = 0; wrongCount = 0;
+    setTimeout(() => {
+      questionIndex++;
+      if (questionIndex >= g4_questions.length) showTransition(3);
+      else g4_render();
+    }, 900);
+  } else {
+    btn.classList.add('wrong');
+    gameStats[3].wrong++;
+    wrongCount++;
+    playWrong();
+    showFeedback('🤔', 'Не то!', false);
+    gameStats[3].hints++;
+    if (wrongCount === 1) showHint(`Подсказка: подбери число так, чтобы произведение было ${q.ans}`);
+    else showHint(`Правильно: пропущенное число = ${q.missing}`);
+    setTimeout(() => {
+      btns.forEach(b => { b.classList.remove('wrong'); b.disabled = false; });
+    }, 700);
+  }
+}
+
+// =============================================
+// GAME 5: Word Problem
+// =============================================
+const g5_tasks = [
+  { emoji:'🐙', text:'У 3 осьминогов по 4 щупальца (у каждого). Сколько щупалец всего?', a:3, b:4 },
+  { emoji:'🐠', text:'В 5 аквариумах по 3 рыбки. Сколько рыбок всего?', a:5, b:3 },
+  { emoji:'🦀', text:'У 4 крабов по 2 клешни. Сколько клешней всего?', a:4, b:2 },
+  { emoji:'🌊', text:'На 3 волнах по 5 дельфинов. Сколько дельфинов всего?', a:3, b:5 },
+  { emoji:'🐚', text:'В 2 сундуках по 9 жемчужин. Сколько жемчужин всего?', a:2, b:9 },
+  { emoji:'🦑', text:'Капитан раздал 4 морякам по 3 монеты. Сколько монет раздал капитан?', a:4, b:3 },
+  { emoji:'🐡', text:'На 5 кораллах по 4 рыбки-клоун. Сколько рыбок всего?', a:5, b:4 },
+  { emoji:'🦈', text:'За 3 дня акула поймала по 5 рыб. Сколько рыб поймала акула?', a:3, b:5 },
+];
+
+function g5_init() {
+  g5_tasks.sort(() => Math.random() - 0.5);
+  document.getElementById('gameName').textContent = '🦑 Задача капитана Кальмара';
+  document.getElementById('gameInstruction').textContent = 'Реши задачу — составь пример!';
+  gameStats[4].total = 6;
+  questionIndex = 0;
+  g5_render();
+}
+
+function g5_render() {
+  const q = g5_tasks[questionIndex % g5_tasks.length];
+  buildDots(6, questionIndex);
+  const correct = q.a * q.b;
+  const wrongs = new Set();
+  while (wrongs.size < 2) {
+    const w = correct + [-4,-3,-2,-1,1,2,3,4][Math.floor(Math.random()*8)];
+    if (w > 0 && w !== correct) wrongs.add(w);
+  }
+  const opts = [correct, ...wrongs].sort(() => Math.random() - 0.5);
+
+  document.getElementById('gameCard').innerHTML = `
+    <div class="task-card">
+      <span class="task-emoji">${q.emoji}</span>
+      ${q.text}
+    </div>
+    <div style="font-size:14px; font-weight:800; color: var(--text-mid);">Выбери правильный ответ:</div>
+    <div class="answers-grid">
+      ${opts.map(o => `<button class="ans-btn" onclick="g5_answer(${o}, this, ${correct}, ${q.a}, ${q.b})">${o}</button>`).join('')}
+    </div>
+  `;
+}
+
+function g5_answer(val, btn, correct, a, b) {
+  const btns = document.querySelectorAll('.ans-btn');
+  btns.forEach(b => b.disabled = true);
+
+  if (val === correct) {
+    btn.classList.add('correct');
+    gameStats[4].correct++;
+    addScore(hintLevel === 0 ? 15 : 8);
+    playCorrect();
+    showFeedback('⚓', 'Верно!', true);
+    showHint(`${a} × ${b} = ${correct}. Отлично!`);
+    hintLevel = 0; wrongCount = 0;
+    setTimeout(() => {
+      hideHint(); questionIndex++;
+      if (questionIndex >= 6) showTransition(4);
+      else g5_render();
+    }, 1100);
+  } else {
+    gameStats[4].wrong++;
+    wrongCount++;
+    playWrong();
+    showFeedback('🌊', 'Подумай ещё!', false);
+    gameStats[4].hints++;
+    showHint(`Подсказка: ${a} групп по ${b}. Составь пример: ${a} × ${b} = ?`);
+    setTimeout(() => {
+      btns.forEach(b => { b.classList.remove('wrong'); b.disabled = false; });
+    }, 800);
+  }
+}
+
+// =============================================
+// GAME 6: Tournament
+// =============================================
+let g6_playerHP, g6_enemyHP, g6_timerInterval, g6_timerVal, g6_total, g6_current6;
+const G6_TOTAL = 8;
+
+function g6_init() {
+  document.getElementById('gameName').textContent = '🏆 Финальный турнир!';
+  document.getElementById('gameInstruction').textContent = 'Отвечай быстро — побеждай Мурену!';
+  g6_playerHP = 100; g6_enemyHP = 100; g6_total = 0;
+  gameStats[5].total = G6_TOTAL;
+  g6_newQuestion();
+}
+
+function g6_newQuestion() {
+  if (g6_total >= G6_TOTAL) {
+    clearInterval(g6_timerInterval);
+    showTransition(5);
+    return;
+  }
+  const a = 2 + Math.floor(Math.random() * 4);
+  const b = 2 + Math.floor(Math.random() * 8);
+  const correct = a * b;
+  const wrongs = new Set();
+  while (wrongs.size < 2) {
+    const w = correct + [-3,-2,-1,1,2,3][Math.floor(Math.random()*6)];
+    if (w > 0 && w !== correct) wrongs.add(w);
+  }
+  const opts = [correct, ...wrongs].sort(() => Math.random() - 0.5);
+  g6_current6 = { a, b, correct };
+
+  // Timer: 10 seconds
+  let timeLeft = 10;
+  clearInterval(g6_timerInterval);
+  g6_timerInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    const pct = (timeLeft / 10) * 100;
+    const tf = document.getElementById('timerFill');
+    if (tf) tf.style.width = Math.max(0, pct) + '%';
+    if (timeLeft <= 0) {
+      clearInterval(g6_timerInterval);
+      g6_enemyHit(); // enemy answers correctly
+      g6_playerHP -= 15;
+      updateHPs();
+      if (g6_playerHP <= 0) {
+        setTimeout(() => showTransition(5), 500);
+        return;
+      }
+      setTimeout(() => { g6_total++; g6_newQuestion(); }, 700);
+    }
+  }, 100);
+
+  buildDots(G6_TOTAL, g6_total);
+  document.getElementById('gameCard').innerHTML = `
+    <div class="tournament-layout">
+      <div class="player-side">
+        <div class="player-avatar">🐙</div>
+        <div class="player-name">Ока</div>
+        <div class="hp-bar-wrap"><div class="hp-bar player-hp" id="playerHP" style="width:${g6_playerHP}%"></div></div>
+      </div>
+      <div class="vs-text">VS</div>
+      <div class="enemy-side">
+        <div class="enemy-avatar">🦈</div>
+        <div class="player-name">Мурена</div>
+        <div class="hp-bar-wrap"><div class="hp-bar enemy-hp" id="enemyHP" style="width:${g6_enemyHP}%"></div></div>
+      </div>
+    </div>
+    <div class="math-expr">${a} × ${b} = ?</div>
+    <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+    <div class="answers-grid">
+      ${opts.map(o => `<button class="ans-btn" onclick="g6_answer(${o}, this)">${o}</button>`).join('')}
+    </div>
+  `;
+}
+
+function updateHPs() {
+  const ph = document.getElementById('playerHP');
+  const eh = document.getElementById('enemyHP');
+  if (ph) ph.style.width = Math.max(0, g6_playerHP) + '%';
+  if (eh) eh.style.width = Math.max(0, g6_enemyHP) + '%';
+}
+
+function g6_enemyHit() {
+  // small screen shake
+  document.getElementById('gameCard').style.transform = 'translateX(-6px)';
+  setTimeout(() => document.getElementById('gameCard').style.transform = '', 200);
+}
+
+function g6_answer(val, btn) {
+  clearInterval(g6_timerInterval);
+  const btns = document.querySelectorAll('.ans-btn');
+  btns.forEach(b => b.disabled = true);
+  g6_total++;
+
+  if (val === g6_current6.correct) {
+    btn.classList.add('correct');
+    g6_enemyHP -= 20;
+    gameStats[5].correct++;
+    addScore(12);
+    playCorrect();
+    showFeedback('⚔️', 'Удар!', true);
+  } else {
+    btn.classList.add('wrong');
+    g6_playerHP -= 12;
+    gameStats[5].wrong++;
+    playWrong();
+    showFeedback('💦', 'Мимо!', false);
+  }
+  updateHPs();
+  if (g6_enemyHP <= 0) {
+    setTimeout(() => showTransition(5), 500);
+    return;
+  }
+  setTimeout(() => g6_newQuestion(), 700);
+}
+
+// =============================================
+// END SCREEN
+// =============================================
+const gameNames = [
+  '🌟 Жемчуга','🐠 Ошибка Рыбки','🐚 Раковины','🦀 Множитель','🦑 Задача','🏆 Турнир'
+];
+
+function showEndScreen() {
+  clearInterval(g6_timerInterval);
+  document.getElementById('progressBar').style.display = 'none';
+  showScreen('endScreen');
+  playWin();
+  spawnPearls();
+
+  const grid = document.getElementById('reportGrid');
+  grid.innerHTML = '';
+
+  let totalCorrect = 0, totalAll = 0;
+
+  gameStats.forEach((s, i) => {
+    const pct = s.total > 0 ? Math.round(s.correct / s.total * 100) : 0;
+    totalCorrect += s.correct;
+    totalAll += s.total;
+    const cls = pct >= 80 ? 'good' : pct >= 50 ? 'ok' : 'bad';
+    const div = document.createElement('div');
+    div.className = 'report-item';
+    div.innerHTML = `
+      <div class="report-game-name">${gameNames[i]}</div>
+      <div class="report-stat ${cls}">${pct}%</div>
+      <div class="report-detail">✓ ${s.correct}/${s.total} · подсказок: ${s.hints}</div>
+    `;
+    grid.appendChild(div);
+  });
+
+  const totalPct = totalAll > 0 ? Math.round(totalCorrect / totalAll * 100) : 0;
+  document.getElementById('totalScore').textContent = `${totalPct}% · ⭐ ${score}`;
+
+  let nextStepText = '';
+  if (totalPct >= 85) nextStepText = '🌟 Отличный результат! Можно переходить к умножению на 6–9.';
+  else if (totalPct >= 60) nextStepText = '👍 Хороший прогресс! Уделите внимание заданиям на пропущенный множитель.';
+  else nextStepText = '📚 Рекомендуем повторить таблицу умножения на 2–5 и поиграть ещё раз.';
+
+  const weakGame = gameStats.indexOf(gameStats.reduce((a,b) =>
+    (b.total > 0 && b.correct/b.total < a.correct/a.total) ? b : a
+  ));
+  if (weakGame >= 0 && gameStats[weakGame].total > 0) {
+    const wp = Math.round(gameStats[weakGame].correct / gameStats[weakGame].total * 100);
+    if (wp < 70) nextStepText += ` Особое внимание: "${gameNames[weakGame]}" (${wp}%).`;
+  }
+
+  document.getElementById('nextStep').innerHTML = `<div class="next-step-label">💡 Рекомендация</div>${nextStepText}`;
+}
+</script>
+</body>
+</html>
