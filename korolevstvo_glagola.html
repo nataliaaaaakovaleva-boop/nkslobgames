@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Королевство Действий — Фея Глаша</title>
+<style>
+/* ===== CSS ПЕРЕМЕННЫЕ ===== */
+:root {
+  --bg:        #fdf0e0;
+  --bg2:       #fae8cc;
+  --indigo:    #4a3f8f;
+  --indigo2:   #6456b0;
+  --indigo-lt: #ede9f8;
+  --gold:      #e8a020;
+  --gold-lt:   #fdf0cc;
+  --green:     #5aaa6a;
+  --green-lt:  #e6f5ea;
+  --terra:     #c05040;
+  --terra-lt:  #fdecea;
+  --text:      #2a2050;
+  --text2:     #6b5f9a;
+  --shadow:    rgba(74,63,143,0.18);
+  --r:         18px;
+  --r2:        12px;
+}
+
+/* ===== СБРОС И БАЗОВЫЕ ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  background: var(--bg);
+  color: var(--text);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ===== ЭКРАНЫ ===== */
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  transition: opacity 0.35s ease;
+}
+.screen.hidden { opacity: 0; pointer-events: none; }
+
+/* ===== ФОНОВЫЙ УЗОР ===== */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(74,63,143,.07) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(232,160,32,.07) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(90,170,106,.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* ===== СТАРТОВЫЙ ЭКРАН ===== */
+#screen-start {
+  background: linear-gradient(160deg, #f5e8d0 0%, #ede0f5 50%, #d8eaf8 100%);
+  gap: 0;
+  z-index: 10;
+}
+.start-castle {
+  font-size: clamp(64px,12vw,110px);
+  animation: castleFloat 4s ease-in-out infinite;
+  filter: drop-shadow(0 8px 24px rgba(74,63,143,0.25));
+  line-height: 1;
+}
+@keyframes castleFloat {
+  0%,100% { transform: translateY(0) rotate(-1deg); }
+  50%      { transform: translateY(-14px) rotate(1deg); }
+}
+.start-title {
+  font-size: clamp(26px,5.5vw,52px);
+  color: var(--indigo);
+  text-align: center;
+  letter-spacing: .5px;
+  line-height: 1.2;
+  margin: 12px 16px 4px;
+  text-shadow: 0 2px 8px rgba(74,63,143,.15);
+}
+.start-sub {
+  font-size: clamp(14px,2.5vw,22px);
+  color: var(--text2);
+  text-align: center;
+  margin-bottom: 20px;
+}
+.start-story {
+  background: white;
+  border-radius: var(--r);
+  padding: 16px 24px;
+  max-width: min(480px, 90vw);
+  font-size: clamp(13px,2vw,17px);
+  line-height: 1.7;
+  color: var(--text);
+  border: 2px solid var(--indigo-lt);
+  text-align: center;
+  box-shadow: 0 4px 24px var(--shadow);
+  margin: 0 16px 24px;
+}
+.start-story strong { color: var(--indigo); }
+.btn-primary {
+  background: linear-gradient(135deg, var(--indigo), var(--indigo2));
+  color: white;
+  border: none;
+  border-radius: 50px;
+  padding: 16px 40px;
+  font-size: clamp(16px,2.5vw,22px);
+  font-family: Georgia, serif;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(74,63,143,0.4);
+  transition: transform .15s, box-shadow .15s;
+  letter-spacing: .5px;
+}
+.btn-primary:hover  { transform: translateY(-3px) scale(1.04); box-shadow: 0 10px 32px rgba(74,63,143,0.45); }
+.btn-primary:active { transform: scale(.97); }
+
+/* ===== HUD ===== */
+#hud {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px;
+  background: rgba(253,240,224,.92);
+  border-bottom: 2px solid rgba(74,63,143,.15);
+  backdrop-filter: blur(8px);
+}
+#hud.hidden { display: none; }
+.hud-towers {
+  display: flex; gap: 6px; align-items: center;
+}
+.tower-dot {
+  width: clamp(22px,4vw,30px); height: clamp(22px,4vw,30px);
+  border-radius: 50%;
+  border: 2px solid var(--indigo);
+  background: var(--bg);
+  font-size: clamp(11px,1.8vw,16px);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .4s, transform .3s;
+  cursor: default;
+}
+.tower-dot.done { background: var(--gold); border-color: var(--gold); transform: scale(1.1); }
+.tower-dot.active { background: var(--indigo-lt); border-color: var(--indigo2); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(74,63,143,.3)} 50%{box-shadow:0 0 0 6px rgba(74,63,143,0)} }
+.hud-stars {
+  font-size: clamp(14px,2.5vw,20px);
+  color: var(--gold);
+  font-weight: bold;
+}
+.hud-fairy {
+  font-size: clamp(20px,3.5vw,28px);
+  animation: fairyBob 2.5s ease-in-out infinite;
+}
+@keyframes fairyBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+
+/* ===== ПРОГРЕСС-БАР ===== */
+#progress-bar {
+  position: fixed; top: 52px; left: 0; right: 0; height: 5px;
+  background: rgba(74,63,143,.1); z-index: 50;
+}
+#progress-bar.hidden { display: none; }
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--indigo), var(--gold));
+  transition: width .6s cubic-bezier(.4,0,.2,1);
+  border-radius: 0 3px 3px 0;
+}
+
+/* ===== ИГРОВОЙ ЭКРАН ===== */
+#screen-game {
+  background: transparent;
+  z-index: 10;
+  padding-top: 64px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  gap: 0;
+  justify-content: flex-start;
+  padding-bottom: 20px;
+}
+.game-wrapper {
+  width: 100%; max-width: 660px;
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 14px;
+}
+.game-header {
+  text-align: center; padding-top: 16px;
+}
+.game-badge {
+  display: inline-block;
+  background: var(--indigo);
+  color: white;
+  border-radius: 50px;
+  padding: 5px 16px;
+  font-size: clamp(12px,1.8vw,15px);
+  margin-bottom: 6px;
+  letter-spacing: .5px;
+}
+.game-title-h {
+  font-size: clamp(20px,3.5vw,30px);
+  color: var(--indigo);
+  margin-bottom: 4px;
+}
+.game-task {
+  font-size: clamp(14px,2.2vw,19px);
+  color: var(--text2);
+  max-width: 540px;
+  line-height: 1.5;
+  padding: 0 8px;
+}
+
+/* ===== КАРТОЧКА ИГРЫ ===== */
+.game-card {
+  background: white;
+  border-radius: var(--r);
+  padding: 20px 24px;
+  width: 100%;
+  border: 2px solid rgba(74,63,143,.12);
+  box-shadow: 0 4px 24px var(--shadow);
+}
+
+/* ===== КНОПКИ ВАРИАНТОВ ===== */
+.options-grid {
+  display: flex; flex-wrap: wrap;
+  gap: 10px; justify-content: center;
+}
+.opt-btn {
+  padding: 12px 22px;
+  border-radius: var(--r2);
+  border: 2.5px solid var(--indigo-lt);
+  background: var(--bg);
+  color: var(--text);
+  font-size: clamp(15px,2.2vw,20px);
+  font-family: Georgia, serif;
+  cursor: pointer;
+  transition: transform .15s, border-color .15s, background .15s, box-shadow .15s;
+  min-width: 90px; text-align: center;
+}
+.opt-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: var(--indigo);
+  box-shadow: 0 4px 16px var(--shadow);
+  background: var(--indigo-lt);
+}
+.opt-btn:active:not(:disabled) { transform: scale(.96); }
+.opt-btn:disabled { opacity: .55; cursor: not-allowed; }
+.opt-btn.correct {
+  background: var(--green-lt) !important;
+  border-color: var(--green) !important;
+  color: #2d6b38 !important;
+  animation: correctPop .35s ease;
+}
+.opt-btn.wrong {
+  background: var(--terra-lt) !important;
+  border-color: var(--terra) !important;
+  color: #8b2a1e !important;
+  animation: wrongShake .35s ease;
+}
+@keyframes correctPop  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+@keyframes wrongShake  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-7px)} 75%{transform:translateX(7px)} }
+
+/* ===== ФИДБЕК ===== */
+#feedback-box {
+  width: 100%; max-width: 580px;
+  padding: 14px 20px;
+  border-radius: var(--r2);
+  font-size: clamp(14px,2vw,18px);
+  line-height: 1.55;
+  text-align: center;
+  display: none;
+  animation: feedSlide .3s ease;
+}
+@keyframes feedSlide { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+#feedback-box.success { background: var(--green-lt); border: 2px solid var(--green); color: #2d6b38; display: block; }
+#feedback-box.error   { background: var(--terra-lt);  border: 2px solid var(--terra);  color: #8b2a1e; display: block; }
+#feedback-box.hint    { background: var(--gold-lt);   border: 2px solid var(--gold);   color: #7a4a00; display: block; }
+
+/* ===== КНОПКИ ДЕЙСТВИЙ ===== */
+.action-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.btn-next {
+  background: linear-gradient(135deg, var(--gold), #c87010);
+  color: white; border: none;
+  border-radius: 50px; padding: 13px 36px;
+  font-size: clamp(15px,2vw,19px);
+  font-family: Georgia, serif; font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(232,160,32,.4);
+  transition: transform .15s, box-shadow .15s;
+}
+.btn-next:hover  { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(232,160,32,.45); }
+.btn-next:active { transform: scale(.97); }
+.btn-hint {
+  background: white; color: var(--indigo);
+  border: 2px solid var(--indigo-lt);
+  border-radius: 50px; padding: 11px 24px;
+  font-size: clamp(13px,1.8vw,16px);
+  font-family: Georgia, serif;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn-hint:hover { background: var(--indigo-lt); border-color: var(--indigo); }
+.btn-hint:active { transform: scale(.96); }
+
+/* ===== ИГРА 1: ОЖИВИ КАРТИНКУ ===== */
+.animate-stage {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+}
+.picture-frame {
+  width: clamp(120px,25vw,180px); height: clamp(120px,25vw,180px);
+  border-radius: var(--r);
+  background: var(--indigo-lt);
+  border: 3px solid var(--indigo);
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(56px,12vw,96px);
+  transition: transform .3s;
+  box-shadow: 0 4px 20px var(--shadow);
+  position: relative; overflow: hidden;
+}
+.picture-frame.alive {
+  animation: frameAlive .6s ease;
+  background: var(--green-lt);
+  border-color: var(--green);
+}
+@keyframes frameAlive {
+  0%   {transform:scale(1)}
+  30%  {transform:scale(1.15) rotate(-3deg)}
+  60%  {transform:scale(1.1) rotate(3deg)}
+  100% {transform:scale(1) rotate(0)}
+}
+.picture-label {
+  font-size: clamp(15px,2.5vw,20px);
+  color: var(--text2);
+  text-align: center;
+}
+
+/* ===== ИГРА 2: ПОЙМАЙ ГЛАГОЛ ===== */
+#catch-area {
+  width: 100%; height: clamp(200px, 35vh, 320px);
+  position: relative; overflow: hidden;
+  background: linear-gradient(180deg, var(--indigo-lt) 0%, var(--bg) 100%);
+  border-radius: var(--r);
+  border: 2px solid rgba(74,63,143,.15);
+}
+.falling-word {
+  position: absolute;
+  padding: 9px 18px;
+  border-radius: 50px;
+  font-size: clamp(16px,2.8vw,22px);
+  font-family: Georgia, serif;
+  cursor: pointer;
+  border: 2.5px solid;
+  transition: transform .1s;
+  white-space: nowrap;
+}
+.falling-word:active { transform: scale(.92); }
+.falling-word.is-verb { background: var(--indigo-lt); border-color: var(--indigo); color: var(--indigo); }
+.falling-word.is-noun { background: var(--bg2); border-color: rgba(74,63,143,.25); color: var(--text2); }
+.catch-score-bar {
+  display: flex; justify-content: space-between;
+  font-size: clamp(13px,1.8vw,16px);
+  color: var(--text2); padding: 4px 4px 0;
+}
+
+/* ===== ИГРА 3: ВОЛШЕБНЫЙ ВОПРОС ===== */
+.sentence-display {
+  font-size: clamp(17px,3vw,26px);
+  line-height: 1.7; text-align: center;
+  color: var(--text);
+  padding: 8px;
+}
+.sentence-display .verb-hl {
+  color: var(--indigo);
+  font-weight: bold;
+  border-bottom: 3px solid var(--indigo);
+  padding-bottom: 1px;
+}
+
+/* ===== ИГРА 4: СОБЕРИ ПРЕДЛОЖЕНИЕ ===== */
+.word-bank {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  min-height: 52px;
+  padding: 10px;
+  background: var(--indigo-lt);
+  border-radius: var(--r2);
+}
+.drop-zone {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  min-height: 62px;
+  padding: 10px;
+  background: var(--bg2);
+  border-radius: var(--r2);
+  border: 2px dashed rgba(74,63,143,.25);
+}
+.drop-zone-label, .bank-label {
+  font-size: clamp(12px,1.8vw,15px);
+  color: var(--text2);
+  width: 100%; margin-bottom: 4px;
+}
+.w-chip {
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: clamp(14px,2.2vw,19px);
+  font-family: Georgia, serif;
+  cursor: pointer;
+  border: 2.5px solid var(--indigo);
+  background: white;
+  color: var(--indigo);
+  transition: transform .15s, box-shadow .15s;
+}
+.w-chip:hover { transform: translateY(-2px); box-shadow: 0 4px 12px var(--shadow); }
+.w-chip:active { transform: scale(.94); }
+.w-chip.in-sentence { background: var(--indigo); color: white; }
+.w-chip.is-verb-chip { background: var(--gold); border-color: var(--gold); color: white; }
+.chip-placeholder { color: rgba(74,63,143,.3); font-size: clamp(13px,2vw,16px); padding: 6px; }
+
+/* ===== ИГРА 5: СУНДУКИ ===== */
+.chests-row {
+  display: flex; gap: clamp(12px,3vw,28px); justify-content: center;
+  flex-wrap: wrap;
+}
+.chest-zone {
+  flex: 1; min-width: clamp(120px,30vw,200px);
+  background: white;
+  border-radius: var(--r);
+  padding: 14px 12px;
+  border: 2.5px solid var(--indigo-lt);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  box-shadow: 0 2px 12px var(--shadow);
+  transition: border-color .2s, background .2s;
+}
+.chest-zone.drag-over { border-color: var(--gold); background: var(--gold-lt); }
+.chest-icon { font-size: clamp(36px,6vw,54px); line-height: 1; }
+.chest-label {
+  font-size: clamp(13px,2vw,17px);
+  color: var(--indigo); font-weight: bold; text-align: center;
+}
+.chest-sub {
+  font-size: clamp(11px,1.5vw,13px);
+  color: var(--text2); text-align: center;
+}
+.chest-dropped {
+  display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+  min-height: 36px;
+}
+.dropped-chip {
+  padding: 5px 12px;
+  border-radius: 50px;
+  font-size: clamp(13px,1.8vw,16px);
+  font-family: Georgia, serif;
+}
+.dropped-chip.verb  { background: var(--green-lt); color: #2d6b38; border: 2px solid var(--green); }
+.dropped-chip.noun  { background: var(--terra-lt); color: #8b2a1e; border: 2px solid var(--terra); }
+.chest-words-row {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  padding: 8px; background: var(--indigo-lt); border-radius: var(--r2);
+  min-height: 52px; width: 100%;
+}
+.drag-chip {
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: clamp(14px,2.2vw,18px);
+  font-family: Georgia, serif;
+  background: white; color: var(--indigo);
+  border: 2.5px solid var(--indigo);
+  cursor: pointer;
+  transition: transform .15s, opacity .2s;
+}
+.drag-chip:hover { transform: scale(1.06); }
+.drag-chip:active { transform: scale(.94); }
+.drag-chip.used { opacity: .3; pointer-events: none; }
+
+/* ===== ИГРА 6: ПОМОГИ ЖИТЕЛЮ ===== */
+.resident-box {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.resident-emoji {
+  font-size: clamp(52px,9vw,80px);
+  animation: residentFloat 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,.1));
+}
+@keyframes residentFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+.sentence-blank {
+  font-size: clamp(17px,3vw,26px);
+  color: var(--text); text-align: center; line-height: 1.8;
+}
+.blank-slot {
+  display: inline-block;
+  min-width: 100px; border-bottom: 3px solid var(--indigo);
+  color: var(--indigo); font-weight: bold;
+  padding: 0 8px; text-align: center;
+}
+
+/* ===== МАСКОТ ГЛАША ===== */
+#mascot {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 2.5px solid var(--indigo-lt);
+  border-radius: 24px;
+  padding: 12px 20px;
+  font-size: clamp(13px,2vw,17px);
+  color: var(--text);
+  max-width: min(440px, 90vw);
+  text-align: center;
+  z-index: 200;
+  box-shadow: 0 8px 32px var(--shadow);
+  display: none;
+  pointer-events: none;
+  animation: mascotSlide .3s ease;
+}
+@keyframes mascotSlide { from{opacity:0;transform:translateX(-50%) translateY(16px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+#mascot::before {
+  content: '🧚';
+  font-size: 22px;
+  display: block; margin-bottom: 4px;
+}
+
+/* ===== ПЕРЕХОД МЕЖДУ ИГРАМИ ===== */
+#transition-screen {
+  position: fixed; inset: 0; z-index: 80;
+  background: linear-gradient(160deg, var(--indigo-lt), var(--bg));
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; opacity: 0; pointer-events: none;
+  transition: opacity .35s;
+}
+#transition-screen.show { opacity: 1; pointer-events: all; }
+.trans-emoji { font-size: clamp(56px,10vw,90px); animation: castleFloat 2s ease-in-out infinite; }
+.trans-title { font-size: clamp(20px,3.5vw,32px); color: var(--indigo); text-align: center; }
+.trans-sub   { font-size: clamp(14px,2.2vw,20px); color: var(--text2); text-align: center; }
+.trans-stars { font-size: clamp(22px,4vw,36px); color: var(--gold); letter-spacing: 6px; }
+
+/* ===== ФИНАЛЬНЫЙ ЭКРАН ===== */
+#screen-end {
+  background: linear-gradient(160deg, #f0e8d8, #e8e0f0, #d8f0e0);
+  z-index: 10; gap: 14px; padding: 20px; overflow-y: auto;
+}
+.end-trophy { font-size: clamp(60px,10vw,100px); animation: trophySpin 3s ease-in-out infinite; }
+@keyframes trophySpin { 0%,100%{transform:rotate(-5deg) scale(1)} 50%{transform:rotate(5deg) scale(1.08)} }
+.end-title { font-size: clamp(24px,5vw,44px); color: var(--indigo); text-align: center; }
+.end-desc  { font-size: clamp(14px,2.2vw,20px); color: var(--text2); text-align: center; max-width: 460px; line-height: 1.6; }
+.end-stars { font-size: clamp(28px,5vw,48px); letter-spacing: 8px; }
+.stats-grid {
+  background: white; border-radius: var(--r); padding: 18px 24px;
+  width: 100%; max-width: 440px;
+  border: 2px solid var(--indigo-lt);
+  box-shadow: 0 4px 20px var(--shadow);
+}
+.stat-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid rgba(74,63,143,.08);
+  font-size: clamp(13px,1.8vw,17px); color: var(--text2);
+}
+.stat-row:last-child { border: none; }
+.stat-val { color: var(--indigo); font-weight: bold; font-size: clamp(14px,2vw,18px); }
+.end-btns { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.btn-secondary {
+  background: white; color: var(--indigo);
+  border: 2.5px solid var(--indigo);
+  border-radius: 50px; padding: 13px 30px;
+  font-size: clamp(14px,2vw,18px);
+  font-family: Georgia, serif;
+  cursor: pointer; transition: all .15s;
+}
+.btn-secondary:hover { background: var(--indigo-lt); transform: translateY(-2px); }
+
+/* ===== ОТЧЁТ ===== */
+#screen-report {
+  background: var(--bg);
+  z-index: 10; overflow-y: auto;
+  justify-content: flex-start; gap: 14px;
+  padding: 24px 20px 40px;
+}
+.report-title { font-size: clamp(20px,3.5vw,30px); color: var(--indigo); text-align: center; margin-top: 8px; }
+.report-section {
+  background: white; border-radius: var(--r); padding: 18px 22px;
+  width: 100%; max-width: 540px;
+  border: 2px solid var(--indigo-lt);
+  box-shadow: 0 2px 12px var(--shadow);
+}
+.report-section h3 { font-size: clamp(14px,2vw,18px); color: var(--indigo); margin-bottom: 10px; }
+.report-row {
+  display: flex; justify-content: space-between;
+  padding: 7px 0; border-bottom: 1px solid rgba(74,63,143,.07);
+  font-size: clamp(12px,1.7vw,15px); color: var(--text2);
+}
+.report-row:last-child { border: none; }
+.report-row span:last-child { color: var(--indigo); font-weight: bold; }
+.report-reco {
+  background: var(--gold-lt); border: 2px solid var(--gold);
+  border-radius: var(--r2); padding: 14px 18px;
+  font-size: clamp(13px,1.8vw,16px); color: #7a4a00;
+  max-width: 540px; width: 100%; line-height: 1.6;
+}
+
+/* ===== КОНФЕТТИ ===== */
+.confetti-piece {
+  position: fixed; pointer-events: none; z-index: 300;
+  border-radius: 3px;
+  animation: confettiFall var(--dur,1.8s) var(--delay,0s) ease-in forwards;
+}
+@keyframes confettiFall {
+  from { transform: translateY(-20px) rotate(0deg) translateX(0); opacity: 1; }
+  to   { transform: translateY(100vh) rotate(540deg) translateX(var(--dx,0px)); opacity: 0; }
+}
+
+/* ===== УТИЛИТЫ ===== */
+.hidden { display: none !important; }
+.mt8 { margin-top: 8px; }
+.divider { width: 100%; height: 1px; background: rgba(74,63,143,.1); margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<!-- ===== СТАРТОВЫЙ ЭКРАН ===== -->
+<div id="screen-start" class="screen">
+  <div class="start-castle">🏰</div>
+  <h1 class="start-title">Королевство Действий</h1>
+  <p class="start-sub">Приключение с феей Глашей</p>
+  <div class="start-story">
+    Злой <strong>Молчун</strong> похитил все глаголы из королевства.<br>
+    Птицы не летят, реки не текут, дети не играют…<br><br>
+    Помоги фее <strong>Глаше</strong> вернуть слова-действия и спасти королевство! ✨
+  </div>
+  <button class="btn-primary" onclick="G.start()">🚀 Начать приключение!</button>
+</div>
+
+<!-- ===== HUD ===== -->
+<div id="hud" class="hidden">
+  <div class="hud-towers" id="hud-towers"></div>
+  <span class="hud-fairy">🧚</span>
+  <span class="hud-stars" id="hud-stars">⭐ 0</span>
+</div>
+<div id="progress-bar" class="hidden"><div id="progress-fill" style="width:0%"></div></div>
+
+<!-- ===== ИГРОВОЙ ЭКРАН ===== -->
+<div id="screen-game" class="screen hidden">
+  <div class="game-wrapper">
+    <div class="game-header">
+      <div class="game-badge" id="g-badge">Испытание 1 из 6</div>
+      <h2 class="game-title-h" id="g-title">Оживи картинку</h2>
+      <p class="game-task" id="g-task">Выбери слово-действие, чтобы оживить картинку!</p>
+    </div>
+    <div class="game-card" id="g-content"></div>
+    <div id="feedback-box"></div>
+    <div class="action-row" id="action-row"></div>
+  </div>
+</div>
+
+<!-- ===== ПЕРЕХОД ===== -->
+<div id="transition-screen">
+  <div class="trans-emoji" id="trans-emoji">🏰</div>
+  <div class="trans-title" id="trans-title">Башня открыта!</div>
+  <div class="trans-stars" id="trans-stars">⭐⭐⭐</div>
+  <div class="trans-sub" id="trans-sub">Следующее испытание начнётся через секунду…</div>
+</div>
+
+<!-- ===== МАСКОТ ===== -->
+<div id="mascot"></div>
+
+<!-- ===== ФИНАЛ ===== -->
+<div id="screen-end" class="screen hidden">
+  <div class="end-trophy">🏆</div>
+  <h2 class="end-title" id="end-title">Королевство спасено!</h2>
+  <div class="end-stars" id="end-stars">⭐⭐⭐</div>
+  <p class="end-desc" id="end-desc">Ты настоящий знаток глаголов!</p>
+  <div class="stats-grid" id="end-stats"></div>
+  <div class="end-btns">
+    <button class="btn-primary" onclick="G.restart()">🔄 Играть снова</button>
+    <button class="btn-secondary" onclick="G.showReport()">📋 Отчёт учителя</button>
+  </div>
+</div>
+
+<!-- ===== ОТЧЁТ ===== -->
+<div id="screen-report" class="screen hidden">
+  <h2 class="report-title">📋 Отчёт для учителя</h2>
+  <div class="report-section" id="report-overall"></div>
+  <div class="report-section" id="report-games"></div>
+  <div class="report-reco" id="report-reco"></div>
+  <button class="btn-secondary" onclick="G.backToEnd()" style="margin-top:8px">← Назад</button>
+</div>
+
+<script>
+// ======================================================
+// ДАННЫЕ ИГР
+// ======================================================
+
+const GAME1_DATA = [
+  { emoji:'🐇', label:'Зайчик', verbs:['прыгает','скачет','бежит'], others:['камень','трава','лес','облако'] },
+  { emoji:'🌞', label:'Солнышко', verbs:['светит','греет','сияет'], others:['небо','тучка','река','поле'] },
+  { emoji:'🐟', label:'Рыбка', verbs:['плывёт','ныряет','плещется'], others:['вода','море','камень','волна'] },
+  { emoji:'🐦', label:'Птичка', verbs:['летит','поёт','щебечет'], others:['дерево','гнездо','ветер','ветка'] },
+  { emoji:'🌧️', label:'Дождик', verbs:['льёт','капает','шумит'], others:['лужа','зонт','земля','трава'] },
+];
+
+const GAME2_DATA = {
+  verbs: ['бежать','читать','петь','рисовать','прыгать','играть','летит','плывёт','строит','думает','несёт','зовёт'],
+  nouns: ['книга','школа','мяч','лес','солнце','дом','река','гора','облако','ветер','цветок','стол'],
+};
+
+const GAME3_DATA = [
+  { sentence: 'Котёнок {играет} с клубком.', verb:'играет', correct:'Что делает?',
+    options:['Что делает?','Кто это?','Какой?','Где?'], tip:'Действие сейчас → «Что делает?»' },
+  { sentence: 'Мы {пойдём} в лес.', verb:'пойдём', correct:'Что сделаем?',
+    options:['Что сделаем?','Кто?','Куда?','Какое?'], tip:'Действие в будущем → «Что сделаем?»' },
+  { sentence: 'Дети {нарисовали} картину.', verb:'нарисовали', correct:'Что сделали?',
+    options:['Что сделали?','Чьи?','Сколько?','Какую?'], tip:'Действие в прошлом → «Что сделали?»' },
+  { sentence: 'Птица {летела} над лесом.', verb:'летела', correct:'Что делала?',
+    options:['Что делала?','Какая?','Где?','Чья?'], tip:'Прошлое время → «Что делала?»' },
+  { sentence: 'Папа {читает} газету.', verb:'читает', correct:'Что делает?',
+    options:['Что делает?','Кто?','Чей?','Откуда?'], tip:'Настоящее время → «Что делает?»' },
+  { sentence: 'Маша {споёт} песню.', verb:'споёт', correct:'Что сделает?',
+    options:['Что сделает?','Кому?','Какую?','Когда?'], tip:'Будущее время → «Что сделает?»' },
+];
+
+const GAME4_DATA = [
+  { words:['Зайчик','прыгает','по','поляне'], verb:'прыгает', tip:'«прыгает» — это действие зайчика!' },
+  { words:['Мама','приготовила','вкусный','суп'], verb:'приготовила', tip:'«приготовила» — это что сделала мама!' },
+  { words:['Ребята','играют','в','мяч'], verb:'играют', tip:'«играют» — это действие ребят!' },
+  { words:['Кот','спит','на','диване'], verb:'спит', tip:'«спит» — это что делает кот!' },
+  { words:['Девочка','рисует','красивый','цветок'], verb:'рисует', tip:'«рисует» — это действие девочки!' },
+];
+
+const GAME5_DATA = [
+  { words: [
+      {w:'бежать',  isVerb:true},  {w:'книга',   isVerb:false},
+      {w:'петь',    isVerb:true},  {w:'солнце',  isVerb:false},
+      {w:'играть',  isVerb:true},  {w:'дерево',  isVerb:false},
+      {w:'школа',   isVerb:false}, {w:'прыгать', isVerb:true},
+    ]
+  },
+  { words: [
+      {w:'читает',  isVerb:true},  {w:'мяч',     isVerb:false},
+      {w:'рисует',  isVerb:true},  {w:'река',    isVerb:false},
+      {w:'спит',    isVerb:true},  {w:'облако',  isVerb:false},
+      {w:'гора',    isVerb:false}, {w:'летит',   isVerb:true},
+    ]
+  },
+];
+
+const GAME6_DATA = [
+  { resident:'🧙', prefix:'Волшебник', sentence:'Волшебник _____ заклинание.', correct:'говорит',
+    options:['говорит','красивый','быстро'], tip:'Нужно слово-действие: что делает волшебник?' },
+  { resident:'🧝', prefix:'Эльф', sentence:'Эльф _____ по лесу.', correct:'бежит',
+    options:['бежит','зелёный','домой'], tip:'«бежит» — это действие. Без глагола предложение не работает!' },
+  { resident:'🧜', prefix:'Русалка', sentence:'Русалка _____ в море.', correct:'плывёт',
+    options:['плывёт','синяя','далеко'], tip:'«плывёт» — слово-действие, отвечает на «Что делает?»' },
+  { resident:'🦁', prefix:'Лев', sentence:'Лев _____ на всю поляну.', correct:'рычит',
+    options:['рычит','огромный','громко'], tip:'«рычит» — это что делает лев. Это глагол!' },
+  { resident:'👸', prefix:'Принцесса', sentence:'Принцесса _____ красивую песню.', correct:'поёт',
+    options:['поёт','весёлая','звонко'], tip:'«поёт» — действие принцессы. Вопрос: что делает?' },
+];
+
+// ======================================================
+// ГЛАВНЫЙ ДВИЖОК ИГРЫ
+// ======================================================
+const G = (function() {
+
+  // ----- СОСТОЯНИЕ -----
+  let state = {};
+
+  function initState() {
+    state = {
+      gameIdx: 0,         // 0..5
+      stars: 0,
+      hintUsed: 0,
+      errors: 0,
+      totalQ: 0,
+      correctQ: 0,
+      startTime: Date.now(),
+      gameStats: Array.from({length:6}, (_,i) => ({
+        name: ['Оживи картинку','Поймай глагол','Волшебный вопрос','Собери предложение','Разложи по сундукам','Помоги жителю'][i],
+        correct:0, total:0, hints:0, errors:0
+      })),
+      // данные текущей игры
+      g1: { roundIdx:0, answered:false },
+      g2: { words:[], caught:0, missed:0, total:0, animFrame:null, started:false, ended:false },
+      g3: { roundIdx:0, answered:false, hintLevel:0 },
+      g4: { roundIdx:0, sentence:[], bank:[], answered:false, verbFound:false, hintLevel:0 },
+      g5: { setIdx:0, answered:{}, hintLevel:0 },
+      g6: { roundIdx:0, answered:false, hintLevel:0 },
+    };
+  }
+
+  // ----- УТИЛИТЫ -----
+  function $id(id) { return document.getElementById(id); }
+
+  function showScreen(id) {
+    ['screen-start','screen-game','screen-end','screen-report'].forEach(s => {
+      $id(s).classList.add('hidden');
+    });
+    $id(id).classList.remove('hidden');
+    $id('hud').classList.toggle('hidden', id !== 'screen-game');
+    $id('progress-bar').classList.toggle('hidden', id !== 'screen-game');
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length-1; i>0; i--) {
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function pick(arr, n) { return shuffle(arr).slice(0, n); }
+
+  function updateHud() {
+    // башни
+    const towersEl = $id('hud-towers');
+    towersEl.innerHTML = '';
+    const labels = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣'];
+    for (let i=0; i<6; i++) {
+      const d = document.createElement('div');
+      d.className = 'tower-dot' +
+        (i < state.gameIdx ? ' done' : '') +
+        (i === state.gameIdx ? ' active' : '');
+      d.textContent = i < state.gameIdx ? '⭐' : labels[i];
+      towersEl.appendChild(d);
+    }
+    $id('hud-stars').textContent = '⭐ ' + state.stars;
+    // прогресс
+    const pct = Math.round((state.gameIdx / 6) * 100);
+    $id('progress-fill').style.width = pct + '%';
+  }
+
+  function showMascot(msg, duration=3000) {
+    const el = $id('mascot');
+    el.textContent = msg;
+    el.style.display = 'block';
+    clearTimeout(showMascot._t);
+    showMascot._t = setTimeout(() => { el.style.display='none'; }, duration);
+  }
+
+  function setFeedback(type, msg) {
+    const el = $id('feedback-box');
+    el.className = 'feedback-box ' + type;
+    el.textContent = msg;
+  }
+
+  function clearFeedback() {
+    const el = $id('feedback-box');
+    el.className = 'feedback-box';
+    el.textContent = '';
+  }
+
+  function showNextBtn(label, cb) {
+    const row = $id('action-row');
+    row.innerHTML = '';
+    const btn = document.createElement('button');
+    btn.className = 'btn-next';
+    btn.textContent = label || '➡️ Дальше';
+    btn.onclick = cb;
+    row.appendChild(btn);
+  }
+
+  function showHintBtn(cb) {
+    const row = $id('action-row');
+    // не добавляем если уже есть
+    if (row.querySelector('.btn-hint')) return;
+    const btn = document.createElement('button');
+    btn.className = 'btn-hint';
+    btn.textContent = '💡 Подсказка';
+    btn.onclick = cb;
+    row.insertBefore(btn, row.firstChild);
+  }
+
+  function clearActions() {
+    $id('action-row').innerHTML = '';
+  }
+
+  function addStar(n=1) {
+    state.stars += n;
+    updateHud();
+  }
+
+  function stStat() { return state.gameStats[state.gameIdx]; }
+
+  function spawnConfetti(count=30) {
+    for (let i=0; i<count; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      const hue = Math.random()*360;
+      const dx = (Math.random()-0.5)*200;
+      el.style.cssText = `
+        left:${Math.random()*100}vw;
+        top:-10px;
+        width:${Math.random()*8+4}px;
+        height:${Math.random()*16+6}px;
+        background:hsl(${hue},75%,60%);
+        --dur:${(Math.random()*1.2+1.2).toFixed(1)}s;
+        --delay:${(Math.random()*0.6).toFixed(2)}s;
+        --dx:${dx.toFixed(0)}px;
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2800);
+    }
+  }
+
+  function showTransition(emoji, title, sub, starsCount, cb) {
+    $id('trans-emoji').textContent = emoji;
+    $id('trans-title').textContent = title;
+    $id('trans-sub').textContent   = sub;
+    $id('trans-stars').textContent = '⭐'.repeat(starsCount) + '☆'.repeat(3-Math.min(starsCount,3));
+    const ts = $id('transition-screen');
+    ts.classList.add('show');
+    spawnConfetti(20);
+    setTimeout(() => {
+      ts.classList.remove('show');
+      setTimeout(cb, 350);
+    }, 2200);
+  }
+
+  // ----- ЗАПУСК -----
+  function start() {
+    initState();
+    showScreen('screen-game');
+    updateHud();
+    renderCurrentGame();
+  }
+
+  function restart() { start(); }
+
+  function backToEnd() { showScreen('screen-end'); }
+
+  function renderCurrentGame() {
+    clearFeedback();
+    clearActions();
+    updateHud();
+    const idx = state.gameIdx;
+    if (idx === 0) renderGame1();
+    else if (idx === 1) renderGame2();
+    else if (idx === 2) renderGame3();
+    else if (idx === 3) renderGame4();
+    else if (idx === 4) renderGame5();
+    else if (idx === 5) renderGame6();
+    else endGame();
+  }
+
+  function advanceGame() {
+    const stat = stStat();
+    const starsEarned = Math.min(3, Math.round((stat.correct / Math.max(stat.total,1)) * 3));
+    state.gameIdx++;
+    if (state.gameIdx >= 6) {
+      endGame();
+    } else {
+      const titles = ['','','','','',''];
+      const emojis = ['🌟','🎯','❓','🧩','📦','🏡'];
+      const names  = ['Оживи картинку','Поймай глагол','Волшебный вопрос','Собери предложение','Разложи по сундукам','Помоги жителю'];
+      showTransition(
+        emojis[state.gameIdx-1],
+        '🏰 Башня ' + state.gameIdx + ' открыта!',
+        'Следующее испытание: «' + names[state.gameIdx] + '»',
+        starsEarned,
+        renderCurrentGame
+      );
+    }
+  }
+
+  // ======================================================
+  // ИГРА 1 — ОЖИВИ КАРТИНКУ
+  // ======================================================
+  function renderGame1() {
+    $id('g-badge').textContent  = 'Испытание 1 из 6 🌟';
+    $id('g-title').textContent  = 'Оживи картинку!';
+    $id('g-task').textContent   = 'Выбери слово-действие, чтобы картинка ожила!';
+
+    state.g1.roundIdx = 0;
+    state.g1.answered = false;
+    renderGame1Round();
+  }
+
+  function renderGame1Round() {
+    clearFeedback(); clearActions();
+    const data  = GAME1_DATA[state.g1.roundIdx];
+    const content = $id('g-content');
+
+    // выбираем 1 правильный + 3 неправильных
+    const correctVerb = pick(data.verbs, 1)[0];
+    const wrongWords  = pick(data.others, 3);
+    const options     = shuffle([correctVerb, ...wrongWords]);
+
+    content.innerHTML = '';
+    const stage = document.createElement('div');
+    stage.className = 'animate-stage';
+
+    const frame = document.createElement('div');
+    frame.className = 'picture-frame';
+    frame.id = 'g1-frame';
+    frame.textContent = data.emoji;
+
+    const lbl = document.createElement('div');
+    lbl.className = 'picture-label';
+    lbl.textContent = `Что делает ${data.label}?`;
+
+    const grid = document.createElement('div');
+    grid.className = 'options-grid';
+
+    options.forEach(word => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = word;
+      btn.onclick = () => handleGame1Click(btn, word, correctVerb, data);
+      grid.appendChild(btn);
+    });
+
+    stage.appendChild(frame);
+    stage.appendChild(lbl);
+    stage.appendChild(grid);
+    content.appendChild(stage);
+
+    // Кнопка подсказки
+    showHintBtn(() => {
+      stStat().hints++;
+      state.hintUsed++;
+      showMascot('💡 Глагол — это слово-действие. Спроси: «Что делает ' + data.label + '?»', 3500);
+      setFeedback('hint', '💡 Ищи слово, которое отвечает на вопрос «Что делает?»');
+    });
+  }
+
+  function handleGame1Click(btn, word, correct, data) {
+    stStat().total++;
+    state.totalQ++;
+
+    if (word === correct) {
+      btn.classList.add('correct');
+      stStat().correct++; state.correctQ++;
+      addStar(2);
+      // анимация картинки
+      const frame = $id('g1-frame');
+      frame.classList.add('alive');
+      setTimeout(() => frame.classList.remove('alive'), 700);
+
+      setFeedback('success', '✅ Верно! «' + word + '» — это слово-действие. Картинка ожила! 🎉');
+      showMascot('🎉 Отлично! Картинка ожила!');
+
+      // Блокируем все кнопки
+      document.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+      clearActions();
+
+      state.g1.roundIdx++;
+      if (state.g1.roundIdx < GAME1_DATA.length) {
+        showNextBtn('➡️ Следующая картинка', renderGame1Round);
+      } else {
+        showNextBtn('🏰 Открыть следующую башню!', advanceGame);
+      }
+    } else {
+      btn.classList.add('wrong');
+      stStat().errors++; state.errors++;
+      state.hintUsed++;
+      showMascot('🤔 Это не действие. Спроси: «Что делает ' + data.label + '?»');
+      setFeedback('error', '❌ «' + word + '» — это не действие. Попробуй другое слово!');
+      setTimeout(() => btn.classList.remove('wrong'), 600);
+      btn.disabled = true;
+    }
+  }
+
+  // ======================================================
+  // ИГРА 2 — ПОЙМАЙ ГЛАГОЛ
+  // ======================================================
+  function renderGame2() {
+    $id('g-badge').textContent  = 'Испытание 2 из 6 🎯';
+    $id('g-title').textContent  = 'Поймай глагол!';
+    $id('g-task').textContent   = 'Нажимай только на слова-действия (глаголы). Другие слова пропускай!';
+
+    // Подготавливаем слова
+    const verbs = shuffle(GAME2_DATA.verbs);
+    const nouns = shuffle(GAME2_DATA.nouns);
+    state.g2 = {
+      words: [], caught: 0, missed: 0, total: 0,
+      animFrame: null, started: false, ended: false,
+      verbsTotal: 0, wrongClicks: 0
+    };
+
+    // Создаём очередь: 8 глаголов + 8 существительных
+    const queue = shuffle([
+      ...verbs.slice(0,8).map(w => ({w, isVerb:true})),
+      ...nouns.slice(0,8).map(w => ({w, isVerb:false})),
+    ]);
+    state.g2.words    = queue;
+    state.g2.verbsTotal = queue.filter(x=>x.isVerb).length;
+
+    const content = $id('g-content');
+    content.innerHTML = `
+      <div class="catch-score-bar">
+        <span>Поймано: <b id="g2-caught">0</b> из <b>${state.g2.verbsTotal}</b> глаголов</span>
+        <span id="g2-time" style="color:var(--indigo)"></span>
+      </div>
+      <div id="catch-area"></div>
+    `;
+
+    showHintBtn(() => {
+      stStat().hints++;
+      state.hintUsed++;
+      showMascot('💡 Глаголы — это действия: бежать, петь, прыгать, читать…', 3500);
+      setFeedback('hint','💡 Нажимай только на слова-действия! Существительные (книга, лес, мяч) — пропускай.');
+    });
+
+    // Запускаем анимацию через секунду
+    setTimeout(() => startFallingWords(queue), 800);
+    showMascot('🎯 Готов? Лови глаголы!');
+  }
+
+  function startFallingWords(queue) {
+    const area = $id('catch-area');
+    if (!area) return;
+    state.g2.started = true;
+    let idx = 0;
+    let activeCount = 0;
+    const maxActive = 3;
+
+    function spawnNext() {
+      if (state.g2.ended) return;
+      if (idx >= queue.length) {
+        // Ждём пока упадут все
+        if (activeCount === 0) finishGame2();
+        return;
+      }
+      if (activeCount >= maxActive) {
+        setTimeout(spawnNext, 600);
+        return;
+      }
+      const item = queue[idx++];
+      activeCount++;
+
+      const el = document.createElement('div');
+      el.className = 'falling-word ' + (item.isVerb ? 'is-verb' : 'is-noun');
+      el.textContent = item.w;
+
+      const areaW = area.offsetWidth || 300;
+      const elW   = item.w.length * 14 + 40;
+      const maxX  = Math.max(10, areaW - elW - 10);
+      el.style.left = Math.floor(Math.random() * maxX) + 'px';
+      el.style.top  = '-40px';
+      area.appendChild(el);
+
+      // Анимация падения
+      const duration = 3200 + Math.random() * 1200; // 3.2–4.4s
+      const startTime = performance.now();
+      const areaH = area.offsetHeight || 250;
+      let removed = false;
+
+      function fall(ts) {
+        if (state.g2.ended || removed) return;
+        const elapsed = ts - startTime;
+        const progress = elapsed / duration;
+        if (progress >= 1) {
+          // Упало на дно
+          if (!el.parentNode) { activeCount--; spawnNext(); return; }
+          if (item.isVerb) {
+            state.g2.missed++;
+            stStat().errors++;
+          }
+          el.remove();
+          removed = true;
+          activeCount--;
+          spawnNext();
+          return;
+        }
+        el.style.top = Math.floor(progress * areaH) + 'px';
+        requestAnimationFrame(fall);
+      }
+      requestAnimationFrame(fall);
+
+      el.onclick = () => {
+        if (removed || state.g2.ended) return;
+        stStat().total++;
+        state.totalQ++;
+        if (item.isVerb) {
+          // правильно
+          stStat().correct++; state.correctQ++;
+          state.g2.caught++;
+          addStar(1);
+          el.style.background = 'var(--green-lt)';
+          el.style.borderColor = 'var(--green)';
+          el.style.color = '#2d6b38';
+          const caught = $id('g2-caught');
+          if (caught) caught.textContent = state.g2.caught;
+          setTimeout(() => {
+            if (!removed) { el.remove(); removed = true; activeCount--; spawnNext(); }
+          }, 250);
+          // всё поймали?
+          if (state.g2.caught >= state.g2.verbsTotal && !state.g2.ended) {
+            setTimeout(finishGame2, 300);
+          }
+        } else {
+          // неправильно
+          state.g2.wrongClicks = (state.g2.wrongClicks||0) + 1;
+          state.errors++;
+          el.style.background = 'var(--terra-lt)';
+          el.style.borderColor = 'var(--terra)';
+          el.style.animation = 'wrongShake .35s ease';
+          setTimeout(() => { el.style.animation = ''; el.style.background=''; el.style.borderColor=''; el.style.color=''; }, 400);
+          setFeedback('error', '❌ «' + item.w + '» — это не действие. Такие слова пропускай!');
+        }
+      };
+
+      // Задержка перед следующим
+      setTimeout(spawnNext, 700 + Math.random() * 500);
+    }
+
+    spawnNext();
+  }
+
+  function finishGame2() {
+    if (state.g2.ended) return;
+    state.g2.ended = true;
+    const area = $id('catch-area');
+    if (area) area.querySelectorAll('.falling-word').forEach(el => el.remove());
+    const caught = state.g2.caught;
+    const total  = state.g2.verbsTotal;
+    stStat().correct = caught;
+    stStat().total   = total;
+    state.correctQ  += caught;
+    state.totalQ    += total;
+    const pct = Math.round(caught/total*100);
+    if (pct >= 70) {
+      setFeedback('success', `✅ Поймал ${caught} из ${total} глаголов (${pct}%)! Отлично!`);
+      showMascot('🎉 Ты настоящий охотник за глаголами!');
+    } else {
+      setFeedback('hint', `Поймал ${caught} из ${total} глаголов. ${pct >= 50 ? 'Хорошо, но можно лучше!' : 'Глагол = действие. Помни об этом!'}`);
+      showMascot('💪 Не беда! Главное — ты старался!');
+    }
+    clearActions();
+    showNextBtn('🏰 Следующая башня!', advanceGame);
+  }
+
+  // ======================================================
+  // ИГРА 3 — ВОЛШЕБНЫЙ ВОПРОС
+  // ======================================================
+  function renderGame3() {
+    $id('g-badge').textContent  = 'Испытание 3 из 6 ❓';
+    $id('g-title').textContent  = 'Волшебный вопрос!';
+    $id('g-task').textContent   = 'Задай правильный вопрос к выделенному слову!';
+    state.g3.roundIdx  = 0;
+    state.g3.answered  = false;
+    state.g3.hintLevel = 0;
+    renderGame3Round();
+  }
+
+  function renderGame3Round() {
+    clearFeedback(); clearActions();
+    state.g3.answered  = false;
+    state.g3.hintLevel = 0;
+    const data    = GAME3_DATA[state.g3.roundIdx];
+    const content = $id('g-content');
+
+    // Строим предложение с выделением
+    const sentHtml = data.sentence.replace(
+      '{' + data.verb + '}',
+      '<span class="verb-hl">' + data.verb + '</span>'
+    );
+
+    const opts = shuffle(data.options);
+    content.innerHTML = `
+      <div class="sentence-display">${sentHtml}</div>
+      <div class="divider mt8"></div>
+      <div class="options-grid" id="g3-opts"></div>
+    `;
+
+    const grid = $id('g3-opts');
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt;
+      btn.onclick = () => handleGame3Click(btn, opt, data, grid);
+      grid.appendChild(btn);
+    });
+
+    showHintBtn(() => {
+      stStat().hints++;
+      state.hintUsed++;
+      state.g3.hintLevel++;
+      if (state.g3.hintLevel === 1) {
+        setFeedback('hint','💡 Подумай: это действие происходит сейчас, раньше или ещё будет?');
+        showMascot('💡 Определи время глагола!');
+      } else {
+        setFeedback('hint','💡 Подсказка: ' + data.tip);
+        showMascot('💡 ' + data.tip, 4000);
+      }
+    });
+
+    showMascot('❓ Задай вопрос к выделенному слову!');
+  }
+
+  function handleGame3Click(btn, opt, data, grid) {
+    if (state.g3.answered) return;
+    state.g3.answered = true;
+    stStat().total++;
+    state.totalQ++;
+    grid.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+
+    if (opt === data.correct) {
+      btn.classList.add('correct');
+      stStat().correct++; state.correctQ++;
+      addStar(2);
+      setFeedback('success', '✅ Верно! ' + data.tip);
+      showMascot('✨ Правильный вопрос! Молодец!');
+    } else {
+      btn.classList.add('wrong');
+      // показать правильный
+      grid.querySelectorAll('.opt-btn').forEach(b => {
+        if (b.textContent === data.correct) b.classList.add('correct');
+      });
+      stStat().errors++; state.errors++;
+      setFeedback('error', '❌ Не совсем. ' + data.tip);
+      showMascot('🤔 Смотри: ' + data.tip, 4000);
+    }
+
+    clearActions();
+    state.g3.roundIdx++;
+    if (state.g3.roundIdx < GAME3_DATA.length) {
+      showNextBtn('➡️ Следующий вопрос', renderGame3Round);
+    } else {
+      showNextBtn('🏰 Следующая башня!', advanceGame);
+    }
+  }
+
+  // ======================================================
+  // ИГРА 4 — СОБЕРИ ПРЕДЛОЖЕНИЕ
+  // ======================================================
+  function renderGame4() {
+    $id('g-badge').textContent  = 'Испытание 4 из 6 🧩';
+    $id('g-title').textContent  = 'Собери предложение!';
+    $id('g-task').textContent   = 'Расставь слова по порядку, потом нажми на глагол!';
+    state.g4.roundIdx  = 0;
+    state.g4.answered  = false;
+    state.g4.verbFound = false;
+    state.g4.hintLevel = 0;
+    renderGame4Round();
+  }
+
+  function renderGame4Round() {
+    clearFeedback(); clearActions();
+    state.g4.answered  = false;
+    state.g4.verbFound = false;
+    state.g4.hintLevel = 0;
+    const data = GAME4_DATA[state.g4.roundIdx];
+    state.g4.sentence  = [];
+    state.g4.bank      = shuffle([...data.words]);
+
+    const content = $id('g-content');
+    content.innerHTML = `
+      <div style="font-size:clamp(13px,1.8vw,15px);color:var(--text2);margin-bottom:4px;">
+        📝 Шаг 1: составь предложение — нажимай слова по порядку
+      </div>
+      <div class="drop-zone" id="g4-sentence">
+        <span class="chip-placeholder" id="g4-placeholder">Нажимай слова снизу…</span>
+      </div>
+      <div class="bank-label">Слова:</div>
+      <div class="word-bank" id="g4-bank"></div>
+    `;
+
+    renderGame4Bank();
+    showHintBtn(() => {
+      stStat().hints++;
+      state.hintUsed++;
+      state.g4.hintLevel++;
+      if (!state.g4.verbFound && state.g4.sentence.length === data.words.length) {
+        // фаза выделения
+        setFeedback('hint','💡 Нажми на слово-действие (глагол). Что делает главный герой?');
+      } else if (!state.g4.verbFound) {
+        setFeedback('hint','💡 ' + data.tip);
+      }
+      showMascot('💡 ' + data.tip, 4000);
+    });
+  }
+
+  function renderGame4Bank() {
+    const data    = GAME4_DATA[state.g4.roundIdx];
+    const bankEl  = $id('g4-bank');
+    const sentEl  = $id('g4-sentence');
+    if (!bankEl || !sentEl) return;
+    bankEl.innerHTML = '';
+
+    state.g4.bank.forEach((word, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'w-chip';
+      chip.textContent = word;
+      chip.onclick = () => {
+        if (state.g4.answered) return;
+        state.g4.sentence.push(word);
+        state.g4.bank.splice(i, 1);
+        renderGame4Sentence(data);
+        renderGame4Bank();
+      };
+      bankEl.appendChild(chip);
+    });
+  }
+
+  function renderGame4Sentence(data) {
+    const sentEl = $id('g4-sentence');
+    if (!sentEl) return;
+    sentEl.innerHTML = '';
+
+    if (state.g4.sentence.length === 0) {
+      sentEl.innerHTML = '<span class="chip-placeholder" id="g4-placeholder">Нажимай слова снизу…</span>';
+      return;
+    }
+
+    state.g4.sentence.forEach((word, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'w-chip in-sentence';
+      chip.textContent = word;
+
+      // Если все слова собраны — клик = выбор глагола
+      if (state.g4.sentence.length === data.words.length && !state.g4.verbFound) {
+        chip.onclick = () => handleGame4VerbClick(chip, word, data);
+      } else if (state.g4.sentence.length < data.words.length) {
+        // Клик = убрать обратно в банк
+        chip.onclick = () => {
+          if (state.g4.answered) return;
+          state.g4.bank.splice(0, 0, word);
+          state.g4.sentence.splice(i, 1);
+          renderGame4Sentence(data);
+          renderGame4Bank();
+        };
+      }
+      sentEl.appendChild(chip);
+    });
+
+    // Если все собраны — подсказка про выделение
+    if (state.g4.sentence.length === data.words.length && !state.g4.verbFound) {
+      setFeedback('hint', '💡 Отлично! Теперь нажми на слово-действие (глагол) в предложении!');
+      showMascot('🎯 Нажми на слово-действие!');
+    }
+  }
+
+  function handleGame4VerbClick(chip, word, data) {
+    if (state.g4.verbFound) return;
+    state.g4.verbFound = true;
+    stStat().total++;
+    state.totalQ++;
+
+    if (word === data.verb) {
+      chip.classList.remove('in-sentence');
+      chip.classList.add('is-verb-chip');
+      stStat().correct++; state.correctQ++;
+      state.g4.answered = true;
+      addStar(3);
+      setFeedback('success', '✅ «' + word + '» — это глагол! ' + data.tip);
+      showMascot('🏆 Браво! Нашёл глагол!');
+      spawnConfetti(10);
+      // Блокируем все чипы
+      document.querySelectorAll('#g4-sentence .w-chip').forEach(c => c.onclick = null);
+    } else {
+      chip.classList.add('wrong');
+      stStat().errors++; state.errors++;
+      state.g4.verbFound = false; // дать ещё шанс
+      setFeedback('error', '❌ «' + word + '» — не глагол. Что делает герой? Найди слово-действие!');
+      showMascot('🤔 Найди слово-действие! Спроси: «Что делает герой?»');
+      setTimeout(() => chip.classList.remove('wrong'), 600);
+      return;
+    }
+
+    clearActions();
+    state.g4.roundIdx++;
+    if (state.g4.roundIdx < GAME4_DATA.length) {
+      showNextBtn('➡️ Следующее предложение', renderGame4Round);
+    } else {
+      showNextBtn('🏰 Следующая башня!', advanceGame);
+    }
+  }
+
+  // ======================================================
+  // ИГРА 5 — РАЗЛОЖИ ПО СУНДУКАМ
+  // ======================================================
+  function renderGame5() {
+    $id('g-badge').textContent  = 'Испытание 5 из 6 📦';
+    $id('g-title').textContent  = 'Разложи по сундукам!';
+    $id('g-task').textContent   = 'Нажми на слово, потом нажми в какой сундук оно идёт!';
+    state.g5 = { setIdx: 0, answered:{}, hintLevel:0, selected:null };
+    renderGame5Set();
+  }
+
+  function renderGame5Set() {
+    clearFeedback(); clearActions();
+    state.g5.answered  = {};
+    state.g5.hintLevel = 0;
+    state.g5.selected  = null;
+    const data = GAME5_DATA[state.g5.setIdx];
+    const shuffled = shuffle([...data.words]);
+
+    const content = $id('g-content');
+    content.innerHTML = `
+      <div class="chests-row">
+        <div class="chest-zone" id="chest-verb" onclick="G._chestClick('verb')">
+          <div class="chest-icon">📗</div>
+          <div class="chest-label">Действия<br>(глаголы)</div>
+          <div class="chest-sub">Что делает?<br>Что делал?</div>
+          <div class="chest-dropped" id="chest-verb-dropped"></div>
+        </div>
+        <div class="chest-zone" id="chest-noun" onclick="G._chestClick('noun')">
+          <div class="chest-icon">📕</div>
+          <div class="chest-label">Не действия<br>(другие слова)</div>
+          <div class="chest-sub">Предмет, живое<br>существо и др.</div>
+          <div class="chest-dropped" id="chest-noun-dropped"></div>
+        </div>
+      </div>
+      <div class="chest-words-row" id="g5-words"></div>
+      <div style="font-size:clamp(12px,1.6vw,14px);color:var(--text2);text-align:center;margin-top:4px;">
+        👆 Нажми слово → затем выбери сундук
+      </div>
+    `;
+
+    const wordsEl = $id('g5-words');
+    shuffled.forEach(item => {
+      const chip = document.createElement('div');
+      chip.className = 'drag-chip';
+      chip.id = 'g5-chip-' + item.w;
+      chip.textContent = item.w;
+      chip.dataset.isverb = item.isVerb ? '1' : '0';
+      chip.onclick = () => selectG5Chip(chip, item);
+      wordsEl.appendChild(chip);
+    });
+
+    stStat().total += shuffled.length;
+    state.totalQ   += shuffled.length;
+
+    showHintBtn(() => {
+      stStat().hints++;
+      state.hintUsed++;
+      state.g5.hintLevel++;
+      if (state.g5.hintLevel === 1) {
+        setFeedback('hint','💡 Глагол = слово-действие. Спрашивай «Что делает?» — если подходит, это глагол!');
+      } else if (state.g5.selected) {
+        const isV = state.g5.selected.dataset.isverb === '1';
+        setFeedback('hint', '💡 «' + state.g5.selected.textContent + '» — ' + (isV ? 'это действие (глагол)!' : 'это не действие!'));
+      }
+      showMascot('💡 Глагол отвечает на вопрос «Что делает?»', 3500);
+    });
+  }
+
+  function selectG5Chip(chip, item) {
+    if (chip.classList.contains('used')) return;
+    // Снимаем выделение с других
+    document.querySelectorAll('.drag-chip').forEach(c => c.style.boxShadow='');
+    state.g5.selected = chip;
+    chip.style.boxShadow = '0 0 0 3px var(--gold)';
+    setFeedback('hint', '«' + item.w + '» — это действие или нет? Выбери сундук!');
+  }
+
+  // Экспортируем для onclick в HTML
+  function chestClick(type) {
+    const chip = state.g5.selected;
+    if (!chip) {
+      showMascot('👆 Сначала нажми на слово!');
+      return;
+    }
+    const isVerb    = chip.dataset.isverb === '1';
+    const correct   = (type === 'verb') === isVerb;
+    const word      = chip.textContent;
+
+    chip.style.boxShadow = '';
+    chip.classList.add('used');
+    state.g5.selected = null;
+
+    // Добавляем в сундук
+    const droppedId = 'chest-' + type + '-dropped';
+    const droppedEl = $id(droppedId);
+    if (droppedEl) {
+      const dc = document.createElement('div');
+      dc.className = 'dropped-chip ' + (correct ? (isVerb ? 'verb':'noun') : (isVerb ? 'noun':'verb'));
+      dc.textContent = word;
+      droppedEl.appendChild(dc);
+    }
+
+    if (correct) {
+      stStat().correct++;
+      state.correctQ++;
+      addStar(1);
+      setFeedback('success', '✅ Верно! «' + word + '» ' + (isVerb ? '— это глагол (действие)!' : '— это не глагол!'));
+      showMascot('✨ Правильно!');
+    } else {
+      stStat().errors++; state.errors++;
+      const correctChest = isVerb ? '📗 Действия' : '📕 Не действия';
+      setFeedback('error', '❌ «' + word + '» нужно было положить в «' + correctChest + '». ' + (isVerb ? 'Это глагол!' : 'Это не глагол!'));
+      showMascot('🤔 ' + (isVerb ? '«'+word+'» — это слово-действие!' : '«'+word+'» — это не действие!'), 3500);
+    }
+
+    state.g5.answered[word] = true;
+
+    // Всё разложено?
+    const data = GAME5_DATA[state.g5.setIdx];
+    const allAnswered = data.words.every(item => state.g5.answered[item.w]);
+    if (allAnswered) {
+      clearActions();
+      state.g5.setIdx++;
+      if (state.g5.setIdx < GAME5_DATA.length) {
+        showNextBtn('➡️ Следующий набор', renderGame5Set);
+      } else {
+        showNextBtn('🏰 Следующая башня!', advanceGame);
+      }
+    }
+  }
+
+  // ======================================================
+  // ИГРА 6 — ПОМОГИ ЖИТЕЛЮ
+  // ======================================================
+  function renderGame6() {
+    $id('g-badge').textContent  = 'Испытание 6 из 6 🏡';
+    $id('g-title').textContent  = 'Помоги жителю!';
+    $id('g-task').textContent   = 'Выбери подходящее слово-действие, чтобы оживить предложение!';
+    state.g6.roundIdx  = 0;
+    state.g6.answered  = false;
+    state.g6.hintLevel = 0;
+    renderGame6Round();
+  }
+
+  function renderGame6Round() {
+    clearFeedback(); clearActions();
+    state.g6.answered  = false;
+    state.g6.hintLevel = 0;
+    const data    = GAME6_DATA[state.g6.roundIdx];
+    const content = $id('g-content');
+
+    const opts = shuffle(data.options);
+
+    content.innerHTML = `
+      <div class="resident-box">
+        <div class="resident-emoji">${data.resident}</div>
+        <div class="sentence-blank">
+          ${data.sentence.replace('_____', '<span class="blank-slot" id="g6-blank">?</span>')}
+        </div>
+      </div>
+      <div class="divider mt8"></div>
+      <div class="options-grid" id="g6-opts"></div>
+    `;
+
+    const grid = $id('g6-opts');
+    opts.forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = opt;
+      btn.onclick = () => handleGame6Click(btn, opt, data, grid);
+      grid.appendChild(btn);
+    });
+
+    showHintBtn(() => {
+      stStat().hints++;
+      state.hintUsed++;
+      state.g6.hintLevel++;
+      if (state.g6.hintLevel === 1) {
+        setFeedback('hint','💡 Нужно слово-действие — то, что отвечает на вопрос «Что делает?»');
+        showMascot('💡 Ищи слово-действие!');
+      } else {
+        setFeedback('hint','💡 ' + data.tip);
+        showMascot('💡 ' + data.tip, 4000);
+      }
+    });
+
+    showMascot('🏡 Помоги жителю — вставь глагол!');
+  }
+
+  function handleGame6Click(btn, opt, data, grid) {
+    if (state.g6.answered) return;
+    state.g6.answered = true;
+    stStat().total++;
+    state.totalQ++;
+    grid.querySelectorAll('.opt-btn').forEach(b => b.disabled = true);
+
+    const blank = $id('g6-blank');
+
+    if (opt === data.correct) {
+      btn.classList.add('correct');
+      if (blank) { blank.textContent = opt; blank.style.color='var(--green)'; blank.style.borderColor='var(--green)'; }
+      stStat().correct++; state.correctQ++;
+      addStar(2);
+      setFeedback('success', '✅ «' + opt + '» — это глагол! ' + data.tip);
+      showMascot('🎉 Житель ожил! Спасибо!');
+      spawnConfetti(12);
+    } else {
+      btn.classList.add('wrong');
+      grid.querySelectorAll('.opt-btn').forEach(b => {
+        if (b.textContent === data.correct) b.classList.add('correct');
+      });
+      if (blank) blank.textContent = '?';
+      stStat().errors++; state.errors++;
+      setFeedback('error', '❌ «' + opt + '» — не глагол. ' + data.tip);
+      showMascot('🤔 ' + data.tip, 4000);
+    }
+
+    clearActions();
+    state.g6.roundIdx++;
+    if (state.g6.roundIdx < GAME6_DATA.length) {
+      showNextBtn('➡️ Следующий житель', renderGame6Round);
+    } else {
+      showNextBtn('🏆 Завершить приключение!', endGame);
+    }
+  }
+
+  // ======================================================
+  // ФИНАЛ
+  // ======================================================
+  function endGame() {
+    // Останавливаем game2 если вдруг
+    if (state.g2 && !state.g2.ended) state.g2.ended = true;
+
+    showScreen('screen-end');
+    spawnConfetti(60);
+
+    const elapsed  = Math.round((Date.now() - state.startTime) / 1000);
+    const totalQ   = state.gameStats.reduce((a,s)=>a+s.total,0);
+    const totalC   = state.gameStats.reduce((a,s)=>a+s.correct,0);
+    const pct      = totalQ > 0 ? Math.round(totalC/totalQ*100) : 0;
+    const starsN   = pct >= 85 ? 3 : pct >= 65 ? 2 : 1;
+    state._elapsed = elapsed;
+    state._pct     = pct;
+    state._starsN  = starsN;
+    state._totalQ  = totalQ;
+    state._totalC  = totalC;
+
+    $id('end-stars').textContent = '⭐'.repeat(starsN) + '☆'.repeat(3-starsN);
+
+    let title, desc;
+    if (starsN === 3) {
+      title = '🏰 Королевство спасено!';
+      desc  = 'Ты настоящий Мастер Глаголов! Все жители снова в движении! ✨';
+    } else if (starsN === 2) {
+      title = '👏 Отличная работа!';
+      desc  = 'Молчун почти побеждён! Ещё немного тренировки — и ты станешь Мастером Глаголов!';
+    } else {
+      title = '💪 Хорошее начало!';
+      desc  = 'Глаголы — непростая тема. Попробуй ещё раз и ты обязательно справишься!';
+    }
+    $id('end-title').textContent = title;
+    $id('end-desc').textContent  = desc;
+
+    const mins = Math.floor(elapsed/60);
+    const secs = elapsed % 60;
+    $id('end-stats').innerHTML = `
+      <div class="stat-row"><span>✅ Верных ответов</span><span class="stat-val">${totalC} из ${totalQ}</span></div>
+      <div class="stat-row"><span>📊 Точность</span><span class="stat-val">${pct}%</span></div>
+      <div class="stat-row"><span>⭐ Звёзды</span><span class="stat-val">${state.stars}</span></div>
+      <div class="stat-row"><span>⏱️ Время</span><span class="stat-val">${mins} мин ${String(secs).padStart(2,'0')} сек</span></div>
+      <div class="stat-row"><span>💡 Подсказок</span><span class="stat-val">${state.hintUsed}</span></div>
+      <div class="stat-row"><span>❌ Ошибок</span><span class="stat-val">${state.errors}</span></div>
+    `;
+  }
+
+  // ======================================================
+  // ОТЧЁТ ДЛЯ УЧИТЕЛЯ
+  // ======================================================
+  function showReport() {
+    showScreen('screen-report');
+
+    const elapsed = state._elapsed || 0;
+    const mins    = Math.floor(elapsed/60), secs = elapsed%60;
+
+    $id('report-overall').innerHTML = `
+      <h3>📊 Общий итог</h3>
+      <div class="report-row"><span>Верных ответов</span><span>${state._totalC} из ${state._totalQ} (${state._pct}%)</span></div>
+      <div class="report-row"><span>Звёзд собрано</span><span>${state.stars}</span></div>
+      <div class="report-row"><span>Итоговая оценка</span><span>${'⭐'.repeat(state._starsN)}${'☆'.repeat(3-state._starsN)}</span></div>
+      <div class="report-row"><span>Время игры</span><span>${mins} мин ${String(secs).padStart(2,'0')} сек</span></div>
+      <div class="report-row"><span>Подсказок</span><span>${state.hintUsed}</span></div>
+      <div class="report-row"><span>Ошибок всего</span><span>${state.errors}</span></div>
+    `;
+
+    let gamesHtml = '<h3>📋 По каждому испытанию</h3>';
+    state.gameStats.forEach((s, i) => {
+      const p = s.total > 0 ? Math.round(s.correct/s.total*100) : 0;
+      const bar = p >= 80 ? '🟢' : p >= 60 ? '🟡' : '🔴';
+      gamesHtml += `
+        <div class="report-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+          <span style="font-weight:bold;color:var(--indigo)">${i+1}. ${s.name}</span>
+          <div style="display:flex;justify-content:space-between;width:100%">
+            <span>Верно: ${s.correct}/${s.total} (${p}%) ${bar}</span>
+            <span>Ошибок: ${s.errors} · Подсказок: ${s.hints}</span>
+          </div>
+        </div>
+      `;
+    });
+    $id('report-games').innerHTML = gamesHtml;
+
+    // Рекомендации
+    const st = state.gameStats;
+    const recs = [];
+    const pct = i => st[i].total > 0 ? st[i].correct/st[i].total : 1;
+    if (pct(0) < 0.7) recs.push('📌 Повторить: связь глагола с действием (игра 1 — «Оживи картинку»).');
+    if (pct(1) < 0.7) recs.push('📌 Повторить: быстрое распознавание глагола среди других слов (игра 2).');
+    if (pct(2) < 0.7) recs.push('📌 Уделить внимание: постановка вопроса к глаголу, особенно по временам (игра 3).');
+    if (pct(3) < 0.7) recs.push('📌 Практиковать: нахождение глагола в тексте (игра 4).');
+    if (pct(4) < 0.7) recs.push('📌 Повторить: отличие глагола от существительного и прилагательного (игра 5).');
+    if (pct(5) < 0.7) recs.push('📌 Закрепить: роль глагола в предложении — без него нет смысла (игра 6).');
+    if (recs.length === 0) recs.push('🌟 Ребёнок отлично справился со всеми заданиями! Можно переходить к изменению глаголов по числам и временам.');
+
+    $id('report-reco').innerHTML = '<b>🧭 Рекомендации:</b><br>' + recs.join('<br>');
+  }
+
+  // Публичный API
+  return { start, restart, backToEnd, showReport, _chestClick: chestClick };
+})();
+</script>
+</body>
+</html>
