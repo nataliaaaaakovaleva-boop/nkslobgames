@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Звёздный Математик: Испытание Шести Башен</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap');
+
+  :root {
+    --indigo: #3D5A99;
+    --indigo-light: #8AAEE0;
+    --indigo-dark: #1A2F66;
+    --amber: #E8A835;
+    --amber-light: #F5C842;
+    --cream: #F5F0E8;
+    --dark: #1A1F36;
+    --lilac: #C47EBF;
+    --lilac-light: #E2AADF;
+    --green-ok: #5BB88A;
+    --sky: #C8DFF5;
+    --tower1: #E8A835;
+    --tower2: #5BB88A;
+    --tower3: #C47EBF;
+    --tower4: #E87B35;
+    --tower5: #5BAEE8;
+    --tower6: #E85B8A;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: linear-gradient(160deg, #0f1b3d 0%, #1a2f66 50%, #0d2244 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    color: var(--cream);
+    user-select: none;
+  }
+
+  /* STARS BACKGROUND */
+  #starfield {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  }
+  .star {
+    position: absolute; border-radius: 50%;
+    background: #fff;
+    animation: twinkle var(--d, 3s) var(--delay, 0s) infinite alternate;
+  }
+  @keyframes twinkle { from { opacity: 0.2; transform: scale(1); } to { opacity: 1; transform: scale(1.4); } }
+
+  /* MAIN CANVAS */
+  #app {
+    position: relative; z-index: 1;
+    width: 100vw; height: 100dvh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  /* SCREENS */
+  .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; }
+  .screen.active { display: flex; }
+
+  /* ===== START SCREEN ===== */
+  #start-screen { gap: 20px; padding: 20px; }
+
+  .title-wrap { text-align: center; }
+  .title-main {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(32px, 8vw, 64px);
+    color: var(--amber);
+    text-shadow: 0 0 30px rgba(232,168,53,0.6), 0 3px 0 rgba(0,0,0,0.4);
+    line-height: 1.1;
+    animation: float 3s ease-in-out infinite;
+  }
+  .title-sub {
+    font-size: clamp(14px, 3vw, 20px);
+    color: var(--indigo-light);
+    margin-top: 4px;
+    font-weight: 700;
+  }
+
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  /* MASCOT */
+  .mascot-wrap { position: relative; }
+  .mascot { width: clamp(80px,18vw,130px); animation: breathe 2.5s ease-in-out infinite; cursor: default; }
+  @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
+  .speech-bubble {
+    position: absolute; top: -10px; right: -140px;
+    background: var(--cream); color: var(--dark);
+    border-radius: 16px; padding: 8px 14px;
+    font-size: 13px; font-weight: 700;
+    max-width: 140px; line-height: 1.3;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .speech-bubble::before {
+    content: '';
+    position: absolute; left: -10px; top: 16px;
+    border: 6px solid transparent;
+    border-right-color: var(--cream);
+  }
+
+  .mission-box {
+    background: rgba(61,90,153,0.35);
+    border: 2px solid rgba(138,174,224,0.4);
+    border-radius: 20px;
+    padding: 16px 24px;
+    max-width: min(480px, 90vw);
+    text-align: center;
+    font-size: clamp(13px, 2.5vw, 16px);
+    line-height: 1.5;
+    color: var(--sky);
+    backdrop-filter: blur(8px);
+  }
+
+  .btn-start {
+    background: linear-gradient(135deg, var(--amber) 0%, #f5c842 100%);
+    color: var(--dark);
+    border: none; border-radius: 50px;
+    padding: 16px 48px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(20px, 4vw, 28px);
+    cursor: pointer;
+    box-shadow: 0 6px 0 #a06a10, 0 10px 30px rgba(232,168,53,0.5);
+    transition: all 0.12s;
+    letter-spacing: 0.5px;
+  }
+  .btn-start:active { transform: translateY(3px); box-shadow: 0 3px 0 #a06a10, 0 6px 20px rgba(232,168,53,0.4); }
+
+  /* ===== MAP SCREEN ===== */
+  #map-screen { padding: 16px; gap: 12px; }
+
+  .hud {
+    width: 100%; max-width: 600px;
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(26,47,102,0.7);
+    border-radius: 20px; padding: 10px 16px;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(138,174,224,0.3);
+  }
+
+  .crystal-bar-wrap { flex: 1; }
+  .crystal-label { font-size: 11px; color: var(--indigo-light); font-weight: 700; margin-bottom: 4px; }
+  .crystal-bar-bg { background: rgba(0,0,0,0.3); border-radius: 10px; height: 14px; overflow: hidden; }
+  .crystal-bar-fill {
+    height: 100%; border-radius: 10px;
+    background: linear-gradient(90deg, var(--amber), var(--amber-light));
+    transition: width 0.6s cubic-bezier(.22,1,.36,1);
+    box-shadow: 0 0 8px rgba(232,168,53,0.8);
+  }
+
+  .score-box { text-align: center; }
+  .score-num { font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--amber); }
+  .score-lbl { font-size: 10px; color: var(--indigo-light); }
+
+  .sound-btn {
+    background: rgba(61,90,153,0.5); border: 1px solid rgba(138,174,224,0.3);
+    border-radius: 50%; width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 18px; flex-shrink: 0;
+  }
+
+  /* TOWERS GRID */
+  .towers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%; max-width: 580px;
+  }
+
+  .tower-card {
+    background: rgba(26,47,102,0.6);
+    border: 2px solid rgba(138,174,224,0.2);
+    border-radius: 20px;
+    padding: 16px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    backdrop-filter: blur(6px);
+    min-height: 110px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px;
+  }
+
+  .tower-card.available {
+    border-color: rgba(138,174,224,0.5);
+    cursor: pointer;
+  }
+  .tower-card.available:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+  .tower-card.available:active { transform: translateY(-1px); }
+
+  .tower-card.locked { opacity: 0.45; cursor: not-allowed; }
+
+  .tower-card.done {
+    border-color: var(--green-ok);
+    background: rgba(91,184,138,0.15);
+  }
+  .tower-card.done::after {
+    content: '✓';
+    position: absolute; top: 8px; right: 10px;
+    color: var(--green-ok); font-size: 16px; font-weight: 900;
+  }
+
+  .tower-emoji { font-size: clamp(28px, 6vw, 38px); }
+  .tower-name {
+    font-size: clamp(10px, 2vw, 13px);
+    font-weight: 800;
+    color: var(--sky);
+    line-height: 1.2;
+  }
+  .tower-type { font-size: 10px; color: var(--indigo-light); }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen { padding: 12px; gap: 10px; }
+
+  .game-hud {
+    width: 100%; max-width: 600px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .tower-title-box {
+    flex: 1;
+    background: rgba(26,47,102,0.7);
+    border-radius: 14px; padding: 8px 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .tower-title-emoji { font-size: 22px; }
+  .tower-title-text { font-family: 'Fredoka One', cursive; font-size: clamp(14px,3vw,18px); color: var(--amber); }
+
+  .progress-pills {
+    display: flex; gap: 4px;
+  }
+  .pill {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: rgba(138,174,224,0.2);
+    border: 1.5px solid rgba(138,174,224,0.4);
+    transition: all 0.3s;
+  }
+  .pill.done-pill { background: var(--amber); border-color: var(--amber); }
+  .pill.current-pill { background: var(--amber-light); border-color: var(--amber-light); animation: pulse-pill 0.8s ease-in-out infinite alternate; }
+  @keyframes pulse-pill { from { transform: scale(1); } to { transform: scale(1.3); } }
+
+  .timer-box {
+    background: rgba(26,47,102,0.7); border-radius: 14px;
+    padding: 8px 14px; text-align: center; min-width: 56px;
+  }
+  .timer-num { font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--cream); }
+  .timer-num.urgent { color: var(--lilac); animation: urgentPulse 0.5s infinite; }
+  @keyframes urgentPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+  /* QUESTION AREA */
+  .question-area {
+    width: 100%; max-width: 600px;
+    background: rgba(26,47,102,0.55);
+    border: 2px solid rgba(138,174,224,0.3);
+    border-radius: 24px; padding: 20px;
+    flex: 1; max-height: 480px;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    backdrop-filter: blur(8px);
+    position: relative; overflow: hidden;
+  }
+
+  .question-text {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(26px, 7vw, 48px);
+    color: var(--cream);
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .question-subtext {
+    font-size: clamp(13px, 2.5vw, 16px);
+    color: var(--sky);
+    text-align: center;
+    max-width: 400px;
+    line-height: 1.5;
+  }
+
+  /* MCQ OPTIONS */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .option-btn {
+    background: rgba(61,90,153,0.5);
+    border: 2px solid rgba(138,174,224,0.3);
+    border-radius: 16px;
+    padding: 14px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(20px, 5vw, 32px);
+    color: var(--cream);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .option-btn:hover { background: rgba(61,90,153,0.8); border-color: var(--indigo-light); transform: scale(1.03); }
+  .option-btn:active { transform: scale(0.97); }
+  .option-btn.correct { background: rgba(91,184,138,0.4); border-color: var(--green-ok); color: #fff; }
+  .option-btn.wrong { background: rgba(196,126,191,0.4); border-color: var(--lilac); }
+  .option-btn.reveal { background: rgba(91,184,138,0.25); border-color: var(--green-ok); }
+  .option-btn:disabled { cursor: default; }
+
+  /* NUMBER INPUT */
+  .num-input-wrap { display: flex; align-items: center; gap: 10px; }
+  .num-display {
+    background: rgba(0,0,0,0.4);
+    border: 3px solid var(--indigo-light);
+    border-radius: 16px;
+    width: 100px; height: 70px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 36px; color: var(--amber);
+  }
+  .numpad {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; width: 100%;
+  }
+  .numpad-btn {
+    background: rgba(61,90,153,0.5);
+    border: 2px solid rgba(138,174,224,0.3);
+    border-radius: 14px; padding: 12px 6px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(18px,4vw,24px); color: var(--cream);
+    cursor: pointer; transition: all 0.12s; text-align: center;
+  }
+  .numpad-btn:active { transform: scale(0.92); background: rgba(61,90,153,0.9); }
+  .numpad-btn.del { background: rgba(196,126,191,0.3); border-color: var(--lilac); }
+  .numpad-btn.ok { background: rgba(91,184,138,0.4); border-color: var(--green-ok); }
+
+  /* MATCHING (Tower 2) */
+  .match-wrap { width: 100%; display: flex; justify-content: space-between; gap: 10px; }
+  .match-col { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .match-item {
+    background: rgba(61,90,153,0.5);
+    border: 2px solid rgba(138,174,224,0.3);
+    border-radius: 14px; padding: 10px;
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(14px,3vw,18px); color: var(--cream);
+    cursor: pointer; text-align: center;
+    transition: all 0.15s;
+  }
+  .match-item:hover { border-color: var(--amber); background: rgba(232,168,53,0.2); }
+  .match-item.selected { border-color: var(--amber); background: rgba(232,168,53,0.35); }
+  .match-item.matched { border-color: var(--green-ok); background: rgba(91,184,138,0.25); color: var(--green-ok); cursor: default; }
+  .match-item.wrong-match { border-color: var(--lilac); background: rgba(196,126,191,0.2); }
+
+  /* DRAG STARS (Tower 3) */
+  .drag-wrap { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+  .stars-pool {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; min-height: 50px;
+    background: rgba(0,0,0,0.2); border-radius: 16px; padding: 10px;
+  }
+  .drag-star {
+    font-size: clamp(20px,5vw,28px); cursor: pointer;
+    transition: transform 0.12s;
+    display: inline-block;
+  }
+  .drag-star:hover { transform: scale(1.2); }
+  .drag-star.in-basket { cursor: default; }
+
+  .baskets-row {
+    display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  }
+  .basket {
+    background: rgba(61,90,153,0.4);
+    border: 2px dashed rgba(138,174,224,0.5);
+    border-radius: 16px; padding: 10px;
+    min-width: 70px; min-height: 70px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .basket:hover { border-color: var(--amber); }
+  .basket.full { border-color: var(--green-ok); }
+  .basket-label { font-size: 11px; color: var(--indigo-light); }
+  .basket-content { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
+
+  /* FEEDBACK OVERLAY */
+  .feedback-overlay {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 12px;
+    border-radius: 22px;
+    animation: fadeInScale 0.3s ease-out;
+    pointer-events: none;
+    padding: 20px; text-align: center;
+  }
+  .feedback-overlay.correct-fb { background: rgba(91,184,138,0.92); }
+  .feedback-overlay.wrong-fb { background: rgba(26,47,102,0.95); border: 2px solid var(--lilac); }
+  @keyframes fadeInScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  .feedback-icon { font-size: 48px; }
+  .feedback-title { font-family: 'Fredoka One', cursive; font-size: 26px; }
+  .feedback-explain { font-size: 14px; color: var(--sky); line-height: 1.5; max-width: 360px; }
+  .feedback-btn {
+    background: var(--amber); color: var(--dark);
+    border: none; border-radius: 50px;
+    padding: 12px 32px;
+    font-family: 'Fredoka One', cursive; font-size: 18px;
+    cursor: pointer; pointer-events: all;
+    box-shadow: 0 4px 0 #a06a10;
+    transition: all 0.12s;
+  }
+  .feedback-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #a06a10; }
+
+  /* TOWER COMPLETE */
+  .tower-complete {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(10,18,50,0.9);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 16px;
+    animation: fadeInScale 0.4s ease-out;
+  }
+  .tower-complete-emoji { font-size: 80px; animation: bounce 0.6s ease-out; }
+  @keyframes bounce { 0% { transform: scale(0) rotate(-10deg); } 70% { transform: scale(1.15) rotate(5deg); } 100% { transform: scale(1) rotate(0deg); } }
+  .tower-complete h2 { font-family: 'Fredoka One', cursive; font-size: clamp(24px,6vw,40px); color: var(--amber); text-align: center; }
+  .tower-complete p { color: var(--sky); font-size: 16px; text-align: center; max-width: 340px; }
+  .tower-stats { display: flex; gap: 20px; }
+  .stat-chip {
+    background: rgba(61,90,153,0.5);
+    border: 1px solid rgba(138,174,224,0.3);
+    border-radius: 14px; padding: 10px 16px;
+    text-align: center;
+  }
+  .stat-chip-num { font-family: 'Fredoka One', cursive; font-size: 24px; color: var(--amber); }
+  .stat-chip-lbl { font-size: 11px; color: var(--indigo-light); }
+
+  /* FINAL REPORT */
+  #report-screen { padding: 16px; gap: 12px; overflow-y: auto; }
+  .report-header { text-align: center; }
+  .report-header h1 { font-family: 'Fredoka One', cursive; font-size: clamp(26px,6vw,40px); color: var(--amber); }
+  .report-crystal { font-size: 60px; animation: spin-slow 4s linear infinite; display: inline-block; }
+  @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+  .report-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; width: 100%; max-width: 580px;
+  }
+  .report-card {
+    background: rgba(26,47,102,0.6);
+    border: 1px solid rgba(138,174,224,0.3);
+    border-radius: 16px; padding: 12px;
+  }
+  .report-card h3 { font-size: 12px; color: var(--indigo-light); margin-bottom: 6px; font-weight: 800; }
+  .report-card .rc-main { font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--amber); }
+  .report-card .rc-sub { font-size: 11px; color: var(--sky); }
+
+  .recommendation-box {
+    background: rgba(91,184,138,0.15);
+    border: 2px solid rgba(91,184,138,0.4);
+    border-radius: 16px; padding: 14px;
+    width: 100%; max-width: 580px;
+    font-size: 14px; color: var(--cream); line-height: 1.5;
+  }
+  .recommendation-box strong { color: var(--green-ok); }
+
+  .btn-again {
+    background: linear-gradient(135deg, var(--amber), var(--amber-light));
+    color: var(--dark); border: none; border-radius: 50px;
+    padding: 14px 40px;
+    font-family: 'Fredoka One', cursive; font-size: 22px;
+    cursor: pointer; box-shadow: 0 5px 0 #a06a10;
+    transition: all 0.12s;
+  }
+  .btn-again:active { transform: translateY(2px); box-shadow: 0 3px 0 #a06a10; }
+
+  /* PARTICLES */
+  .particle {
+    position: fixed; pointer-events: none; z-index: 200;
+    font-size: 20px; animation: particleFly var(--dur, 0.8s) ease-out forwards;
+  }
+  @keyframes particleFly {
+    0% { opacity: 1; transform: translate(0,0) scale(1); }
+    100% { opacity: 0; transform: translate(var(--dx, 0px), var(--dy, -80px)) scale(0.3); }
+  }
+
+  /* SHAKE */
+  .shake { animation: shakeAnim 0.4s ease-out; }
+  @keyframes shakeAnim {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+  }
+
+  /* Text input for tower 4 */
+  .input-row {
+    display: flex; align-items: center; gap: 12px;
+    justify-content: center; width: 100%;
+  }
+  .eq-part {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(22px, 6vw, 38px); color: var(--cream);
+  }
+  .eq-input {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(22px, 6vw, 38px);
+    color: var(--amber);
+    background: rgba(0,0,0,0.4);
+    border: 3px solid var(--indigo-light);
+    border-radius: 14px; padding: 6px 10px;
+    width: 90px; text-align: center;
+    outline: none;
+  }
+
+  /* HINT BUTTON */
+  .hint-btn {
+    background: rgba(196,126,191,0.25);
+    border: 1.5px solid var(--lilac);
+    border-radius: 50px; padding: 8px 18px;
+    color: var(--lilac); font-weight: 800;
+    font-size: 13px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .hint-btn:hover { background: rgba(196,126,191,0.4); }
+  .hint-text {
+    background: rgba(196,126,191,0.15);
+    border: 1px solid rgba(196,126,191,0.4);
+    border-radius: 14px; padding: 10px 16px;
+    color: var(--lilac-light); font-size: 13px;
+    text-align: center; max-width: 380px;
+    line-height: 1.5;
+  }
+
+  /* Responsive */
+  @media (max-width: 400px) {
+    .towers-grid { grid-template-columns: repeat(2, 1fr); }
+    .options-grid { grid-template-columns: 1fr; }
+    .report-grid { grid-template-columns: 1fr; }
+  }
+  @media (min-width: 700px) {
+    .towers-grid { gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="starfield"></div>
+
+<div id="app">
+  <!-- START SCREEN -->
+  <div id="start-screen" class="screen active">
+    <div class="title-wrap">
+      <div class="title-main">⭐ Звёздный Математик</div>
+      <div class="title-sub">Испытание Шести Башен</div>
+    </div>
+    <div class="mascot-wrap">
+      <svg class="mascot" viewBox="0 0 120 140" xmlns="http://www.w3.org/2000/svg">
+        <!-- Body -->
+        <ellipse cx="60" cy="85" rx="38" ry="44" fill="#8AAEE0"/>
+        <!-- Wings -->
+        <ellipse cx="25" cy="95" rx="16" ry="22" fill="#3D5A99" transform="rotate(-15 25 95)"/>
+        <ellipse cx="95" cy="95" rx="16" ry="22" fill="#3D5A99" transform="rotate(15 95 95)"/>
+        <!-- Hat -->
+        <polygon points="60,10 30,55 90,55" fill="#1A2F66"/>
+        <rect x="22" y="52" width="76" height="12" rx="6" fill="#E8A835"/>
+        <!-- Star on hat -->
+        <text x="60" y="44" text-anchor="middle" font-size="16" fill="#E8A835">⭐</text>
+        <!-- Face base -->
+        <circle cx="60" cy="72" r="30" fill="#C8DFF5"/>
+        <!-- Eyes -->
+        <circle cx="48" cy="68" r="11" fill="white"/>
+        <circle cx="72" cy="68" r="11" fill="white"/>
+        <circle cx="50" cy="69" r="7" fill="#1A1F36"/>
+        <circle cx="74" cy="69" r="7" fill="#1A1F36"/>
+        <circle cx="52" cy="67" r="2.5" fill="white"/>
+        <circle cx="76" cy="67" r="2.5" fill="white"/>
+        <!-- Beak -->
+        <polygon points="60,76 53,84 67,84" fill="#E8A835"/>
+        <!-- Blush -->
+        <ellipse cx="38" cy="78" rx="7" ry="4" fill="#F5A0B5" opacity="0.6"/>
+        <ellipse cx="82" cy="78" rx="7" ry="4" fill="#F5A0B5" opacity="0.6"/>
+        <!-- Wand -->
+        <line x1="95" y1="100" x2="115" y2="80" stroke="#E8A835" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="116" cy="79" r="6" fill="#F5C842"/>
+        <text x="113" y="82" text-anchor="middle" font-size="8" fill="#fff">✦</text>
+        <!-- Feet -->
+        <ellipse cx="46" cy="128" rx="12" ry="6" fill="#E8A835"/>
+        <ellipse cx="74" cy="128" rx="12" ry="6" fill="#E8A835"/>
+      </svg>
+      <div class="speech-bubble">Привет! Поможешь мне спасти королевство? 🏰</div>
+    </div>
+    <div class="mission-box">
+      🌙 Тёмный туман разбил <strong>Кристалл Знаний</strong> на 6 осколков и спрятал их в башнях.<br>
+      Реши задачи на умножение и деление — и собери кристалл!
+    </div>
+    <button class="btn-start" onclick="startGame()">🚀 Начать приключение!</button>
+  </div>
+
+  <!-- MAP SCREEN -->
+  <div id="map-screen" class="screen">
+    <div class="hud">
+      <div style="font-size:28px;animation:breathe 2.5s infinite">🦉</div>
+      <div class="crystal-bar-wrap">
+        <div class="crystal-label">Кристалл: <span id="crystal-text">0/6</span></div>
+        <div class="crystal-bar-bg"><div class="crystal-bar-fill" id="crystal-fill" style="width:0%"></div></div>
+      </div>
+      <div class="score-box">
+        <div class="score-num" id="score-display">0</div>
+        <div class="score-lbl">⭐ монет</div>
+      </div>
+      <div class="sound-btn" onclick="toggleSound()" id="sound-btn">🔊</div>
+    </div>
+
+    <div style="font-family:'Fredoka One',cursive;font-size:clamp(16px,4vw,22px);color:var(--sky);text-align:center;">
+      Выбери башню и начни испытание!
+    </div>
+
+    <div class="towers-grid" id="towers-grid"></div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="game-screen" class="screen">
+    <div class="game-hud">
+      <div class="tower-title-box">
+        <div class="tower-title-emoji" id="g-tower-emoji">🗼</div>
+        <div class="tower-title-text" id="g-tower-name">Башня 1</div>
+      </div>
+      <div class="progress-pills" id="progress-pills"></div>
+      <div class="timer-box">
+        <div class="timer-num" id="timer-display">--</div>
+      </div>
+    </div>
+    <div class="question-area" id="question-area">
+      <!-- dynamic content -->
+    </div>
+  </div>
+
+  <!-- REPORT SCREEN -->
+  <div id="report-screen" class="screen">
+    <div class="report-header">
+      <div class="report-crystal">💎</div>
+      <h1>Кристалл собран!</h1>
+      <p style="color:var(--sky);font-size:15px;margin-top:4px;">Отличная работа, Звёздный Математик!</p>
+    </div>
+    <div class="report-grid" id="report-grid"></div>
+    <div class="recommendation-box" id="recommendation-box"></div>
+    <div style="font-size:13px;color:var(--indigo-light);text-align:center;max-width:500px;">
+      📋 <strong style="color:var(--sky)">Отчёт для учителя:</strong> точность, время и подсказки по каждой башне сохранены в разделе выше.
+    </div>
+    <button class="btn-again" onclick="resetGame()">🔄 Играть снова</button>
+  </div>
+</div>
+
+<!-- TOWER COMPLETE OVERLAY -->
+<div class="tower-complete" id="tower-complete-overlay" style="display:none">
+  <div class="tower-complete-emoji" id="tc-emoji">🎉</div>
+  <h2 id="tc-title">Башня покорена!</h2>
+  <p id="tc-msg">Ты молодец!</p>
+  <div class="tower-stats">
+    <div class="stat-chip">
+      <div class="stat-chip-num" id="tc-correct">0</div>
+      <div class="stat-chip-lbl">верно</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-num" id="tc-time">0с</div>
+      <div class="stat-chip-lbl">время</div>
+    </div>
+    <div class="stat-chip">
+      <div class="stat-chip-num" id="tc-hints">0</div>
+      <div class="stat-chip-lbl">подсказок</div>
+    </div>
+  </div>
+  <button class="btn-start" id="tc-btn" onclick="finishTower()">Продолжить →</button>
+</div>
+
+<script>
+// =================== STARS ===================
+(function(){
+  const sf = document.getElementById('starfield');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2.5+0.5;
+    s.style.cssText=`width:${sz}px;height:${sz}px;top:${Math.random()*100}%;left:${Math.random()*100}%;--d:${2+Math.random()*4}s;--delay:${Math.random()*4}s;opacity:${Math.random()*0.7+0.2}`;
+    sf.appendChild(s);
+  }
+})();
+
+// =================== GAME STATE ===================
+let soundOn = true;
+let totalScore = 0;
+let towersCompleted = 0;
+let currentTower = null;
+let currentQ = 0;
+let towerStartTime = 0;
+let timerInterval = null;
+let timerSec = 0;
+let hintsUsed = 0;
+let correctCount = 0;
+let totalQ = 0;
+let feedbackVisible = false;
+
+// Per-tower telemetry
+let towerStats = [];
+
+// Tower definitions
+const TOWERS = [
+  { id:0, name:'Вспышка памяти', emoji:'⚡', color:'#E8A835', type:'Вспоминание', questions: genTower1() },
+  { id:1, name:'Волшебные пары', emoji:'🔗', color:'#5BB88A', type:'Сопоставление', questions: genTower2() },
+  { id:2, name:'Раздели поровну', emoji:'⭐', color:'#C47EBF', type:'Применение', questions: genTower3() },
+  { id:3, name:'Пропавший множитель', emoji:'❓', color:'#E87B35', type:'Восстановление', questions: genTower4() },
+  { id:4, name:'Задача-ловушка', emoji:'🔍', color:'#5BAEE8', type:'Оценивание', questions: genTower5() },
+  { id:5, name:'Финальный кристалл', emoji:'💎', color:'#E85B8A', type:'Контроль', questions: genTower6() },
+];
+
+// Initialize stats
+TOWERS.forEach(t => towerStats.push({correct:0, total:0, hints:0, time:0, done:false}));
+
+// =================== QUESTION GENERATORS ===================
+
+function shuffle(arr){ return arr.sort(()=>Math.random()-0.5); }
+function rand(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+function genMCQ(question, correct, wrongPool, explain){
+  const wrongs = shuffle(wrongPool).slice(0,3);
+  const opts = shuffle([correct, ...wrongs]);
+  return { type:'mcq', question, correct, opts, explain };
+}
+
+function genTower1(){
+  const qs=[];
+  const tables=[[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[2,9],[4,7],[3,8]];
+  shuffle(tables).slice(0,6).forEach(([a,b])=>{
+    const ans=a*b;
+    const wrongs=[ans+rand(1,3),ans-rand(1,4),ans+rand(4,8)].filter(x=>x>0&&x!==ans);
+    qs.push(genMCQ(`${a} × ${b} = ?`, ans, wrongs, `${a} × ${b} = ${ans}\nПомни: ${a} раз по ${b}!`));
+  });
+  return qs;
+}
+
+function genTower2(){
+  // Matching pairs — we handle this specially; return pair sets
+  const pairs=[
+    {mul:'3 × 8 = 24', div:'24 ÷ 3 = 8'},
+    {mul:'4 × 7 = 28', div:'28 ÷ 4 = 7'},
+    {mul:'6 × 5 = 30', div:'30 ÷ 6 = 5'},
+    {mul:'9 × 3 = 27', div:'27 ÷ 9 = 3'},
+    {mul:'2 × 8 = 16', div:'16 ÷ 2 = 8'},
+    {mul:'7 × 4 = 28', div:'28 ÷ 7 = 4'},
+  ];
+  return shuffle(pairs).slice(0,4).map(p=>({type:'match', pair:p}));
+}
+
+function genTower3(){
+  const configs=[
+    {total:12,groups:3,per:4},{total:15,groups:5,per:3},
+    {total:16,groups:4,per:4},{total:18,groups:6,per:3},
+    {total:20,groups:4,per:5},{total:24,groups:6,per:4},
+    {total:14,groups:7,per:2},{total:21,groups:7,per:3},
+  ];
+  return shuffle(configs).slice(0,5).map(c=>({type:'drag', ...c, explain:`${c.total} ÷ ${c.groups} = ${c.per}. В каждой корзинке ${c.per} звёздочки!`}));
+}
+
+function genTower4(){
+  const qs=[];
+  const eqs=[
+    {a:'□',op:'×',b:4,eq:28,ans:7},{a:'□',op:'×',b:3,eq:21,ans:7},
+    {a:5,op:'×',b:'□',eq:35,ans:7},{a:'□',op:'×',b:6,eq:42,ans:7},
+    {a:8,op:'×',b:'□',eq:56,ans:7},{a:'□',op:'×',b:9,eq:63,ans:7},
+    {a:4,op:'×',b:'□',eq:24,ans:6},{a:'□',op:'×',b:8,eq:40,ans:5},
+  ];
+  return shuffle(eqs).slice(0,5).map(e=>({
+    type:'input', ...e,
+    explain: e.a==='□' ? `${e.eq} ÷ ${e.b} = ${e.ans}, значит □ = ${e.ans}` : `${e.eq} ÷ ${e.a} = ${e.ans}, значит □ = ${e.ans}`
+  }));
+}
+
+function genTower5(){
+  const problems=[
+    { text:'Маша купила 24 карандаша и разложила их поровну в 4 пенала. Сколько карандашей в каждом пенале?',
+      opts:['24 ÷ 4 = 6 ✓ (верно)', '24 × 4 = 96 ✗ (умножили, хотя надо делить)', '24 - 4 = 20 ✗ (вычли, но задача о делении)'],
+      correct:0, explain:'Раскладываем поровну — значит делим: 24 ÷ 4 = 6'},
+    { text:'В 3 корзинах по 7 яблок. Сколько яблок всего?',
+      opts:['3 × 7 = 21 ✓ (верно)', '3 + 7 = 10 ✗ (сложили, но нужно умножение)', '21 ÷ 3 = 7 ✗ (это обратное действие)'],
+      correct:0, explain:'«По 7» — это умножение: 3 × 7 = 21'},
+    { text:'36 конфет разложили в 9 пакетиков поровну. Сколько конфет в каждом пакетике?',
+      opts:['36 × 9 = 324 ✗ (умножили, а нужно делить)', '36 ÷ 9 = 4 ✓ (верно)', '36 - 9 = 27 ✗ (вычли, но задача о делении)'],
+      correct:1, explain:'«Разложили поровну» — делим: 36 ÷ 9 = 4'},
+    { text:'Лукс разложил 5 кучек по 6 монет. Сколько монет всего?',
+      opts:['5 + 6 = 11 ✗ (сложили, но нужно умножение)', '5 ÷ 6 ✗ (делить нечего — монет 5×6)', '5 × 6 = 30 ✓ (верно)'],
+      correct:2, explain:'5 кучек по 6 монет = 5 × 6 = 30'},
+  ];
+  return shuffle(problems).slice(0,4).map(p=>({type:'choice3', ...p}));
+}
+
+function genTower6(){
+  // Mix of all types, no hints, timer pressure
+  const mixed=[];
+  // 3 MCQ
+  const t1=genTower1().slice(0,3);
+  // 2 input
+  const t4=genTower4().slice(0,2);
+  // 2 choice3
+  const t5=genTower5().slice(0,2);
+  // 1 drag
+  const t3=genTower3().slice(0,1);
+  return shuffle([...t1,...t4,...t5,...t3]);
+}
+
+// =================== SCREENS ===================
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame(){ showScreen('map-screen'); renderMap(); }
+
+function renderMap(){
+  document.getElementById('crystal-text').textContent = `${towersCompleted}/6`;
+  document.getElementById('crystal-fill').style.width = `${(towersCompleted/6)*100}%`;
+  document.getElementById('score-display').textContent = totalScore;
+
+  const grid = document.getElementById('towers-grid');
+  grid.innerHTML='';
+  TOWERS.forEach((t,i)=>{
+    const done = towerStats[i].done;
+    const locked = i>0 && !towerStats[i-1].done;
+    const card=document.createElement('div');
+    card.className=`tower-card ${done?'done':locked?'locked':'available'}`;
+    card.style.borderColor = done ? 'var(--green-ok)' : !locked ? t.color+'88' : '';
+    card.innerHTML=`
+      <div class="tower-emoji" style="filter:${locked?'grayscale(1)':'drop-shadow(0 0 8px '+t.color+'88)'}">${t.emoji}</div>
+      <div class="tower-name">${t.name}</div>
+      <div class="tower-type">${t.type}</div>
+      ${locked?'<div style="font-size:11px;color:var(--lilac)">🔒 Сначала предыдущая</div>':''}
+    `;
+    if(!locked && !done){
+      card.onclick=()=>startTower(i);
+    }
+    grid.appendChild(card);
+  });
+}
+
+// =================== TOWER ===================
+function startTower(idx){
+  currentTower=idx;
+  currentQ=0;
+  hintsUsed=0;
+  correctCount=0;
+  feedbackVisible=false;
+  towerStartTime=Date.now();
+  totalQ=TOWERS[idx].questions.length;
+
+  document.getElementById('g-tower-emoji').textContent=TOWERS[idx].emoji;
+  document.getElementById('g-tower-name').textContent=TOWERS[idx].name;
+  renderPills();
+  showScreen('game-screen');
+  startTimer();
+  renderQuestion();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  timerSec=0;
+  updateTimerDisplay();
+  timerInterval=setInterval(()=>{
+    timerSec++;
+    updateTimerDisplay();
+  },1000);
+}
+
+function updateTimerDisplay(){
+  const el=document.getElementById('timer-display');
+  const m=Math.floor(timerSec/60);
+  const s=timerSec%60;
+  el.textContent=m>0?`${m}:${s<10?'0'+s:s}`:`${s}`;
+  el.className='timer-num'+(timerSec>120?' urgent':'');
+}
+
+function renderPills(){
+  const wrap=document.getElementById('progress-pills');
+  wrap.innerHTML='';
+  for(let i=0;i<totalQ;i++){
+    const p=document.createElement('div');
+    p.className=`pill ${i<currentQ?'done-pill':i===currentQ?'current-pill':''}`;
+    wrap.appendChild(p);
+  }
+}
+
+// =================== QUESTION RENDERERS ===================
+function renderQuestion(){
+  if(currentQ>=totalQ){ endTower(); return; }
+  renderPills();
+  const q=TOWERS[currentTower].questions[currentQ];
+  const area=document.getElementById('question-area');
+  area.innerHTML='';
+  feedbackVisible=false;
+
+  if(q.type==='mcq') renderMCQ(q,area);
+  else if(q.type==='match') renderMatch(q,area);
+  else if(q.type==='drag') renderDrag(q,area);
+  else if(q.type==='input') renderInput(q,area);
+  else if(q.type==='choice3') renderChoice3(q,area);
+}
+
+function renderMCQ(q,area){
+  const noHints = currentTower===5; // tower 6 = no hints
+
+  area.innerHTML=`
+    <div class="question-text">${q.question}</div>
+    <div class="options-grid" id="opts-grid"></div>
+    ${!noHints?`<button class="hint-btn" onclick="showHintMCQ(${JSON.stringify(q.correct)})">💡 Подсказка</button>`:''}
+  `;
+  const grid=area.querySelector('#opts-grid');
+  q.opts.forEach((o,i)=>{
+    const btn=document.createElement('button');
+    btn.className='option-btn';
+    btn.textContent=o;
+    btn.onclick=()=>answerMCQ(o,q,btn,grid);
+    grid.appendChild(btn);
+  });
+}
+
+function showHintMCQ(correct){
+  hintsUsed++;
+  // Remove one wrong answer
+  const grid=document.getElementById('opts-grid');
+  const btns=[...grid.querySelectorAll('.option-btn')].filter(b=>!b.disabled&&parseInt(b.textContent)!==correct);
+  if(btns.length>0){ btns[0].style.opacity='0.3'; btns[0].disabled=true; }
+}
+
+function answerMCQ(val,q,btn,grid){
+  if(feedbackVisible) return;
+  feedbackVisible=true;
+  const correct = val===q.correct;
+  towerStats[currentTower].total++;
+  if(correct){ towerStats[currentTower].correct++; correctCount++; addScore(10); spawnParticles(btn); }
+  
+  [...grid.querySelectorAll('.option-btn')].forEach(b=>{
+    b.disabled=true;
+    if(parseInt(b.textContent)===q.correct||b.textContent===q.correct) b.classList.add('reveal');
+  });
+  btn.classList.add(correct?'correct':'wrong');
+  if(!correct) shakeArea();
+  showFeedback(correct, q.explain, ()=>{ currentQ++; renderQuestion(); });
+}
+
+function renderMatch(q,area){
+  // Show one pair round at a time; q.pair = {mul, div}
+  const p=q.pair;
+  area.innerHTML=`
+    <div class="question-text" style="font-size:clamp(16px,4vw,22px)">Соедини умножение и деление — это одна семья!</div>
+    <div class="match-wrap">
+      <div class="match-col" id="left-col"></div>
+      <div style="display:flex;align-items:center;font-size:32px;color:var(--amber);">↔</div>
+      <div class="match-col" id="right-col"></div>
+    </div>
+    <div class="hint-text" style="display:none" id="match-hint">Подсказка: если 3×8=24, то 24÷3=8 — это обратное действие!</div>
+    <button class="hint-btn" onclick="document.getElementById('match-hint').style.display='block';hintsUsed++;">💡 Подсказка</button>
+  `;
+
+  let selected={left:null,right:null};
+  let matched=false;
+
+  // Build left/right from a shuffled pool (include 1 distractor pair)
+  const allLeft=[[p.mul,'left-0']];
+  const allRight=[[p.div,'right-0']];
+  // Add distractors
+  const distL=['5 × 6 = 30','2 × 9 = 18'];
+  const distR=['30 ÷ 5 = 6','18 ÷ 2 = 9'];
+  allLeft.push([distL[rand(0,1)],'left-d']);
+  allRight.push([distR[rand(0,1)],'right-d']);
+  shuffle(allLeft); shuffle(allRight);
+
+  const lc=area.querySelector('#left-col');
+  const rc=area.querySelector('#right-col');
+
+  function tryMatch(){
+    if(!selected.left||!selected.right) return;
+    const lOk=selected.left.dataset.id==='left-0';
+    const rOk=selected.right.dataset.id==='right-0';
+    if(lOk&&rOk){
+      selected.left.classList.add('matched'); selected.right.classList.add('matched');
+      towerStats[currentTower].total++; towerStats[currentTower].correct++; correctCount++; addScore(15);
+      spawnParticlesAt(area);
+      feedbackVisible=true;
+      showFeedback(true,'Правильно! Умножение и деление — это одна семья чисел 🌟',()=>{ currentQ++; renderQuestion(); });
+    } else {
+      selected.left.classList.add('wrong-match'); selected.right.classList.add('wrong-match');
+      towerStats[currentTower].total++;
+      shakeArea();
+      setTimeout(()=>{
+        if(selected.left){ selected.left.classList.remove('wrong-match','selected'); }
+        if(selected.right){ selected.right.classList.remove('wrong-match','selected'); }
+        selected={left:null,right:null};
+      },700);
+    }
+  }
+
+  allLeft.forEach(([txt,id])=>{
+    const item=document.createElement('div');
+    item.className='match-item'; item.textContent=txt; item.dataset.id=id;
+    item.onclick=()=>{
+      if(item.classList.contains('matched')||feedbackVisible) return;
+      lc.querySelectorAll('.match-item').forEach(x=>x.classList.remove('selected'));
+      item.classList.add('selected'); selected.left=item; tryMatch();
+    };
+    lc.appendChild(item);
+  });
+  allRight.forEach(([txt,id])=>{
+    const item=document.createElement('div');
+    item.className='match-item'; item.textContent=txt; item.dataset.id=id;
+    item.onclick=()=>{
+      if(item.classList.contains('matched')||feedbackVisible) return;
+      rc.querySelectorAll('.match-item').forEach(x=>x.classList.remove('selected'));
+      item.classList.add('selected'); selected.right=item; tryMatch();
+    };
+    rc.appendChild(item);
+  });
+}
+
+function renderDrag(q,area){
+  area.innerHTML=`
+    <div class="question-text" style="font-size:clamp(18px,4vw,26px)">Раздели ${q.total} ⭐ на ${q.groups} корзинки поровну!</div>
+    <div class="drag-wrap">
+      <div class="stars-pool" id="stars-pool"></div>
+      <div class="baskets-row" id="baskets-row"></div>
+    </div>
+    <button class="hint-btn" id="hint-drag-btn" onclick="showDragHint(${q.total},${q.groups},${q.per})">💡 Подсказка</button>
+    <div class="hint-text" style="display:none" id="drag-hint-text"></div>
+  `;
+
+  const pool=area.querySelector('#stars-pool');
+  const brow=area.querySelector('#baskets-row');
+  const baskets=[];
+  let starCounts=Array(q.groups).fill(0);
+
+  // Create baskets
+  for(let i=0;i<q.groups;i++){
+    const b=document.createElement('div');
+    b.className='basket';
+    b.innerHTML=`<div class="basket-label">Корзинка ${i+1}</div><div class="basket-content" id="bc-${i}"></div>`;
+    b.onclick=()=>addStar(i);
+    baskets.push(b);
+    brow.appendChild(b);
+  }
+
+  // Create stars
+  let poolCount=q.total;
+  function updatePool(){
+    pool.innerHTML='';
+    for(let i=0;i<poolCount;i++){
+      const s=document.createElement('span');
+      s.className='drag-star'; s.textContent='⭐'; s.onclick=()=>{ /* click handled by basket */ };
+      pool.appendChild(s);
+    }
+    if(poolCount===0){ pool.innerHTML='<span style="color:var(--indigo-light);font-size:13px">Все звёзды разложены!</span>'; }
+  }
+
+  function addStar(bi){
+    if(poolCount===0||feedbackVisible) return;
+    poolCount--;
+    starCounts[bi]++;
+    const bc=area.querySelector(`#bc-${bi}`);
+    const s=document.createElement('span'); s.textContent='⭐'; s.style.fontSize='16px';
+    bc.appendChild(s);
+    baskets[bi].classList.toggle('full',starCounts[bi]===q.per);
+    updatePool();
+    // Check done
+    if(poolCount===0){ checkDrag(q,starCounts); }
+  }
+
+  updatePool();
+}
+
+function showDragHint(total,groups,per){
+  hintsUsed++;
+  document.getElementById('hint-drag-btn').style.display='none';
+  const ht=document.getElementById('drag-hint-text');
+  ht.style.display='block';
+  ht.textContent=`Подсказка: ${total} ÷ ${groups} = ${per}. В каждой корзинке должно быть ${per} звёздочки.`;
+}
+
+function checkDrag(q,counts){
+  const ok=counts.every(c=>c===q.per);
+  feedbackVisible=true;
+  towerStats[currentTower].total++;
+  if(ok){ towerStats[currentTower].correct++; correctCount++; addScore(15); spawnParticlesAt(document.getElementById('question-area')); }
+  else shakeArea();
+  showFeedback(ok, q.explain, ()=>{ currentQ++; renderQuestion(); });
+}
+
+function renderInput(q,area){
+  const noHints=currentTower===5;
+  const leftStr=q.a==='□'?'□':String(q.a);
+  const rightStr=q.b==='□'?'□':String(q.b);
+  area.innerHTML=`
+    <div class="question-text" style="font-size:clamp(16px,4vw,24px)">Найди пропущенное число</div>
+    <div class="input-row">
+      ${q.a==='□'?`<div class="num-display" id="user-num">?</div>`:`<div class="eq-part">${q.a}</div>`}
+      <div class="eq-part">${q.op}</div>
+      ${q.b==='□'?`<div class="num-display" id="user-num">?</div>`:`<div class="eq-part">${q.b}</div>`}
+      <div class="eq-part">= ${q.eq}</div>
+    </div>
+    <div class="numpad" id="numpad"></div>
+    ${!noHints?`<button class="hint-btn" onclick="showInputHint(${q.ans},${q.eq},${q.a==='□'?q.b:q.a})">💡 Подсказка</button>`:''}
+  `;
+  let entered='';
+  const display=area.querySelector('#user-num');
+  const numpad=area.querySelector('#numpad');
+  
+  for(let i=1;i<=9;i++){
+    const b=document.createElement('button'); b.className='numpad-btn'; b.textContent=i;
+    b.onclick=()=>{ if(entered.length<2){ entered+=i; display.textContent=entered; } }; numpad.appendChild(b);
+  }
+  const delB=document.createElement('button'); delB.className='numpad-btn del'; delB.textContent='⌫';
+  delB.onclick=()=>{ entered=entered.slice(0,-1); display.textContent=entered||'?'; }; numpad.appendChild(delB);
+  const zB=document.createElement('button'); zB.className='numpad-btn'; zB.textContent='0';
+  zB.onclick=()=>{ if(entered.length<2){ entered+='0'; display.textContent=entered; } }; numpad.appendChild(zB);
+  const okB=document.createElement('button'); okB.className='numpad-btn ok'; okB.textContent='✓';
+  okB.onclick=()=>{
+    if(feedbackVisible||!entered) return;
+    feedbackVisible=true;
+    const correct=parseInt(entered)===q.ans;
+    towerStats[currentTower].total++;
+    if(correct){ towerStats[currentTower].correct++; correctCount++; addScore(12); spawnParticlesAt(area); }
+    else shakeArea();
+    showFeedback(correct, q.explain, ()=>{ currentQ++; renderQuestion(); });
+  };
+  numpad.appendChild(okB);
+}
+
+function showInputHint(ans,eq,divisor){
+  hintsUsed++;
+  const hint=document.createElement('div'); hint.className='hint-text';
+  hint.textContent=`Подсказка: ${eq} ÷ ${divisor} = ${ans}`;
+  document.getElementById('question-area').appendChild(hint);
+}
+
+function renderChoice3(q,area){
+  area.innerHTML=`
+    <div class="question-text" style="font-size:clamp(14px,3vw,20px);line-height:1.4;">${q.text}</div>
+    <div class="question-subtext">Выбери правильное решение:</div>
+    <div style="display:flex;flex-direction:column;gap:8px;width:100%;" id="c3-opts"></div>
+  `;
+  const c=area.querySelector('#c3-opts');
+  q.opts.forEach((o,i)=>{
+    const btn=document.createElement('button');
+    btn.className='option-btn';
+    btn.style.fontSize='clamp(12px,2.5vw,16px)';
+    btn.style.textAlign='left'; btn.style.padding='12px 16px';
+    btn.textContent=o;
+    btn.onclick=()=>{
+      if(feedbackVisible) return; feedbackVisible=true;
+      const correct=i===q.correct;
+      towerStats[currentTower].total++;
+      if(correct){ towerStats[currentTower].correct++; correctCount++; addScore(15); spawnParticlesAt(area); }
+      else shakeArea();
+      [...c.querySelectorAll('.option-btn')].forEach((b,j)=>{ b.disabled=true; if(j===q.correct) b.classList.add('reveal'); });
+      btn.classList.add(correct?'correct':'wrong');
+      showFeedback(correct, q.explain, ()=>{ currentQ++; renderQuestion(); });
+    };
+    c.appendChild(btn);
+  });
+}
+
+// =================== FEEDBACK ===================
+function showFeedback(correct, explain, onNext){
+  const area=document.getElementById('question-area');
+  const overlay=document.createElement('div');
+  overlay.className=`feedback-overlay ${correct?'correct-fb':'wrong-fb'}`;
+  overlay.innerHTML=`
+    <div class="feedback-icon">${correct?'⭐':'🦉'}</div>
+    <div class="feedback-title" style="color:${correct?'#fff':'var(--amber)'}">${correct?'Молодец!':'Почти!'}</div>
+    <div class="feedback-explain">${explain}</div>
+    <button class="feedback-btn" onclick="nextAfterFeedback()">Дальше →</button>
+  `;
+  area.appendChild(overlay);
+  window._onNextFeedback=onNext;
+}
+
+function nextAfterFeedback(){
+  if(window._onNextFeedback){ window._onNextFeedback(); window._onNextFeedback=null; }
+}
+
+// =================== END TOWER ===================
+function endTower(){
+  clearInterval(timerInterval);
+  const elapsed=Math.round((Date.now()-towerStartTime)/1000);
+  towerStats[currentTower].time=elapsed;
+  towerStats[currentTower].hints+=hintsUsed;
+  towerStats[currentTower].done=true;
+  towersCompleted++;
+
+  const msgs=[
+    'Башня Вспышки покорена! ⚡','Пары найдены! 🔗','Звёзды разложены! ⭐',
+    'Множитель найден! ❓','Ловушка раскрыта! 🔍','Кристалл восстановлен! 💎'
+  ];
+  const adviceArr=[
+    'Таблицу умножения ты знаешь отлично!',
+    'Умножение и деление — родные братья!',
+    'Деление — это раскладывание поровну!',
+    'Искать неизвестное — как маленький детектив!',
+    'Ты умеешь найти ошибку — это важно!',
+    '🎉 Все башни пройдены! Кристалл собран!'
+  ];
+
+  document.getElementById('tc-emoji').textContent=TOWERS[currentTower].emoji;
+  document.getElementById('tc-title').textContent=msgs[currentTower];
+  document.getElementById('tc-msg').textContent=adviceArr[currentTower];
+  document.getElementById('tc-correct').textContent=`${correctCount}/${totalQ}`;
+  document.getElementById('tc-time').textContent=`${elapsed}с`;
+  document.getElementById('tc-hints').textContent=hintsUsed;
+  document.getElementById('tower-complete-overlay').style.display='flex';
+}
+
+function finishTower(){
+  document.getElementById('tower-complete-overlay').style.display='none';
+  if(towersCompleted>=6){ showReport(); }
+  else { showScreen('map-screen'); renderMap(); }
+}
+
+// =================== REPORT ===================
+function showReport(){
+  showScreen('report-screen');
+  const grid=document.getElementById('report-grid');
+  grid.innerHTML='';
+
+  let totalCorrect=0, totalTasks=0, weakTower='', weakScore=1;
+  TOWERS.forEach((t,i)=>{
+    const s=towerStats[i];
+    const pct=s.total>0?Math.round(s.correct/s.total*100):0;
+    totalCorrect+=s.correct; totalTasks+=s.total;
+    if(pct<weakScore||weakTower===''){weakScore=pct;weakTower=t.name;}
+    const card=document.createElement('div');
+    card.className='report-card';
+    card.innerHTML=`
+      <h3>${t.emoji} ${t.name}</h3>
+      <div class="rc-main">${pct}%</div>
+      <div class="rc-sub">${s.correct}/${s.total} верно · ${s.time}с · ${s.hints} подск.</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Summary card
+  const overallPct=totalTasks>0?Math.round(totalCorrect/totalTasks*100):0;
+  const sc=document.createElement('div');
+  sc.className='report-card';
+  sc.style.gridColumn='1/-1';
+  sc.innerHTML=`
+    <h3>📊 Итог урока</h3>
+    <div class="rc-main">${overallPct}% — ${overallPct>=80?'Отлично! ⭐':overallPct>=60?'Хорошо 👍':'Нужна практика 📚'}</div>
+    <div class="rc-sub">${totalCorrect}/${totalTasks} задач верно · Собрано ⭐: ${totalScore}</div>
+  `;
+  grid.appendChild(sc);
+
+  const rec=document.getElementById('recommendation-box');
+  rec.innerHTML=overallPct>=80
+    ? `<strong>🏆 Рекомендация учителю:</strong> Ученик уверенно владеет материалом. Рекомендуем задачи повышенной сложности (таблицы до ×9, составные задачи).`
+    : overallPct>=60
+    ? `<strong>📝 Рекомендация учителю:</strong> Слабое место — <em>${weakTower}</em>. Рекомендуем дополнительную практику на данный тип задач.`
+    : `<strong>📚 Рекомендация учителю:</strong> Требуется дополнительная работа. Особое внимание: <em>${weakTower}</em>. Рекомендуем вернуться к объяснению темы.`;
+}
+
+// =================== UTILS ===================
+function addScore(n){ totalScore+=n; }
+
+function shakeArea(){
+  const a=document.getElementById('question-area');
+  a.classList.remove('shake');
+  void a.offsetWidth;
+  a.classList.add('shake');
+}
+
+function spawnParticles(btn){
+  const r=btn.getBoundingClientRect();
+  spawnParticlesXY(r.left+r.width/2, r.top+r.height/2);
+}
+
+function spawnParticlesAt(el){
+  const r=el.getBoundingClientRect();
+  spawnParticlesXY(r.left+r.width/2, r.top+r.height/2);
+}
+
+function spawnParticlesXY(x,y){
+  const emojis=['⭐','✨','💫','🌟'];
+  for(let i=0;i<8;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    p.textContent=emojis[rand(0,emojis.length-1)];
+    const angle=rand(0,360)*Math.PI/180;
+    const dist=rand(40,100);
+    p.style.left=x+'px'; p.style.top=y+'px';
+    p.style.setProperty('--dx',Math.cos(angle)*dist+'px');
+    p.style.setProperty('--dy',Math.sin(angle)*dist-80+'px');
+    p.style.setProperty('--dur',(0.6+Math.random()*0.5)+'s');
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(),1200);
+  }
+}
+
+function toggleSound(){
+  soundOn=!soundOn;
+  document.getElementById('sound-btn').textContent=soundOn?'🔊':'🔇';
+}
+
+function resetGame(){
+  totalScore=0; towersCompleted=0; currentTower=null;
+  towerStats=TOWERS.map(()=>({correct:0,total:0,hints:0,time:0,done:false}));
+  TOWERS[0].questions=genTower1();
+  TOWERS[1].questions=genTower2();
+  TOWERS[2].questions=genTower3();
+  TOWERS[3].questions=genTower4();
+  TOWERS[4].questions=genTower5();
+  TOWERS[5].questions=genTower6();
+  showScreen('map-screen'); renderMap();
+}
+</script>
+</body>
+</html>
