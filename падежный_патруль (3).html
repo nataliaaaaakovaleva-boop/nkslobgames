@@ -1,0 +1,2723 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Падежный Патруль — Словоград</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Comfortaa:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #FBF7EE;
+    --indigo: #5B6FA6;
+    --indigo-dark: #3D4F80;
+    --indigo-light: #8A9BC9;
+    --amber: #E8A838;
+    --amber-light: #F5C96A;
+    --amber-dark: #C4831A;
+    --text: #1E2A4A;
+    --text-soft: #4A5568;
+    --white: #FFFFFF;
+    --green: #4CAF82;
+    --green-light: #D4F0E4;
+    --red-soft: #D95F5F;
+    --red-light: #FDEAEA;
+    --card-bg: #FFFFFF;
+    --shadow: rgba(30,42,74,0.12);
+
+    /* Падеж-цвета */
+    --c1: #E8A838; /* Именительный — золото */
+    --c2: #5B9A6F; /* Родительный — зелёный */
+    --c3: #5B6FA6; /* Дательный — индиго */
+    --c4: #C97A3A; /* Винительный — терракот */
+    --c5: #8B5BA6; /* Творительный — фиолетовый */
+    --c6: #3A8FA6; /* Предложный — бирюза */
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    user-select: none;
+  }
+
+  /* ===== ЭКРАНЫ ===== */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ===== СТАРТОВЫЙ ЭКРАН ===== */
+  #screen-start {
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(160deg, #EEF0F8 0%, #FBF7EE 50%, #FFF5E0 100%);
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .start-clouds {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .cloud {
+    position: absolute;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.6;
+    animation: floatCloud 20s linear infinite;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+  .cloud:nth-child(1) { width:120px; height:40px; top:10%; left:-140px; animation-duration:25s; }
+  .cloud:nth-child(1)::before { width:60px; height:60px; top:-30px; left:20px; }
+  .cloud:nth-child(1)::after { width:40px; height:40px; top:-20px; left:60px; }
+  .cloud:nth-child(2) { width:80px; height:30px; top:25%; left:-100px; animation-duration:35s; animation-delay:-10s; opacity:0.4; }
+  .cloud:nth-child(3) { width:150px; height:45px; top:60%; left:-180px; animation-duration:30s; animation-delay:-5s; }
+  .cloud:nth-child(3)::before { width:70px; height:70px; top:-35px; left:30px; }
+
+  @keyframes floatCloud {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(100vw + 200px)); }
+  }
+
+  .city-skyline {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 20px;
+    opacity: 0.15;
+  }
+
+  .building {
+    background: var(--indigo);
+    border-radius: 4px 4px 0 0;
+    flex-shrink: 0;
+  }
+
+  .start-content { position: relative; z-index: 10; max-width: 480px; }
+
+  .logo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--indigo);
+    color: white;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  .game-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(32px, 8vw, 54px);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  .game-title span { color: var(--indigo); }
+
+  .game-subtitle {
+    font-size: clamp(14px, 3.5vw, 18px);
+    color: var(--text-soft);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  /* Маскот */
+  .mascot-wrap {
+    margin: 16px auto;
+    width: 120px;
+    height: 120px;
+    position: relative;
+  }
+
+  .mascot-svg {
+    width: 100%;
+    height: 100%;
+    animation: breathe 3s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(1.04); }
+  }
+
+  .start-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--amber);
+    color: var(--text);
+    border: none;
+    border-radius: 16px;
+    padding: 16px 36px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(16px, 4vw, 20px);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 0 var(--amber-dark), 0 8px 20px rgba(232,168,56,0.3);
+    transition: transform 0.1s, box-shadow 0.1s;
+    margin-top: 8px;
+  }
+
+  .start-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--amber-dark), 0 4px 10px rgba(232,168,56,0.2);
+  }
+
+  .start-btn:hover { background: var(--amber-light); }
+
+  .sound-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: white;
+    border: 2px solid var(--indigo-light);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    transition: background 0.2s;
+    z-index: 100;
+  }
+  .sound-toggle:hover { background: var(--bg); }
+
+  /* ===== КАРТА ===== */
+  #screen-map {
+    background: linear-gradient(160deg, #E8EEF8 0%, #FBF7EE 100%);
+    padding: 16px;
+    align-items: center;
+    position: relative;
+  }
+
+  .map-header {
+    text-align: center;
+    margin-bottom: 16px;
+    z-index: 10;
+  }
+
+  .map-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(18px, 5vw, 26px);
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .map-subtitle {
+    font-size: 14px;
+    color: var(--text-soft);
+    margin-top: 4px;
+  }
+
+  .map-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    max-width: 480px;
+    width: 100%;
+    z-index: 10;
+  }
+
+  .district-btn {
+    aspect-ratio: 1;
+    border-radius: 20px;
+    border: 3px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+    padding: 8px;
+    background: white;
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+
+  .district-btn.locked {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(0.6);
+  }
+
+  .district-btn.completed::after {
+    content: '✓';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 14px;
+    font-weight: 900;
+    color: var(--green);
+  }
+
+  .district-btn:not(.locked):hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px var(--shadow);
+  }
+
+  .district-btn:not(.locked):active { transform: translateY(0); }
+
+  .district-icon { font-size: clamp(28px, 7vw, 36px); margin-bottom: 4px; }
+
+  .district-name {
+    font-size: clamp(9px, 2.5vw, 12px);
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .district-case {
+    font-size: clamp(8px, 2vw, 10px);
+    font-weight: 600;
+    opacity: 0.7;
+    text-align: center;
+  }
+
+  .map-mascot {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 70px;
+    animation: breathe 3s ease-in-out infinite;
+    cursor: pointer;
+    z-index: 10;
+  }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    border-radius: 16px;
+    padding: 8px 16px;
+    box-shadow: 0 2px 8px var(--shadow);
+    margin-top: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    z-index: 10;
+  }
+
+  .stars-row { display: flex; gap: 3px; }
+  .star { font-size: 16px; filter: grayscale(1); transition: filter 0.3s; }
+  .star.lit { filter: none; }
+
+  /* ===== ИГРОВОЙ ЭКРАН ===== */
+  #screen-game {
+    background: var(--bg);
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .game-topbar {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    gap: 10px;
+    background: white;
+    box-shadow: 0 2px 8px var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .back-btn {
+    background: var(--bg);
+    border: 2px solid var(--indigo-light);
+    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .back-btn:hover { background: #E8EEF8; }
+
+  .topbar-info { flex: 1; }
+
+  .topbar-title {
+    font-size: clamp(13px, 3.5vw, 16px);
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  .topbar-sub {
+    font-size: 11px;
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+
+  .progress-wrap {
+    width: 80px;
+    flex-shrink: 0;
+  }
+
+  .progress-bar-bg {
+    height: 8px;
+    background: #E8EEF8;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease;
+    background: var(--amber);
+  }
+
+  .progress-text {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-soft);
+    text-align: right;
+    margin-top: 2px;
+  }
+
+  /* Контент мини-игры */
+  .game-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 14px;
+    max-width: 560px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* Карточка падежа */
+  .case-intro-card {
+    border-radius: 20px;
+    padding: 16px 20px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px var(--shadow);
+  }
+
+  .case-intro-card::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+  }
+
+  .case-intro-card::after {
+    content: '';
+    position: absolute;
+    bottom: -20px;
+    left: -20px;
+    width: 80px;
+    height: 80px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+
+  .case-name {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(18px, 5vw, 24px);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .case-questions {
+    font-size: clamp(13px, 3.5vw, 16px);
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 8px;
+  }
+
+  .case-hint {
+    font-size: clamp(11px, 3vw, 13px);
+    opacity: 0.85;
+    line-height: 1.4;
+    background: rgba(255,255,255,0.15);
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+
+  /* Задание */
+  .task-card {
+    background: white;
+    border-radius: 20px;
+    padding: 16px 20px;
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+
+  .task-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-soft);
+    margin-bottom: 8px;
+  }
+
+  .task-text {
+    font-size: clamp(15px, 4vw, 19px);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .task-text .blank {
+    display: inline-block;
+    min-width: 80px;
+    border-bottom: 3px solid var(--indigo);
+    color: var(--indigo);
+    padding: 0 4px;
+  }
+
+  /* Варианты ответов */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .option-btn {
+    background: white;
+    border: 3px solid #E0E7F0;
+    border-radius: 16px;
+    padding: 14px 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(14px, 3.5vw, 17px);
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+    box-shadow: 0 3px 0 #C5CDD9;
+    line-height: 1.3;
+  }
+
+  .option-btn:not(:disabled):hover {
+    border-color: var(--indigo-light);
+    background: #F0F3FF;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 #C5CDD9;
+  }
+
+  .option-btn:not(:disabled):active {
+    transform: translateY(2px);
+    box-shadow: none;
+  }
+
+  .option-btn.correct {
+    background: var(--green-light);
+    border-color: var(--green);
+    color: #2D7A56;
+    box-shadow: 0 3px 0 #3A9669;
+  }
+
+  .option-btn.wrong {
+    background: var(--red-light);
+    border-color: var(--red-soft);
+    color: var(--red-soft);
+    box-shadow: 0 3px 0 #B84A4A;
+    animation: shake 0.4s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  /* Обратная связь */
+  .feedback-box {
+    border-radius: 16px;
+    padding: 12px 16px;
+    font-size: clamp(13px, 3.5vw, 15px);
+    font-weight: 600;
+    line-height: 1.5;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .feedback-box.show { display: block; }
+
+  .feedback-box.correct-fb {
+    background: var(--green-light);
+    border: 2px solid var(--green);
+    color: #2D7A56;
+  }
+
+  .feedback-box.wrong-fb {
+    background: var(--red-light);
+    border: 2px solid var(--red-soft);
+    color: #A03333;
+  }
+
+  .feedback-box.hint-fb {
+    background: #FFF8E8;
+    border: 2px solid var(--amber);
+    color: #8A5A00;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Кнопка «Далее» */
+  .next-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--indigo);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 24px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(15px, 4vw, 17px);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--indigo-dark);
+    transition: transform 0.1s, box-shadow 0.1s;
+    width: 100%;
+  }
+
+  .next-btn.show { display: flex; }
+
+  .next-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 var(--indigo-dark);
+  }
+
+  /* Подсказка */
+  .hint-row {
+    display: flex;
+    justify-content: center;
+    margin-top: -4px;
+  }
+
+  .hint-btn {
+    background: none;
+    border: 2px dashed var(--amber);
+    border-radius: 12px;
+    padding: 7px 16px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--amber-dark);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .hint-btn:hover { background: #FFF5D6; }
+  .hint-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Счётчик ошибок */
+  .hearts-row {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: -4px;
+  }
+
+  .heart { font-size: 20px; transition: filter 0.3s; }
+  .heart.lost { filter: grayscale(1); opacity: 0.4; }
+
+  /* ===== ЭКРАН ПОБЕДЫ МИНИ-ИГРЫ ===== */
+  #screen-mini-win {
+    background: linear-gradient(160deg, #E8EEF8 0%, #FBF7EE 100%);
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+  }
+
+  .win-card {
+    background: white;
+    border-radius: 28px;
+    padding: 32px 24px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 8px 32px var(--shadow);
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .win-emoji { font-size: 56px; margin-bottom: 8px; }
+
+  .win-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(22px, 6vw, 30px);
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .win-desc {
+    font-size: clamp(14px, 3.5vw, 16px);
+    color: var(--text-soft);
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+
+  /* Карточка падежа — итог */
+  .case-card-summary {
+    border-radius: 16px;
+    padding: 16px;
+    color: white;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  .ccs-title { font-weight: 800; font-size: 16px; margin-bottom: 4px; }
+  .ccs-q { font-size: 14px; opacity: 0.9; margin-bottom: 4px; }
+  .ccs-ex { font-size: 13px; opacity: 0.8; }
+
+  .win-stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+
+  .stat-box {
+    background: var(--bg);
+    border-radius: 14px;
+    padding: 10px 14px;
+    text-align: center;
+    flex: 1;
+    max-width: 100px;
+  }
+
+  .stat-num {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--indigo);
+    display: block;
+  }
+
+  .stat-label { font-size: 11px; font-weight: 600; color: var(--text-soft); }
+
+  .continue-btn {
+    background: var(--amber);
+    color: var(--text);
+    border: none;
+    border-radius: 16px;
+    padding: 14px 32px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(15px, 4vw, 17px);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--amber-dark);
+    transition: transform 0.1s, box-shadow 0.1s;
+    width: 100%;
+  }
+
+  .continue-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 var(--amber-dark);
+  }
+
+  /* ===== ФИНАЛЬНЫЙ ЭКРАН ===== */
+  #screen-final {
+    background: linear-gradient(160deg, #E0E8FF 0%, #FBF7EE 50%, #FFF5E0 100%);
+    align-items: center;
+    justify-content: flex-start;
+    padding: 24px 16px;
+    overflow-y: auto;
+  }
+
+  .final-content {
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .final-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(24px, 6vw, 36px);
+    font-weight: 700;
+    color: var(--text);
+    margin: 12px 0 8px;
+  }
+
+  .final-sub {
+    font-size: clamp(13px, 3.5vw, 15px);
+    color: var(--text-soft);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .passport-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .passport-tile {
+    border-radius: 16px;
+    padding: 12px 8px;
+    color: white;
+    text-align: center;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  }
+
+  .pt-icon { font-size: 22px; margin-bottom: 4px; }
+  .pt-name { font-size: 11px; font-weight: 800; line-height: 1.2; }
+  .pt-q { font-size: 9px; opacity: 0.85; margin-top: 2px; }
+
+  /* Отчёт для учителя */
+  .teacher-report {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 4px 16px var(--shadow);
+    text-align: left;
+    margin-bottom: 16px;
+  }
+
+  .report-title {
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-soft);
+    margin-bottom: 12px;
+  }
+
+  .report-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #F0F3FF;
+  }
+
+  .report-row:last-child { border-bottom: none; }
+
+  .report-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .report-case { font-size: 13px; font-weight: 700; flex: 1; }
+  .report-acc { font-size: 12px; font-weight: 600; color: var(--text-soft); }
+  .report-bar-wrap { width: 80px; height: 6px; background: #E8EEF8; border-radius: 3px; overflow: hidden; flex-shrink: 0; }
+  .report-bar { height: 100%; border-radius: 3px; }
+
+  .recommendation-box {
+    background: #FFF8E8;
+    border: 2px solid var(--amber);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #7A4F00;
+    line-height: 1.5;
+    margin-bottom: 16px;
+    text-align: left;
+  }
+
+  .play-again-btn {
+    background: var(--indigo);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    padding: 14px 32px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(15px, 4vw, 17px);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--indigo-dark);
+    transition: transform 0.1s, box-shadow 0.1s;
+    width: 100%;
+    margin-bottom: 40px;
+  }
+
+  .play-again-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 var(--indigo-dark);
+  }
+
+  /* Трамвайчик (переход) */
+  .tram-transition {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--indigo);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s;
+  }
+
+  .tram-transition.show { opacity: 1; pointer-events: all; }
+
+  .tram-emoji { font-size: 56px; animation: tramRide 0.8s ease-in-out infinite alternate; }
+
+  @keyframes tramRide {
+    from { transform: translateX(-8px) rotate(-2deg); }
+    to { transform: translateX(8px) rotate(2deg); }
+  }
+
+  .tram-text {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(16px, 4vw, 20px);
+    font-weight: 700;
+    margin-top: 16px;
+    opacity: 0.9;
+  }
+
+  /* Частицы */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    z-index: 500;
+    font-size: 20px;
+    animation: particleFly 0.8s ease-out forwards;
+  }
+
+  @keyframes particleFly {
+    from { transform: translate(0,0) scale(1); opacity: 1; }
+    to { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+  }
+
+  /* Специальные механики */
+
+  /* Силуэты (Мини-игра 1) */
+  .silhouettes-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .silhouette-btn {
+    background: white;
+    border: 3px solid #E0E7F0;
+    border-radius: 16px;
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 80px;
+    box-shadow: 0 3px 0 #C5CDD9;
+  }
+
+  .silhouette-btn:hover {
+    border-color: var(--c1);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 #C5CDD9;
+  }
+
+  .silhouette-btn.correct {
+    background: var(--green-light);
+    border-color: var(--green);
+    box-shadow: 0 3px 0 #3A9669;
+  }
+
+  .silhouette-btn.wrong {
+    background: var(--red-light);
+    border-color: var(--red-soft);
+    animation: shake 0.4s ease;
+    box-shadow: 0 3px 0 #B84A4A;
+  }
+
+  .silhouette-icon { font-size: 32px; }
+  .silhouette-word { font-size: 12px; font-weight: 700; color: var(--text); text-align: center; }
+
+  /* Полки (Мини-игра 2) */
+  .shelf-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: flex-end;
+    background: #F5EFE0;
+    border-radius: 12px;
+    padding: 16px 12px 8px;
+    border-bottom: 4px solid #C8B090;
+    flex-wrap: wrap;
+  }
+
+  .shelf-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 6px;
+    background: white;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    min-width: 64px;
+  }
+
+  .shelf-item:hover { border-color: var(--c2); transform: translateY(-2px); }
+  .shelf-item.correct { background: var(--green-light); border-color: var(--green); }
+  .shelf-item.wrong { background: var(--red-light); border-color: var(--red-soft); animation: shake 0.4s; }
+
+  .shelf-icon { font-size: 28px; }
+  .shelf-word { font-size: 11px; font-weight: 700; text-align: center; }
+
+  /* Персонажи дательного (мини-игра 3) */
+  .chars-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .char-btn {
+    background: white;
+    border: 3px solid #E0E7F0;
+    border-radius: 16px;
+    padding: 12px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 3px 0 #C5CDD9;
+  }
+
+  .char-btn:hover { border-color: var(--c3); transform: translateY(-2px); box-shadow: 0 5px 0 #C5CDD9; }
+  .char-btn.correct { background: var(--green-light); border-color: var(--green); }
+  .char-btn.wrong { background: var(--red-light); border-color: var(--red-soft); animation: shake 0.4s; }
+
+  .char-icon { font-size: 30px; flex-shrink: 0; }
+  .char-info { flex: 1; }
+  .char-word { font-size: 14px; font-weight: 800; color: var(--text); }
+  .char-subword { font-size: 11px; font-weight: 600; color: var(--text-soft); }
+
+  /* Кубики (мини-игра 4) */
+  .cubes-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    min-height: 60px;
+    background: #F0F3FF;
+    border-radius: 14px;
+    padding: 12px;
+    border: 2px dashed var(--indigo-light);
+  }
+
+  .cube-btn {
+    background: var(--indigo);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s;
+    box-shadow: 0 3px 0 var(--indigo-dark);
+  }
+
+  .cube-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 0 var(--indigo-dark); }
+  .cube-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--indigo-dark); }
+  .cube-btn.selected { background: var(--amber); color: var(--text); box-shadow: 0 3px 0 var(--amber-dark); }
+  .cube-btn.correct { background: var(--green); box-shadow: 0 3px 0 #2D7A56; }
+  .cube-btn.wrong { background: var(--red-soft); animation: shake 0.4s; }
+
+  .built-phrase {
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    min-height: 28px;
+    color: var(--indigo-dark);
+    padding: 4px 0;
+  }
+
+  /* Мастерская (мини-игра 5) */
+  .workshop-items {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .workshop-item {
+    background: white;
+    border: 3px solid #E0E7F0;
+    border-radius: 14px;
+    padding: 12px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 76px;
+    box-shadow: 0 3px 0 #C5CDD9;
+  }
+
+  .workshop-item:hover { border-color: var(--c5); transform: translateY(-2px); }
+  .workshop-item.correct { background: var(--green-light); border-color: var(--green); }
+  .workshop-item.wrong { background: var(--red-light); border-color: var(--red-soft); animation: shake 0.4s; }
+
+  .wi-icon { font-size: 28px; }
+  .wi-word { font-size: 11px; font-weight: 700; text-align: center; }
+
+  /* Библиотека (мини-игра 6) */
+  .library-phrase {
+    font-size: clamp(16px, 4vw, 20px);
+    font-weight: 700;
+    text-align: center;
+    color: var(--text);
+    background: white;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 3px 8px var(--shadow);
+    line-height: 1.5;
+  }
+
+  /* Вопрос-подсказка (вспывающая) */
+  .floating-q {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--indigo);
+    color: white;
+    border-radius: 14px;
+    padding: 8px 20px;
+    font-size: 15px;
+    font-weight: 700;
+    z-index: 200;
+    animation: fadeInDown 0.3s ease, fadeOut 0.3s ease 1.5s forwards;
+    white-space: nowrap;
+    max-width: 90vw;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+
+  /* Responsive */
+  @media (max-width: 360px) {
+    .options-grid { grid-template-columns: 1fr; }
+    .map-grid { gap: 8px; }
+  }
+
+  @media (min-width: 600px) {
+    .game-content { padding: 24px; }
+  }
+
+  /* Анимация победы */
+  .confetti-piece {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    pointer-events: none;
+    z-index: 999;
+    animation: confettiFall 1.2s ease-out forwards;
+  }
+
+  @keyframes confettiFall {
+    from { transform: translate(0,0) rotate(0deg); opacity: 1; }
+    to { transform: translate(var(--dx), 400px) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Трамвайчик-переход -->
+<div class="tram-transition" id="tramTransition">
+  <div class="tram-emoji">🚃</div>
+  <div class="tram-text" id="tramText">Едем в следующий район...</div>
+</div>
+
+<!-- Кнопка звука (глобальная) -->
+<div class="sound-toggle" id="soundToggle" title="Звук">🔊</div>
+
+<!-- ===== СТАРТОВЫЙ ЭКРАН ===== -->
+<div class="screen active" id="screen-start">
+  <div class="start-clouds">
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+    <div class="cloud"></div>
+  </div>
+  <div class="city-skyline" id="citySkyline"></div>
+
+  <div class="start-content">
+    <div class="logo-badge">🏫 3 класс · Русский язык</div>
+    <div class="game-title">Падежный<br><span>Патруль</span></div>
+    <div class="game-subtitle">Помоги котёнку Буквику восстановить<br>Книгу Падежей Словограда!</div>
+
+    <div class="mascot-wrap">
+      <svg class="mascot-svg" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <!-- Тело -->
+        <ellipse cx="60" cy="78" rx="26" ry="30" fill="#5B6FA6"/>
+        <!-- Детективный плащ -->
+        <ellipse cx="60" cy="88" rx="30" ry="22" fill="#3D4F80"/>
+        <!-- Голова -->
+        <circle cx="60" cy="52" r="30" fill="#E8C49A"/>
+        <!-- Уши -->
+        <polygon points="32,30 22,8 44,20" fill="#E8C49A"/>
+        <polygon points="88,30 98,8 76,20" fill="#E8C49A"/>
+        <polygon points="34,28 26,12 43,22" fill="#FFB5A0"/>
+        <polygon points="86,28 94,12 77,22" fill="#FFB5A0"/>
+        <!-- Глаза -->
+        <circle cx="48" cy="50" r="8" fill="white"/>
+        <circle cx="72" cy="50" r="8" fill="white"/>
+        <circle cx="50" cy="51" r="5" fill="#1E2A4A"/>
+        <circle cx="74" cy="51" r="5" fill="#1E2A4A"/>
+        <circle cx="51" cy="49" r="2" fill="white"/>
+        <circle cx="75" cy="49" r="2" fill="white"/>
+        <!-- Нос -->
+        <ellipse cx="60" cy="60" rx="5" ry="3.5" fill="#C97A8A"/>
+        <!-- Рот -->
+        <path d="M54,65 Q60,71 66,65" stroke="#C97A8A" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- Усы -->
+        <line x1="36" y1="60" x2="54" y2="62" stroke="#8A7A6A" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="36" y1="64" x2="54" y2="64" stroke="#8A7A6A" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="66" y1="62" x2="84" y2="60" stroke="#8A7A6A" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="66" y1="64" x2="84" y2="64" stroke="#8A7A6A" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Кепка детектива -->
+        <rect x="32" y="27" width="56" height="10" rx="5" fill="#1E2A4A"/>
+        <rect x="26" y="32" width="68" height="6" rx="3" fill="#2A3A60"/>
+        <!-- Значок -->
+        <circle cx="60" cy="85" r="8" fill="#E8A838" stroke="#C4831A" stroke-width="1.5"/>
+        <text x="60" y="89" text-anchor="middle" fill="white" font-size="8" font-weight="bold">П!</text>
+      </svg>
+    </div>
+
+    <button class="start-btn" onclick="startGame()">
+      🚃 Отправиться в Словоград!
+    </button>
+  </div>
+</div>
+
+<!-- ===== КАРТА СЛОВОГРАДА ===== -->
+<div class="screen" id="screen-map">
+  <div class="map-header">
+    <div class="map-title">🗺️ Карта Словограда</div>
+    <div class="map-subtitle" id="mapSubtitle">Выбери район для исследования!</div>
+  </div>
+
+  <div class="map-grid" id="mapGrid"></div>
+
+  <div class="score-bar">
+    <span>⭐ Звёзды:</span>
+    <div class="stars-row" id="starsRow"></div>
+    <span id="starsCount" style="margin-left:4px; font-size:13px; color:var(--text-soft)">0/6</span>
+  </div>
+
+  <svg class="map-mascot" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" onclick="mascotTalk()" title="Нажми на Буквика!">
+    <ellipse cx="60" cy="78" rx="26" ry="30" fill="#5B6FA6"/>
+    <ellipse cx="60" cy="88" rx="30" ry="22" fill="#3D4F80"/>
+    <circle cx="60" cy="52" r="30" fill="#E8C49A"/>
+    <polygon points="32,30 22,8 44,20" fill="#E8C49A"/>
+    <polygon points="88,30 98,8 76,20" fill="#E8C49A"/>
+    <polygon points="34,28 26,12 43,22" fill="#FFB5A0"/>
+    <polygon points="86,28 94,12 77,22" fill="#FFB5A0"/>
+    <circle cx="48" cy="50" r="8" fill="white"/>
+    <circle cx="72" cy="50" r="8" fill="white"/>
+    <circle cx="50" cy="51" r="5" fill="#1E2A4A"/>
+    <circle cx="74" cy="51" r="5" fill="#1E2A4A"/>
+    <circle cx="51" cy="49" r="2" fill="white"/>
+    <circle cx="75" cy="49" r="2" fill="white"/>
+    <ellipse cx="60" cy="60" rx="5" ry="3.5" fill="#C97A8A"/>
+    <path d="M54,65 Q60,71 66,65" stroke="#C97A8A" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <rect x="32" y="27" width="56" height="10" rx="5" fill="#1E2A4A"/>
+    <rect x="26" y="32" width="68" height="6" rx="3" fill="#2A3A60"/>
+    <circle cx="60" cy="85" r="8" fill="#E8A838" stroke="#C4831A" stroke-width="1.5"/>
+    <text x="60" y="89" text-anchor="middle" fill="white" font-size="8" font-weight="bold">П!</text>
+  </svg>
+</div>
+
+<!-- ===== ИГРОВОЙ ЭКРАН ===== -->
+<div class="screen" id="screen-game">
+  <div class="game-topbar">
+    <div class="back-btn" onclick="goToMap()">←</div>
+    <div class="topbar-info">
+      <div class="topbar-title" id="topbarTitle">Именительный падеж</div>
+      <div class="topbar-sub" id="topbarSub">Район: Паспортный стол</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="progress-text" id="progressText">0/6</div>
+    </div>
+  </div>
+
+  <div class="game-content" id="gameContent"></div>
+</div>
+
+<!-- ===== ПОБЕДА В МИНИ-ИГРЕ ===== -->
+<div class="screen" id="screen-mini-win">
+  <div class="win-card" id="winCard"></div>
+</div>
+
+<!-- ===== ФИНАЛЬНЫЙ ЭКРАН ===== -->
+<div class="screen" id="screen-final">
+  <div class="final-content" id="finalContent"></div>
+</div>
+
+<script>
+// ===== ДАННЫЕ ИГРЫ =====
+
+const CASES = [
+  {
+    id: 0,
+    name: 'Именительный',
+    short: 'Им.',
+    questions: 'Кто? Что?',
+    hint: 'Это «паспорт» слова — его начальная, обычная форма.',
+    example: 'кот, дом, мама',
+    icon: '🏠',
+    color: '#E8A838',
+    darkColor: '#C4831A',
+    district: 'Паспортный стол',
+    type: 'silhouettes',
+    tip: 'Именительный — это когда слово стоит как обычно, в словаре!'
+  },
+  {
+    id: 1,
+    name: 'Родительный',
+    short: 'Род.',
+    questions: 'Кого? Чего?',
+    hint: 'Отвечает на вопрос «нет кого/чего?» — как будто чего-то не хватает.',
+    example: 'нет кота, нет дома',
+    icon: '🏪',
+    color: '#5B9A6F',
+    darkColor: '#3D7050',
+    district: 'Магазин «Запасы»',
+    type: 'shelf',
+    tip: 'Слышишь слово «нет»? Значит, скоро придёт Родительный!'
+  },
+  {
+    id: 2,
+    name: 'Дательный',
+    short: 'Дат.',
+    questions: 'Кому? Чему?',
+    hint: 'Отвечает на вопрос «дать кому/чему?» — направление к кому-то.',
+    example: 'дать коту, помочь маме',
+    icon: '🎁',
+    color: '#5B6FA6',
+    darkColor: '#3D4F80',
+    district: 'Почта подарков',
+    type: 'chars',
+    tip: 'Дательный — падеж подарков и помощи!'
+  },
+  {
+    id: 3,
+    name: 'Винительный',
+    short: 'Вин.',
+    questions: 'Кого? Что?',
+    hint: 'Отвечает на вопрос «вижу кого/что?» — то, на что направлено действие.',
+    example: 'вижу кота, несу книгу',
+    icon: '👀',
+    color: '#C97A3A',
+    darkColor: '#9A5A20',
+    district: 'Детективная улица',
+    type: 'cubes',
+    tip: 'Подставляй слово «вижу» — если звучит хорошо, это Винительный!'
+  },
+  {
+    id: 4,
+    name: 'Творительный',
+    short: 'Тв.',
+    questions: 'Кем? Чем?',
+    hint: 'Отвечает на вопрос «рисую чем? иду с кем?» — инструмент или компания.',
+    example: 'рисую карандашом, иду с другом',
+    icon: '🎨',
+    color: '#8B5BA6',
+    darkColor: '#6B3D86',
+    district: 'Мастерская',
+    type: 'workshop',
+    tip: 'Творительный — падеж мастеров! Чем работаешь?'
+  },
+  {
+    id: 5,
+    name: 'Предложный',
+    short: 'Пр.',
+    questions: 'О ком? О чём?',
+    hint: 'Всегда с предлогом! Отвечает «думаю о ком/о чём?»',
+    example: 'думаю о коте, расскажу о доме',
+    icon: '📚',
+    color: '#3A8FA6',
+    darkColor: '#2A6F86',
+    district: 'Библиотека',
+    type: 'options',
+    tip: 'Предложный — всегда с предлогом: «о», «в», «на», «при»!'
+  }
+];
+
+// Задания для каждой мини-игры
+const TASKS = [
+  // === ИМЕНИТЕЛЬНЫЙ — найди слово в начальной форме ===
+  {
+    caseId: 0,
+    items: [
+      {
+        prompt: 'Кто живёт в этом домике? Найди слово в начальной форме (именительный падеж):',
+        sentence: '',
+        options: [
+          { icon: '🐱', word: 'кот', correct: true },
+          { icon: '🐈', word: 'кота', correct: false },
+          { icon: '🐾', word: 'коту', correct: false },
+          { icon: '🐱', word: 'котом', correct: false }
+        ],
+        feedback: { correct: '✅ Правильно! «Кот» — именительный падеж. Это начальная форма, как в словаре!', wrong: '🤔 Подумай: какое слово стоит в начальной, словарной форме — как будто ты отвечаешь «кто это?»' }
+      },
+      {
+        prompt: 'Буквик встретил жителя. Как зовут жителя в именительном падеже?',
+        sentence: '',
+        options: [
+          { icon: '🐘', word: 'слона', correct: false },
+          { icon: '🐘', word: 'слон', correct: true },
+          { icon: '🐘', word: 'слоном', correct: false },
+          { icon: '🐘', word: 'слоне', correct: false }
+        ],
+        feedback: { correct: '✅ «Слон» — именительный! Отвечает на вопрос «кто?»', wrong: '🤔 Именительный — это когда слово в своей первоначальной форме. «Кто?» — слон!' }
+      },
+      {
+        prompt: 'Выбери слово в именительном падеже:',
+        sentence: '',
+        options: [
+          { icon: '🌸', word: 'розой', correct: false },
+          { icon: '🌸', word: 'розе', correct: false },
+          { icon: '🌸', word: 'роза', correct: true },
+          { icon: '🌸', word: 'розу', correct: false }
+        ],
+        feedback: { correct: '✅ «Роза» — именительный падеж! Вопрос: что? — роза.', wrong: '🤔 Именительный отвечает на вопрос «что?». Что? — роза!' }
+      },
+      {
+        prompt: 'Какое слово стоит в именительном падеже?',
+        sentence: '',
+        options: [
+          { icon: '📚', word: 'книгой', correct: false },
+          { icon: '📚', word: 'книгу', correct: false },
+          { icon: '📚', word: 'книге', correct: false },
+          { icon: '📚', word: 'книга', correct: true }
+        ],
+        feedback: { correct: '✅ «Книга» — именительный! Это как «паспорт» слова.', wrong: '🤔 Именительный — начальная форма слова. Что? — книга!' }
+      },
+      {
+        prompt: 'Найди именительный падеж:',
+        sentence: '',
+        options: [
+          { icon: '🌳', word: 'дерево', correct: true },
+          { icon: '🌳', word: 'дерева', correct: false },
+          { icon: '🌳', word: 'дереву', correct: false },
+          { icon: '🌳', word: 'деревом', correct: false }
+        ],
+        feedback: { correct: '✅ «Дерево» — именительный! Что? — дерево.', wrong: '🤔 Именительный: задай вопрос «кто?» или «что?». Что? — дерево!' }
+      },
+      {
+        prompt: 'Буквик спрашивает: «Что это?» Выбери правильную форму:',
+        sentence: '',
+        options: [
+          { icon: '☀️', word: 'солнцем', correct: false },
+          { icon: '☀️', word: 'солнце', correct: true },
+          { icon: '☀️', word: 'солнцу', correct: false },
+          { icon: '☀️', word: 'о солнце', correct: false }
+        ],
+        feedback: { correct: '✅ «Солнце» — именительный падеж! Что? — солнце.', wrong: '🤔 Буквик спросил «что?» — значит нужен именительный. Что? — солнце!' }
+      }
+    ]
+  },
+
+  // === РОДИТЕЛЬНЫЙ — выбери форму «нет чего/кого» ===
+  {
+    caseId: 1,
+    items: [
+      {
+        prompt: 'В магазине пусто! Буквик говорит: «Нет ___».  Что поставить вместо ___?',
+        sentence: 'Нет ___.',
+        target: 'яблока',
+        options: ['яблоко', 'яблока', 'яблоку', 'яблоком'],
+        correct: 1,
+        icons: ['🍎','🍎','🍎','🍎'],
+        feedback: { correct: '✅ «Нет яблока» — родительный падеж! Нет чего? — яблока.', wrong: '🤔 После слова «нет» используй родительный падеж: нет чего? — яблока!' }
+      },
+      {
+        prompt: 'На полке ничего нет! «Нет ___ »:',
+        sentence: 'Нет ___.',
+        target: 'молока',
+        options: ['молоко', 'молоке', 'молока', 'молоком'],
+        correct: 2,
+        icons: ['🥛','🥛','🥛','🥛'],
+        feedback: { correct: '✅ «Нет молока» — родительный! Нет чего? — молока.', wrong: '🤔 Нет чего? — молока! «Нет» — верный сигнал родительного падежа.' }
+      },
+      {
+        prompt: 'Магазин закрыт. «Нет ___»:',
+        sentence: 'Нет ___.',
+        target: 'хлеба',
+        options: ['хлебу', 'хлебом', 'хлеб', 'хлеба'],
+        correct: 3,
+        icons: ['🍞','🍞','🍞','🍞'],
+        feedback: { correct: '✅ «Нет хлеба» — родительный падеж!', wrong: '🤔 Нет чего? — хлеба. Слово «нет» — подсказка: нужен родительный!' }
+      },
+      {
+        prompt: 'Буквик ищет друга. «Нет ___»:',
+        sentence: 'Нет ___.',
+        target: 'друга',
+        options: ['другом', 'другу', 'друга', 'друг'],
+        correct: 2,
+        icons: ['👦','👦','👦','👦'],
+        feedback: { correct: '✅ «Нет друга» — родительный! Нет кого? — друга.', wrong: '🤔 Нет кого? — друга! Родительный падеж отвечает на вопрос «кого? чего?»' }
+      },
+      {
+        prompt: 'В холодильнике пусто. «Нет ___»:',
+        sentence: 'Нет ___.',
+        target: 'сыра',
+        options: ['сыру', 'сыр', 'сыра', 'сыром'],
+        correct: 2,
+        icons: ['🧀','🧀','🧀','🧀'],
+        feedback: { correct: '✅ «Нет сыра» — родительный падеж!', wrong: '🤔 Нет чего? — сыра. Запомни: после «нет» — родительный!' }
+      },
+      {
+        prompt: 'Буквик не нашёл книгу. «Нет ___»:',
+        sentence: 'Нет ___.',
+        target: 'книги',
+        options: ['книга', 'книге', 'книгой', 'книги'],
+        correct: 3,
+        icons: ['📕','📕','📕','📕'],
+        feedback: { correct: '✅ «Нет книги» — родительный! Нет чего? — книги.', wrong: '🤔 Нет чего? — книги! Ищи слово «нет» — это знак родительного падежа.' }
+      }
+    ]
+  },
+
+  // === ДАТЕЛЬНЫЙ — кому подарить ===
+  {
+    caseId: 2,
+    items: [
+      {
+        prompt: 'Буквик хочет подарить подарок. «Подарю ___». Кому?',
+        gift: '🎂',
+        giftName: 'торт',
+        chars: [
+          { icon: '👩', name: 'маме', wrongForms: ['мама', 'мамой', 'маму'], correct: true },
+          { icon: '👦', name: 'другу', wrongForms: ['друг', 'другом', 'друга'], correct: false },
+          { icon: '🐶', name: 'собаке', wrongForms: ['собака', 'собакой', 'собаку'], correct: false },
+          { icon: '🧒', name: 'сестре', wrongForms: ['сестра', 'сестрой', 'сестру'], correct: false }
+        ],
+        correctIdx: 0,
+        feedback: { correct: '✅ «Маме» — дательный! Подарить кому? — маме.', wrong: '🤔 Дательный — это «кому?». Буквик дарит торт кому? — маме!' }
+      },
+      {
+        prompt: 'Буквик несёт письмо. «Отдам письмо ___». Кому?',
+        gift: '✉️',
+        giftName: 'письмо',
+        chars: [
+          { icon: '👴', name: 'дедушке', wrongForms: ['дедушка', 'дедушкой', 'дедушку'], correct: true },
+          { icon: '🐱', name: 'коту', wrongForms: ['кот', 'котом', 'кота'], correct: false },
+          { icon: '👩‍🏫', name: 'учительнице', wrongForms: ['учительница', 'учительницей', 'учительницу'], correct: false },
+          { icon: '🐰', name: 'зайцу', wrongForms: ['заяц', 'зайцем', 'зайца'], correct: false }
+        ],
+        correctIdx: 0,
+        feedback: { correct: '✅ «Дедушке» — дательный! Кому? — дедушке.', wrong: '🤔 Кому отдать письмо? — дедушке! Это дательный падеж.' }
+      },
+      {
+        prompt: '«Помогу ___». Выбери правильную форму:',
+        gift: '🤝',
+        giftName: 'помощь',
+        chars: [
+          { icon: '👧', name: 'подруге', wrongForms: ['подруга', 'подругой', 'подругу'], correct: true },
+          { icon: '🐸', name: 'лягушке', wrongForms: ['лягушка', 'лягушкой', 'лягушку'], correct: false },
+          { icon: '🦁', name: 'льву', wrongForms: ['лев', 'львом', 'льва'], correct: false },
+          { icon: '🐦', name: 'птице', wrongForms: ['птица', 'птицей', 'птицу'], correct: false }
+        ],
+        correctIdx: 0,
+        feedback: { correct: '✅ «Подруге» — дательный! Помочь кому? — подруге.', wrong: '🤔 Помочь кому? — подруге! Это дательный падеж.' }
+      },
+      {
+        prompt: '«Позвоню ___». Выбери дательный падеж:',
+        gift: '📞',
+        giftName: 'звонок',
+        chars: [
+          { icon: '🧑‍🦱', name: 'брату', wrongForms: ['брат', 'братом', 'брата'], correct: true },
+          { icon: '🐻', name: 'медведю', wrongForms: ['медведь', 'медведем', 'медведя'], correct: false },
+          { icon: '🧑‍🦳', name: 'соседу', wrongForms: ['сосед', 'соседом', 'соседа'], correct: false },
+          { icon: '👶', name: 'малышу', wrongForms: ['малыш', 'малышом', 'малыша'], correct: false }
+        ],
+        correctIdx: 0,
+        feedback: { correct: '✅ «Брату» — дательный! Позвонить кому? — брату.', wrong: '🤔 Кому позвонить? — брату! Дательный отвечает на вопрос «кому? чему?»' }
+      },
+      {
+        prompt: '«Расскажу ___». Кому расскажет Буквик?',
+        gift: '📖',
+        giftName: 'история',
+        chars: [
+          { icon: '🐯', name: 'тигру', wrongForms: ['тигр', 'тигром', 'тигра'], correct: false },
+          { icon: '👩', name: 'маме', wrongForms: ['мама', 'мамой', 'маму'], correct: true },
+          { icon: '🐺', name: 'волку', wrongForms: ['волк', 'волком', 'волка'], correct: false },
+          { icon: '🐧', name: 'пингвину', wrongForms: ['пингвин', 'пингвином', 'пингвина'], correct: false }
+        ],
+        correctIdx: 1,
+        feedback: { correct: '✅ «Маме» — дательный падеж! Рассказать кому? — маме.', wrong: '🤔 Рассказать кому? — маме! Это дательный падеж.' }
+      },
+      {
+        prompt: '«Принесу подарок ___». Выбери дательный:',
+        gift: '🎀',
+        giftName: 'подарок',
+        chars: [
+          { icon: '👩‍🦰', name: 'бабушке', wrongForms: ['бабушка', 'бабушкой', 'бабушку'], correct: true },
+          { icon: '🐼', name: 'панде', wrongForms: ['панда', 'пандой', 'панду'], correct: false },
+          { icon: '🐬', name: 'дельфину', wrongForms: ['дельфин', 'дельфином', 'дельфина'], correct: false },
+          { icon: '🦊', name: 'лисице', wrongForms: ['лисица', 'лисицей', 'лисицу'], correct: false }
+        ],
+        correctIdx: 0,
+        feedback: { correct: '✅ «Бабушке» — дательный! Принести кому? — бабушке.', wrong: '🤔 Принести кому? — бабушке! Это дательный падеж.' }
+      }
+    ]
+  },
+
+  // === ВИНИТЕЛЬНЫЙ — собери фразу из кубиков ===
+  {
+    caseId: 3,
+    items: [
+      {
+        prompt: 'Буквик смотрит на предметы. Выбери: «Вижу ___ »',
+        verb: 'Вижу',
+        options: ['книгу', 'книга', 'книги', 'книге'],
+        correct: 0,
+        icon: '📗',
+        feedback: { correct: '✅ «Вижу книгу» — винительный! Вижу что? — книгу.', wrong: '🤔 Подставь «вижу»: вижу что? — книгу! Это винительный падеж.' }
+      },
+      {
+        prompt: 'Буквик несёт что-то. «Несу ___ »:',
+        verb: 'Несу',
+        options: ['сумки', 'сумку', 'сумкой', 'сумке'],
+        correct: 1,
+        icon: '👜',
+        feedback: { correct: '✅ «Несу сумку» — винительный! Несу что? — сумку.', wrong: '🤔 Несу что? — сумку! Это винительный падеж. Проверяй вопросом «кого? что?»' }
+      },
+      {
+        prompt: '«Люблю ___». Выбери форму винительного:',
+        verb: 'Люблю',
+        options: ['мороженым', 'мороженое', 'мороженого', 'мороженом'],
+        correct: 1,
+        icon: '🍦',
+        feedback: { correct: '✅ «Люблю мороженое» — винительный! Люблю что? — мороженое.', wrong: '🤔 Люблю что? — мороженое! Это винительный падеж.' }
+      },
+      {
+        prompt: 'Буквик гладит котёнка. «Глажу ___»:',
+        verb: 'Глажу',
+        options: ['котёнок', 'котёнке', 'котёнка', 'котёнком'],
+        correct: 2,
+        icon: '🐱',
+        feedback: { correct: '✅ «Глажу котёнка» — винительный! Глажу кого? — котёнка.', wrong: '🤔 Глажу кого? — котёнка! Для одушевлённых винительный часто похож на родительный.' }
+      },
+      {
+        prompt: '«Читаю ___». Выбери верную форму:',
+        verb: 'Читаю',
+        options: ['книга', 'книге', 'книгой', 'книгу'],
+        correct: 3,
+        icon: '📘',
+        feedback: { correct: '✅ «Читаю книгу» — винительный! Читаю что? — книгу.', wrong: '🤔 Читаю что? — книгу! Это винительный падеж.' }
+      },
+      {
+        prompt: 'Буквик нашёл что-то. «Нашёл ___»:',
+        verb: 'Нашёл',
+        options: ['ключом', 'ключе', 'ключа', 'ключ'],
+        correct: 3,
+        icon: '🔑',
+        feedback: { correct: '✅ «Нашёл ключ» — винительный! Нашёл что? — ключ.', wrong: '🤔 Нашёл что? — ключ! Это винительный падеж. Неодушевлённые часто не меняют форму.' }
+      }
+    ]
+  },
+
+  // === ТВОРИТЕЛЬНЫЙ — выбери инструмент ===
+  {
+    caseId: 4,
+    items: [
+      {
+        prompt: 'Буквик в мастерской. «Буквик рисует ___». Чем рисует?',
+        template: 'Буквик рисует ___.',
+        items: [
+          { icon: '✏️', word: 'карандашом', correct: true },
+          { icon: '✏️', word: 'карандаша', correct: false },
+          { icon: '✏️', word: 'карандашу', correct: false },
+          { icon: '✏️', word: 'карандаш', correct: false }
+        ],
+        feedback: { correct: '✅ «Карандашом» — творительный! Рисует чем? — карандашом.', wrong: '🤔 Чем рисует? — карандашом! Творительный отвечает на вопрос «кем? чем?»' }
+      },
+      {
+        prompt: '«Буквик пишет ___». Выбери творительный падеж:',
+        template: 'Буквик пишет ___.',
+        items: [
+          { icon: '🖊️', word: 'ручку', correct: false },
+          { icon: '🖊️', word: 'ручки', correct: false },
+          { icon: '🖊️', word: 'ручкой', correct: true },
+          { icon: '🖊️', word: 'ручке', correct: false }
+        ],
+        feedback: { correct: '✅ «Ручкой» — творительный! Пишет чем? — ручкой.', wrong: '🤔 Пишет чем? — ручкой! Для творительного часто добавляется окончание -ом/-ой/-ем.' }
+      },
+      {
+        prompt: '«Буквик идёт с ___». С кем?',
+        template: 'Буквик идёт с ___.',
+        items: [
+          { icon: '🐶', word: 'собака', correct: false },
+          { icon: '🐶', word: 'собакой', correct: true },
+          { icon: '🐶', word: 'собаку', correct: false },
+          { icon: '🐶', word: 'собаки', correct: false }
+        ],
+        feedback: { correct: '✅ «С собакой» — творительный! Идёт с кем? — с собакой.', wrong: '🤔 Идёт с кем? — с собакой! После предлога «с» обычно стоит творительный падеж.' }
+      },
+      {
+        prompt: '«Буквик режет ___». Чем режет?',
+        template: 'Буквик режет ___.',
+        items: [
+          { icon: '🔪', word: 'ножа', correct: false },
+          { icon: '🔪', word: 'ножу', correct: false },
+          { icon: '🔪', word: 'ножом', correct: true },
+          { icon: '🔪', word: 'нож', correct: false }
+        ],
+        feedback: { correct: '✅ «Ножом» — творительный! Режет чем? — ножом.', wrong: '🤔 Режет чем? — ножом! Окончание -ом — частый признак творительного у слов мужского рода.' }
+      },
+      {
+        prompt: '«Буквик играет с ___». С кем играет?',
+        template: 'Буквик играет с ___.',
+        items: [
+          { icon: '🧸', word: 'другу', correct: false },
+          { icon: '🧸', word: 'другом', correct: true },
+          { icon: '🧸', word: 'друга', correct: false },
+          { icon: '🧸', word: 'друг', correct: false }
+        ],
+        feedback: { correct: '✅ «С другом» — творительный! Играет с кем? — с другом.', wrong: '🤔 С кем играет? — с другом! После «с» — творительный падеж.' }
+      },
+      {
+        prompt: '«Буквик стал ___». Кем стал?',
+        template: 'Буквик стал ___.',
+        items: [
+          { icon: '🕵️', word: 'детективом', correct: true },
+          { icon: '🕵️', word: 'детектив', correct: false },
+          { icon: '🕵️', word: 'детектива', correct: false },
+          { icon: '🕵️', word: 'детективу', correct: false }
+        ],
+        feedback: { correct: '✅ «Детективом» — творительный! Стал кем? — детективом!', wrong: '🤔 Стал кем? — детективом! Окончание -ом — творительный падеж мужского рода.' }
+      }
+    ]
+  },
+
+  // === ПРЕДЛОЖНЫЙ — вставь форму ===
+  {
+    caseId: 5,
+    items: [
+      {
+        prompt: 'Буквик мечтает. «Я думаю о ___». О ком думает?',
+        sentence: 'Я думаю о ___ (мама).',
+        options: ['маму', 'маме', 'мамой', 'мамы'],
+        correct: 1,
+        feedback: { correct: '✅ «О маме» — предложный! Думаю о ком? — о маме.', wrong: '🤔 О ком думает? — о маме! Предложный отвечает «о ком? о чём?» и всегда с предлогом.' }
+      },
+      {
+        prompt: '«Расскажи мне о ___». О чём рассказать?',
+        sentence: 'Расскажи о ___ (город).',
+        options: ['городу', 'городом', 'городе', 'города'],
+        correct: 2,
+        feedback: { correct: '✅ «О городе» — предложный! Рассказать о чём? — о городе.', wrong: '🤔 Рассказать о чём? — о городе! Окончание -е часто встречается в предложном падеже.' }
+      },
+      {
+        prompt: '«Буквик читал книгу о ___». О чём книга?',
+        sentence: 'Книга о ___ (природа).',
+        options: ['природе', 'природу', 'природой', 'природы'],
+        correct: 0,
+        feedback: { correct: '✅ «О природе» — предложный! О чём? — о природе.', wrong: '🤔 О чём книга? — о природе! Это предложный падеж — всегда с предлогом.' }
+      },
+      {
+        prompt: '«Мы говорили о ___». О чём говорили?',
+        sentence: 'Мы говорили о ___ (погода).',
+        options: ['погодой', 'погоде', 'погоду', 'погоды'],
+        correct: 1,
+        feedback: { correct: '✅ «О погоде» — предложный! Говорили о чём? — о погоде.', wrong: '🤔 О чём говорили? — о погоде! Предложный всегда с предлогом «о», «в», «на», «при».' }
+      },
+      {
+        prompt: '«Буквик мечтает о ___». О чём мечтает?',
+        sentence: 'Буквик мечтает о ___ (море).',
+        options: ['морем', 'моря', 'море', 'морю'],
+        correct: 2,
+        feedback: { correct: '✅ «О море» — предложный! Мечтает о чём? — о море.', wrong: '🤔 Мечтает о чём? — о море! Это предложный падеж.' }
+      },
+      {
+        prompt: '«Буввик рассказал о своём ___». О чём?',
+        sentence: 'Буквик рассказал о своём ___ (приключение).',
+        options: ['приключением', 'приключения', 'приключению', 'приключении'],
+        correct: 3,
+        feedback: { correct: '✅ «О приключении» — предложный! О чём? — о приключении. Ты освоил последний падеж!', wrong: '🤔 О чём рассказал? — о приключении! Это предложный падеж. Ты почти у цели!' }
+      }
+    ]
+  }
+];
+
+// ===== СОСТОЯНИЕ ИГРЫ =====
+let state = {
+  completedCases: new Set(),
+  currentCase: -1,
+  currentTask: 0,
+  taskResults: [], // { correct, hints }
+  hintsUsed: 0,
+  lives: 3,
+  soundOn: true,
+  stats: {} // caseId: { accuracy, time, hints }
+};
+
+// ===== УТИЛИТЫ =====
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+}
+
+function playSound(type) {
+  if (!state.soundOn) return;
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  o.connect(g); g.connect(ctx.destination);
+
+  const sounds = {
+    correct: [[523, 0, 0.1], [659, 0.1, 0.1], [784, 0.2, 0.15]],
+    wrong: [[330, 0, 0.05], [280, 0.08, 0.1]],
+    click: [[440, 0, 0.05]],
+    win: [[523,0,0.08],[659,0.1,0.08],[784,0.2,0.08],[1047,0.3,0.15]],
+    tram: [[300,0,0.1],[350,0.15,0.1],[400,0.3,0.1]]
+  };
+
+  const seq = sounds[type] || sounds.click;
+  seq.forEach(([freq, delay, dur]) => {
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.connect(g2); g2.connect(ctx.destination);
+    o2.frequency.value = freq;
+    o2.type = type === 'wrong' ? 'sawtooth' : 'sine';
+    g2.gain.setValueAtTime(0.15, ctx.currentTime + delay);
+    g2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + dur);
+    o2.start(ctx.currentTime + delay);
+    o2.stop(ctx.currentTime + delay + dur + 0.01);
+  });
+}
+
+function spawnParticles(x, y, type) {
+  const emojis = type === 'correct' ? ['⭐','✨','🎉','💛','🌟'] : ['💔','❌'];
+  for (let i = 0; i < 6; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    const dx = (Math.random() - 0.5) * 120 + 'px';
+    const dy = -(Math.random() * 100 + 40) + 'px';
+    p.style.cssText = `left:${x}px; top:${y}px; --dx:${dx}; --dy:${dy}; animation-delay:${i * 0.05}s`;
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1000);
+  }
+}
+
+function spawnConfetti() {
+  const colors = ['#E8A838','#5B6FA6','#4CAF82','#8B5BA6','#3A8FA6','#C97A3A'];
+  for (let i = 0; i < 30; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti-piece';
+    const dx = (Math.random() - 0.5) * 300 + 'px';
+    c.style.cssText = `
+      left: ${Math.random() * 100}vw;
+      top: -10px;
+      background: ${colors[Math.floor(Math.random() * colors.length)]};
+      --dx: ${dx};
+      animation-delay: ${Math.random() * 0.5}s;
+      animation-duration: ${0.8 + Math.random() * 0.6}s;
+      transform: rotate(${Math.random() * 360}deg);
+    `;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 1600);
+  }
+}
+
+function tramTransition(text, cb) {
+  const el = document.getElementById('tramTransition');
+  document.getElementById('tramText').textContent = text;
+  el.classList.add('show');
+  playSound('tram');
+  setTimeout(() => {
+    el.classList.remove('show');
+    if (cb) cb();
+  }, 1600);
+}
+
+function showFloatingQ(text) {
+  const old = document.querySelector('.floating-q');
+  if (old) old.remove();
+  const el = document.createElement('div');
+  el.className = 'floating-q';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+// ===== СТАРТОВЫЙ ЭКРАН =====
+
+function buildSkyline() {
+  const el = document.getElementById('citySkyline');
+  const heights = [60, 90, 50, 110, 70, 85, 45, 100, 65, 80, 55, 95, 75, 60, 85];
+  el.innerHTML = heights.map(h => `<div class="building" style="width:${20+Math.random()*15}px;height:${h}px"></div>`).join('');
+}
+
+function startGame() {
+  playSound('click');
+  buildMapGrid();
+  tramTransition('Добро пожаловать в Словоград!', () => {
+    showScreen('map');
+  });
+}
+
+// ===== КАРТА =====
+
+function buildMapGrid() {
+  const grid = document.getElementById('mapGrid');
+  const starsRow = document.getElementById('starsRow');
+
+  grid.innerHTML = CASES.map((c, i) => {
+    const locked = i > 0 && !state.completedCases.has(i - 1);
+    const completed = state.completedCases.has(i);
+    return `
+      <div class="district-btn ${locked ? 'locked' : ''} ${completed ? 'completed' : ''}"
+           style="border-color: ${completed ? c.color : 'transparent'}; ${completed ? `background: ${c.color}18` : ''}"
+           onclick="${locked ? '' : `enterDistrict(${i})`}">
+        <div class="district-icon">${c.icon}</div>
+        <div class="district-name" style="color: ${c.color}">${c.name}</div>
+        <div class="district-case">${c.district}</div>
+        ${locked ? '<div style="font-size:16px;margin-top:4px">🔒</div>' : ''}
+      </div>
+    `;
+  }).join('');
+
+  starsRow.innerHTML = Array.from({length: 6}, (_, i) =>
+    `<span class="star ${state.completedCases.has(i) ? 'lit' : ''}">⭐</span>`
+  ).join('');
+
+  document.getElementById('starsCount').textContent = `${state.completedCases.size}/6`;
+
+  const sub = document.getElementById('mapSubtitle');
+  if (state.completedCases.size === 0) {
+    sub.textContent = 'Помоги Буквику открыть все 6 падежей!';
+  } else if (state.completedCases.size < 6) {
+    sub.textContent = `Открыто районов: ${state.completedCases.size} из 6. Продолжай!`;
+  } else {
+    sub.textContent = '🎉 Все районы открыты! Словоград спасён!';
+  }
+}
+
+function mascotTalk() {
+  const tips = [
+    'Привет! Я Буквик — помоги мне собрать Книгу Падежей!',
+    'Падежей в русском языке шесть!',
+    'Именительный — это начальная форма слова.',
+    'Запомни: «нет» — сигнал родительного падежа!',
+    'Дательный — падеж подарков и помощи!',
+    'Подставляй «вижу» — это поможет найти винительный!',
+    'Творительный — падеж мастеров и друзей!',
+    'Предложный всегда идёт с предлогом!'
+  ];
+  showFloatingQ(tips[Math.floor(Math.random() * tips.length)]);
+  playSound('click');
+}
+
+function goToMap() {
+  playSound('click');
+  buildMapGrid();
+  showScreen('map');
+}
+
+// ===== ВХОД В РАЙОН =====
+
+function enterDistrict(idx) {
+  playSound('click');
+  state.currentCase = idx;
+  state.currentTask = 0;
+  state.taskResults = [];
+  state.hintsUsed = 0;
+  state.lives = 3;
+  state.taskStart = Date.now();
+
+  const c = CASES[idx];
+  tramTransition(`Едем в район «${c.district}»!`, () => {
+    showScreen('game');
+    document.getElementById('topbarTitle').textContent = c.name + ' падеж';
+    document.getElementById('topbarSub').textContent = '📍 ' + c.district;
+    document.getElementById('progressFill').style.background = c.color;
+    renderTask();
+  });
+}
+
+// ===== РЕНДЕР ЗАДАНИЯ =====
+
+function renderTask() {
+  const cIdx = state.currentCase;
+  const tIdx = state.currentTask;
+  const caseData = CASES[cIdx];
+  const tasks = TASKS[cIdx].items;
+  const task = tasks[tIdx];
+
+  // Прогресс
+  const pct = (tIdx / tasks.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = `${tIdx}/${tasks.length}`;
+
+  const content = document.getElementById('gameContent');
+  content.innerHTML = '';
+
+  // Карточка падежа (краткая)
+  const introCard = document.createElement('div');
+  introCard.className = 'case-intro-card';
+  introCard.style.background = `linear-gradient(135deg, ${caseData.color}, ${caseData.darkColor})`;
+  introCard.innerHTML = `
+    <div class="case-name">${caseData.icon} ${caseData.name} падеж</div>
+    <div class="case-questions">Вопрос: ${caseData.questions}</div>
+    <div class="case-hint">${caseData.hint}</div>
+  `;
+  content.appendChild(introCard);
+
+  // Сердечки
+  const heartsRow = document.createElement('div');
+  heartsRow.className = 'hearts-row';
+  heartsRow.id = 'heartsRow';
+  heartsRow.innerHTML = Array.from({length: 3}, (_, i) =>
+    `<span class="heart ${i >= state.lives ? 'lost' : ''}">❤️</span>`
+  ).join('');
+  content.appendChild(heartsRow);
+
+  // Задание
+  const taskCard = document.createElement('div');
+  taskCard.className = 'task-card';
+
+  const taskLabel = document.createElement('div');
+  taskLabel.className = 'task-label';
+  taskLabel.textContent = `Задание ${tIdx + 1} из ${tasks.length}`;
+  taskCard.appendChild(taskLabel);
+
+  const taskText = document.createElement('div');
+  taskText.className = 'task-text';
+  taskText.textContent = task.prompt;
+  taskCard.appendChild(taskText);
+
+  if (task.sentence) {
+    const sentBox = document.createElement('div');
+    sentBox.style.cssText = 'margin-top:8px; font-size:clamp(16px,4vw,20px); font-weight:800; color:var(--indigo);';
+    sentBox.innerHTML = task.sentence.replace('___', `<span class="blank">___</span>`);
+    taskCard.appendChild(sentBox);
+  }
+
+  content.appendChild(taskCard);
+
+  // Варианты ответов — в зависимости от типа мини-игры
+  const type = caseData.type;
+
+  if (type === 'silhouettes' || type === 'options') {
+    renderOptionsGrid(content, task, cIdx, tIdx);
+  } else if (type === 'shelf') {
+    renderShelf(content, task, cIdx, tIdx);
+  } else if (type === 'chars') {
+    renderChars(content, task, cIdx, tIdx);
+  } else if (type === 'cubes') {
+    renderCubes(content, task, cIdx, tIdx);
+  } else if (type === 'workshop') {
+    renderWorkshop(content, task, cIdx, tIdx);
+  }
+
+  // Обратная связь
+  const fb = document.createElement('div');
+  fb.className = 'feedback-box';
+  fb.id = 'feedbackBox';
+  content.appendChild(fb);
+
+  // Кнопка подсказки
+  const hintRow = document.createElement('div');
+  hintRow.className = 'hint-row';
+  const hintBtn = document.createElement('button');
+  hintBtn.className = 'hint-btn';
+  hintBtn.id = 'hintBtn';
+  hintBtn.textContent = '💡 Подсказка';
+  hintBtn.onclick = showHint;
+  hintRow.appendChild(hintBtn);
+  content.appendChild(hintRow);
+
+  // Кнопка «Далее»
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'next-btn';
+  nextBtn.id = 'nextBtn';
+  nextBtn.textContent = tIdx < tasks.length - 1 ? 'Следующее задание →' : '🏆 Завершить район!';
+  nextBtn.onclick = nextTask;
+  content.appendChild(nextBtn);
+}
+
+// --- Стандартная сетка вариантов ---
+function renderOptionsGrid(content, task, cIdx, tIdx) {
+  const grid = document.createElement('div');
+  grid.className = 'options-grid';
+
+  // Определяем индекс правильного ответа:
+  // Если options — массив объектов с полем correct:true, ищем его индекс.
+  // Если options — массив строк, используем task.correct как индекс.
+  let correctIdx;
+  if (task.options && typeof task.options[0] === 'object' && task.options[0] !== null) {
+    correctIdx = task.options.findIndex(o => o.correct === true);
+  } else {
+    correctIdx = task.correct;
+  }
+
+  (task.options || []).forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = typeof opt === 'string' ? opt : opt.word;
+    btn.onclick = (e) => handleOptionAnswer(btn, i, correctIdx, task.feedback, e, grid);
+    grid.appendChild(btn);
+  });
+
+  content.appendChild(grid);
+}
+
+function handleOptionAnswer(btn, idx, correctIdx, feedback, e, grid) {
+  // Используем grid если передан, иначе ищем глобально
+  const allBtns = grid
+    ? Array.from(grid.querySelectorAll('.option-btn'))
+    : Array.from(document.querySelectorAll('.option-btn'));
+
+  let isCorrect = idx === correctIdx;
+
+  allBtns.forEach(b => { b.disabled = true; b.onclick = null; });
+  const fb = document.getElementById('feedbackBox');
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    fb.className = 'feedback-box correct-fb show';
+    fb.textContent = feedback.correct;
+    playSound('correct');
+    spawnParticles(e.clientX, e.clientY, 'correct');
+    state.taskResults.push({ correct: true, hints: state.hintsUsed });
+    showNextBtn();
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback-box wrong-fb show';
+    fb.textContent = feedback.wrong;
+    playSound('wrong');
+    spawnParticles(e.clientX, e.clientY, 'wrong');
+    state.lives = Math.max(0, state.lives - 1);
+    updateHearts();
+
+    if (state.lives === 0) {
+      // Показать правильный ответ
+      allBtns[correctIdx].classList.add('correct');
+      state.taskResults.push({ correct: false, hints: state.hintsUsed });
+      showNextBtn();
+    } else {
+      // Разблокировать оставшиеся кнопки, кроме уже нажатой неверной
+      allBtns.forEach((b, bi) => {
+        if (!b.classList.contains('wrong')) {
+          b.disabled = false;
+          b.onclick = (ev) => handleOptionAnswer(b, bi, correctIdx, feedback, ev, grid);
+        }
+      });
+    }
+  }
+}
+
+// --- Полка (родительный) ---
+function renderShelf(content, task, cIdx, tIdx) {
+  const shelf = document.createElement('div');
+  shelf.className = 'shelf-row';
+
+  task.options.forEach((opt, i) => {
+    const item = document.createElement('div');
+    item.className = 'shelf-item';
+    item.innerHTML = `<div class="shelf-icon">${task.icons[i]}</div><div class="shelf-word">${opt}</div>`;
+    item.onclick = (e) => {
+      const allItems = shelf.querySelectorAll('.shelf-item');
+      allItems.forEach(it => it.onclick = null);
+      const fb = document.getElementById('feedbackBox');
+
+      if (i === task.correct) {
+        item.classList.add('correct');
+        fb.className = 'feedback-box correct-fb show';
+        fb.textContent = task.feedback.correct;
+        playSound('correct');
+        spawnParticles(e.clientX, e.clientY, 'correct');
+        state.taskResults.push({ correct: true, hints: state.hintsUsed });
+        showNextBtn();
+      } else {
+        item.classList.add('wrong');
+        fb.className = 'feedback-box wrong-fb show';
+        fb.textContent = task.feedback.wrong;
+        playSound('wrong');
+        state.lives = Math.max(0, state.lives - 1);
+        updateHearts();
+        if (state.lives === 0) {
+          const correctItem = shelf.querySelectorAll('.shelf-item')[task.correct];
+          correctItem.classList.add('correct');
+          state.taskResults.push({ correct: false, hints: state.hintsUsed });
+          showNextBtn();
+        } else {
+          allItems.forEach(it => {
+            if (it !== item) it.onclick = arguments.callee; // re-enable
+          });
+          renderShelf_reattach(shelf, task, cIdx, tIdx);
+        }
+      }
+    };
+    shelf.appendChild(item);
+  });
+
+  content.appendChild(shelf);
+}
+
+function renderShelf_reattach(shelf, task) {
+  const items = shelf.querySelectorAll('.shelf-item');
+  items.forEach((item, i) => {
+    if (!item.classList.contains('wrong')) {
+      item.onclick = (e) => {
+        items.forEach(it => it.onclick = null);
+        const fb = document.getElementById('feedbackBox');
+        if (i === task.correct) {
+          item.classList.add('correct');
+          fb.className = 'feedback-box correct-fb show';
+          fb.textContent = task.feedback.correct;
+          playSound('correct');
+          spawnParticles(e.clientX, e.clientY, 'correct');
+          state.taskResults.push({ correct: true, hints: state.hintsUsed });
+          showNextBtn();
+        } else {
+          item.classList.add('wrong');
+          fb.className = 'feedback-box wrong-fb show';
+          fb.textContent = task.feedback.wrong;
+          playSound('wrong');
+          state.lives = Math.max(0, state.lives - 1);
+          updateHearts();
+          if (state.lives === 0) {
+            items[task.correct].classList.add('correct');
+            state.taskResults.push({ correct: false, hints: state.hintsUsed });
+            showNextBtn();
+          } else {
+            renderShelf_reattach(shelf, task);
+          }
+        }
+      };
+    }
+  });
+}
+
+// --- Персонажи (дательный) ---
+function renderChars(content, task, cIdx, tIdx) {
+  // Показываем подарок
+  const giftDiv = document.createElement('div');
+  giftDiv.style.cssText = 'text-align:center; font-size:36px; margin-bottom:4px;';
+  giftDiv.textContent = task.gift;
+  content.appendChild(giftDiv);
+
+  // Карточки персонажей — только иконка + именительная форма (без ответа)
+  const grid = document.createElement('div');
+  grid.className = 'chars-row';
+
+  task.chars.forEach((ch, i) => {
+    const card = document.createElement('div');
+    card.className = 'char-btn';
+    card.style.cursor = 'default';
+    card.innerHTML = `
+      <div class="char-icon">${ch.icon}</div>
+      <div class="char-info">
+        <div class="char-word">${ch.wrongForms[0]}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  content.appendChild(grid);
+
+  // Метка выбора
+  const chooseLabel = document.createElement('div');
+  chooseLabel.style.cssText = 'font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-soft); text-align:center; margin-top:4px;';
+  chooseLabel.textContent = 'Выбери правильную форму слова:';
+  content.appendChild(chooseLabel);
+
+  // Берём правильного персонажа и строим 4 варианта его слова:
+  // именительный, родительный, дательный (правильный), винительный/творительный
+  const correctChar = task.chars[task.correctIdx];
+  const rawOptions = [
+    { word: correctChar.wrongForms[0], isCorrect: false }, // именительный
+    { word: correctChar.wrongForms[1] || correctChar.wrongForms[0] + 'а', isCorrect: false }, // родительный
+    { word: correctChar.name, isCorrect: true },           // дательный — правильный
+    { word: correctChar.wrongForms[2] || correctChar.wrongForms[0] + 'у', isCorrect: false }, // винительный
+  ];
+
+  // Перемешиваем
+  const shuffled = rawOptions.slice().sort(() => Math.random() - 0.5);
+  const newCorrectIdx = shuffled.findIndex(o => o.isCorrect);
+
+  // Кнопки вариантов
+  const optGrid = document.createElement('div');
+  optGrid.className = 'options-grid';
+
+  function attachHandlers() {
+    const allBtns = Array.from(optGrid.querySelectorAll('.option-btn'));
+    allBtns.forEach((btn, i) => {
+      if (btn.classList.contains('wrong')) return;
+      btn.onclick = (e) => {
+        allBtns.forEach(b => { b.disabled = true; b.onclick = null; });
+        const fb = document.getElementById('feedbackBox');
+        if (shuffled[i].isCorrect) {
+          btn.classList.add('correct');
+          grid.querySelectorAll('.char-btn')[task.correctIdx].classList.add('correct');
+          fb.className = 'feedback-box correct-fb show';
+          fb.textContent = task.feedback.correct;
+          playSound('correct');
+          spawnParticles(e.clientX, e.clientY, 'correct');
+          state.taskResults.push({ correct: true, hints: state.hintsUsed });
+          showNextBtn();
+        } else {
+          btn.classList.add('wrong');
+          fb.className = 'feedback-box wrong-fb show';
+          fb.textContent = task.feedback.wrong;
+          playSound('wrong');
+          state.lives = Math.max(0, state.lives - 1);
+          updateHearts();
+          if (state.lives === 0) {
+            allBtns[newCorrectIdx].classList.add('correct');
+            grid.querySelectorAll('.char-btn')[task.correctIdx].classList.add('correct');
+            state.taskResults.push({ correct: false, hints: state.hintsUsed });
+            showNextBtn();
+          } else {
+            allBtns.forEach(b => { if (!b.classList.contains('wrong')) b.disabled = false; });
+            attachHandlers();
+          }
+        }
+      };
+    });
+  }
+
+  shuffled.forEach((opt) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.textContent = opt.word;
+    optGrid.appendChild(btn);
+  });
+
+  content.appendChild(optGrid);
+  attachHandlers();
+}
+
+
+
+// --- Кубики (винительный) ---
+function renderCubes(content, task, cIdx, tIdx) {
+  const verbDiv = document.createElement('div');
+  verbDiv.style.cssText = 'text-align:center; font-size:20px; font-weight:800; color:var(--indigo-dark); margin-bottom:4px;';
+  verbDiv.textContent = task.verb + ' ___ ' + (task.icon || '');
+  content.appendChild(verbDiv);
+
+  const cubesArea = document.createElement('div');
+  cubesArea.className = 'cubes-area';
+  cubesArea.id = 'cubesArea';
+
+  task.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'cube-btn';
+    btn.textContent = opt;
+    btn.dataset.idx = i;
+    btn.onclick = (e) => handleCubeAnswer(btn, i, task.correct, task.feedback, e, cubesArea);
+    cubesArea.appendChild(btn);
+  });
+
+  content.appendChild(cubesArea);
+}
+
+function handleCubeAnswer(btn, idx, correctIdx, feedback, e, area) {
+  const allBtns = area.querySelectorAll('.cube-btn');
+  allBtns.forEach(b => b.disabled = true);
+  const fb = document.getElementById('feedbackBox');
+
+  if (idx === correctIdx) {
+    btn.classList.add('correct');
+    fb.className = 'feedback-box correct-fb show';
+    fb.textContent = feedback.correct;
+    playSound('correct');
+    spawnParticles(e.clientX, e.clientY, 'correct');
+    state.taskResults.push({ correct: true, hints: state.hintsUsed });
+    showNextBtn();
+  } else {
+    btn.classList.add('wrong');
+    fb.className = 'feedback-box wrong-fb show';
+    fb.textContent = feedback.wrong;
+    playSound('wrong');
+    state.lives = Math.max(0, state.lives - 1);
+    updateHearts();
+    if (state.lives === 0) {
+      allBtns[correctIdx].classList.add('correct');
+      state.taskResults.push({ correct: false, hints: state.hintsUsed });
+      showNextBtn();
+    } else {
+      allBtns.forEach(b => { if (b !== btn) { b.disabled = false; } });
+    }
+  }
+}
+
+// --- Мастерская (творительный) ---
+function renderWorkshop(content, task, cIdx, tIdx) {
+  const template = document.createElement('div');
+  template.style.cssText = 'text-align:center; font-size:clamp(14px,3.5vw,17px); font-weight:700; color:var(--indigo-dark); padding:8px 12px; background:#F0F3FF; border-radius:12px; margin-bottom:4px;';
+  template.innerHTML = (task.template || '').replace('___', '<span style="color:var(--amber-dark)">___</span>');
+  content.appendChild(template);
+
+  const row = document.createElement('div');
+  row.className = 'workshop-items';
+
+  task.items.forEach((item, i) => {
+    const btn = document.createElement('div');
+    btn.className = 'workshop-item';
+    btn.innerHTML = `<div class="wi-icon">${item.icon}</div><div class="wi-word">${item.word}</div>`;
+    btn.onclick = (e) => {
+      const allBtns = row.querySelectorAll('.workshop-item');
+      allBtns.forEach(b => b.onclick = null);
+      const fb = document.getElementById('feedbackBox');
+
+      if (item.correct) {
+        btn.classList.add('correct');
+        fb.className = 'feedback-box correct-fb show';
+        fb.textContent = task.feedback.correct;
+        playSound('correct');
+        spawnParticles(e.clientX, e.clientY, 'correct');
+        state.taskResults.push({ correct: true, hints: state.hintsUsed });
+        showNextBtn();
+      } else {
+        btn.classList.add('wrong');
+        fb.className = 'feedback-box wrong-fb show';
+        fb.textContent = task.feedback.wrong;
+        playSound('wrong');
+        state.lives = Math.max(0, state.lives - 1);
+        updateHearts();
+        if (state.lives === 0) {
+          allBtns.forEach((b, bi) => { if (task.items[bi].correct) b.classList.add('correct'); });
+          state.taskResults.push({ correct: false, hints: state.hintsUsed });
+          showNextBtn();
+        } else {
+          reattachWorkshop(row, task);
+        }
+      }
+    };
+    row.appendChild(btn);
+  });
+
+  content.appendChild(row);
+}
+
+function reattachWorkshop(row, task) {
+  const allBtns = row.querySelectorAll('.workshop-item');
+  allBtns.forEach((btn, i) => {
+    if (!btn.classList.contains('wrong')) {
+      btn.onclick = (e) => {
+        allBtns.forEach(b => b.onclick = null);
+        const fb = document.getElementById('feedbackBox');
+        if (task.items[i].correct) {
+          btn.classList.add('correct');
+          fb.className = 'feedback-box correct-fb show';
+          fb.textContent = task.feedback.correct;
+          playSound('correct');
+          spawnParticles(e.clientX, e.clientY, 'correct');
+          state.taskResults.push({ correct: true, hints: state.hintsUsed });
+          showNextBtn();
+        } else {
+          btn.classList.add('wrong');
+          fb.className = 'feedback-box wrong-fb show';
+          fb.textContent = task.feedback.wrong;
+          playSound('wrong');
+          state.lives = Math.max(0, state.lives - 1);
+          updateHearts();
+          if (state.lives === 0) {
+            allBtns.forEach((b, bi) => { if (task.items[bi].correct) b.classList.add('correct'); });
+            state.taskResults.push({ correct: false, hints: state.hintsUsed });
+            showNextBtn();
+          } else {
+            reattachWorkshop(row, task);
+          }
+        }
+      };
+    }
+  });
+}
+
+// ===== ПОДСКАЗКА =====
+
+function showHint() {
+  const cIdx = state.currentCase;
+  const tIdx = state.currentTask;
+  const caseData = CASES[cIdx];
+  state.hintsUsed++;
+
+  const fb = document.getElementById('feedbackBox');
+  const hintBtn = document.getElementById('hintBtn');
+
+  let hintText = '';
+  const hints = [
+    `💡 Подсказка: Вопрос этого падежа — «${caseData.questions}»`,
+    `💡 Подсказка: ${caseData.tip}`,
+    `💡 Пример: ${caseData.example}`
+  ];
+
+  hintText = hints[Math.min(state.hintsUsed - 1, 2)];
+
+  fb.className = 'feedback-box hint-fb show';
+  fb.textContent = hintText;
+
+  if (state.hintsUsed >= 3) {
+    hintBtn.disabled = true;
+    hintBtn.textContent = 'Подсказок больше нет';
+  }
+
+  playSound('click');
+}
+
+// ===== СЛЕДУЮЩИЙ ШАГ =====
+
+function showNextBtn() {
+  const nextBtn = document.getElementById('nextBtn');
+  if (nextBtn) nextBtn.classList.add('show');
+  const hintBtn = document.getElementById('hintBtn');
+  if (hintBtn) hintBtn.disabled = true;
+}
+
+function updateHearts() {
+  const row = document.getElementById('heartsRow');
+  if (row) {
+    row.innerHTML = Array.from({length: 3}, (_, i) =>
+      `<span class="heart ${i >= state.lives ? 'lost' : ''}">❤️</span>`
+    ).join('');
+  }
+}
+
+function nextTask() {
+  playSound('click');
+  const tasks = TASKS[state.currentCase].items;
+  state.currentTask++;
+  state.hintsUsed = 0;
+  state.lives = 3;
+
+  if (state.currentTask >= tasks.length) {
+    finishMiniGame();
+  } else {
+    renderTask();
+    document.getElementById('gameContent').scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+}
+
+// ===== ЗАВЕРШЕНИЕ МИНИ-ИГРЫ =====
+
+function finishMiniGame() {
+  const cIdx = state.currentCase;
+  const caseData = CASES[cIdx];
+  const results = state.taskResults;
+  const correct = results.filter(r => r.correct).length;
+  const total = results.length;
+  const accuracy = Math.round((correct / total) * 100);
+  const totalHints = results.reduce((sum, r) => sum + r.hints, 0);
+
+  state.completedCases.add(cIdx);
+  state.stats[cIdx] = { accuracy, correct, total, hints: totalHints };
+
+  spawnConfetti();
+  playSound('win');
+
+  const allDone = state.completedCases.size === 6;
+
+  showScreen('mini-win');
+
+  const card = document.getElementById('winCard');
+  card.innerHTML = `
+    <div class="win-emoji">${accuracy >= 80 ? '🌟' : accuracy >= 50 ? '⭐' : '💪'}</div>
+    <div class="win-title">${accuracy >= 80 ? 'Отлично!' : accuracy >= 50 ? 'Хорошо!' : 'Продолжай!'}</div>
+    <div class="win-desc">
+      Ты открыл район «${caseData.district}» и узнал про <strong>${caseData.name} падеж</strong>!
+    </div>
+
+    <div class="case-card-summary" style="background: linear-gradient(135deg, ${caseData.color}, ${caseData.darkColor})">
+      <div class="ccs-title">${caseData.icon} ${caseData.name} падеж</div>
+      <div class="ccs-q">Вопрос: ${caseData.questions}</div>
+      <div class="ccs-ex">Пример: ${caseData.example}</div>
+    </div>
+
+    <div class="win-stats">
+      <div class="stat-box">
+        <span class="stat-num">${correct}/${total}</span>
+        <span class="stat-label">Верно</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">${accuracy}%</span>
+        <span class="stat-label">Точность</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-num">${totalHints}</span>
+        <span class="stat-label">Подсказок</span>
+      </div>
+    </div>
+
+    <button class="continue-btn" onclick="${allDone ? 'showFinalScreen()' : 'goToMap()'}">
+      ${allDone ? '🏆 Посмотреть итог урока!' : '🗺️ Вернуться на карту'}
+    </button>
+  `;
+}
+
+// ===== ФИНАЛЬНЫЙ ЭКРАН =====
+
+function showFinalScreen() {
+  playSound('win');
+  spawnConfetti();
+  showScreen('final');
+
+  const totalCorrect = Object.values(state.stats).reduce((sum, s) => sum + s.correct, 0);
+  const totalTasks = Object.values(state.stats).reduce((sum, s) => sum + s.total, 0);
+  const avgAccuracy = Math.round((totalCorrect / totalTasks) * 100);
+  const totalHints = Object.values(state.stats).reduce((sum, s) => sum + s.hints, 0);
+
+  // Рекомендация
+  const weakCases = CASES.filter((c, i) => state.stats[i] && state.stats[i].accuracy < 70);
+  const rec = weakCases.length > 0
+    ? `Обратите внимание на: ${weakCases.map(c => c.name + ' падеж').join(', ')}.`
+    : 'Все падежи усвоены хорошо! Можно переходить к склонению существительных.';
+
+  const content = document.getElementById('finalContent');
+  content.innerHTML = `
+    <div style="font-size:64px; margin-bottom:8px;">🏆</div>
+    <div class="final-title">Словоград спасён!</div>
+    <div class="final-sub">Буквик нашёл все страницы Книги Падежей!<br>Ты настоящий эксперт по падежам!</div>
+
+    <div class="passport-grid">
+      ${CASES.map((c, i) => `
+        <div class="passport-tile" style="background: linear-gradient(135deg, ${c.color}, ${c.darkColor}); animation-delay: ${i * 0.1}s">
+          <div class="pt-icon">${c.icon}</div>
+          <div class="pt-name">${c.name}</div>
+          <div class="pt-q">${c.questions}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="teacher-report">
+      <div class="report-title">📊 Отчёт для учителя</div>
+      ${CASES.map((c, i) => {
+        const s = state.stats[i] || { accuracy: 0, correct: 0, total: 6, hints: 0 };
+        return `
+          <div class="report-row">
+            <div class="report-dot" style="background:${c.color}"></div>
+            <div class="report-case">${c.name}</div>
+            <div class="report-acc">${s.correct}/${s.total} · ${s.accuracy}% · 💡${s.hints}</div>
+            <div class="report-bar-wrap">
+              <div class="report-bar" style="width:${s.accuracy}%; background:${c.color}"></div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+      <div style="margin-top:12px; padding-top:12px; border-top:2px solid #F0F3FF; display:flex; gap:16px; flex-wrap:wrap;">
+        <div class="stat-box"><span class="stat-num">${avgAccuracy}%</span><span class="stat-label">Средняя точность</span></div>
+        <div class="stat-box"><span class="stat-num">${totalCorrect}/${totalTasks}</span><span class="stat-label">Верных ответов</span></div>
+        <div class="stat-box"><span class="stat-num">${totalHints}</span><span class="stat-label">Подсказок всего</span></div>
+      </div>
+    </div>
+
+    <div class="recommendation-box">
+      🎯 <strong>Рекомендация:</strong> ${rec}
+    </div>
+
+    <div style="background:white; border-radius:16px; padding:16px; margin-bottom:16px; font-size:13px; color:var(--text-soft); line-height:1.6; text-align:left; box-shadow:0 2px 8px var(--shadow)">
+      <strong style="color:var(--text)">👩‍🏫 Вопросы для рефлексии:</strong><br>
+      1. Какой падеж оказался самым сложным?<br>
+      2. Какой вопрос задаёт дательный падеж?<br>
+      3. Придумай своё слово в творительном падеже!
+    </div>
+
+    <button class="play-again-btn" onclick="resetGame()">
+      🔄 Сыграть снова
+    </button>
+  `;
+}
+
+// ===== СБРОС ИГРЫ =====
+
+function resetGame() {
+  state.completedCases = new Set();
+  state.currentCase = -1;
+  state.currentTask = 0;
+  state.taskResults = [];
+  state.stats = {};
+  playSound('click');
+  buildMapGrid();
+  showScreen('map');
+}
+
+// ===== ЗВУК =====
+
+let soundOn = true;
+document.getElementById('soundToggle').onclick = function() {
+  soundOn = !soundOn;
+  state.soundOn = soundOn;
+  this.textContent = soundOn ? '🔊' : '🔇';
+};
+
+// ===== СТАРТ =====
+
+buildSkyline();
+</script>
+</body>
+</html>
