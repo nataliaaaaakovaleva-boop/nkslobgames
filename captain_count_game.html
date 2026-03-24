@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Капитан Счёт и Остров Задач</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap');
+
+  :root {
+    --sea: #5BA8C4;
+    --sea-dark: #3A7A96;
+    --sea-light: #A8D8EA;
+    --sand: #E8C87A;
+    --sand-dark: #C9A44A;
+    --coral: #E07A5F;
+    --coral-light: #F2A98A;
+    --navy: #1A3A4A;
+    --white: #FAFDF7;
+    --green: #6BBF7A;
+    --purple: #8A7FBF;
+    --sky: #D4EFFF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--sky);
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #game-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* === OCEAN BACKGROUND === */
+  .ocean-bg {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, #C8E8F5 0%, #A8D8EA 40%, #5BA8C4 70%, #3A7A96 100%);
+    z-index: 0;
+  }
+
+  .wave {
+    position: fixed;
+    bottom: 0;
+    left: -10%;
+    width: 120%;
+    height: 120px;
+    background: rgba(91,168,196,0.3);
+    border-radius: 50% 50% 0 0;
+    animation: waveAnim 4s ease-in-out infinite;
+    z-index: 1;
+  }
+  .wave2 {
+    animation: waveAnim 5s ease-in-out infinite reverse;
+    background: rgba(58,122,150,0.2);
+    height: 90px;
+  }
+
+  @keyframes waveAnim {
+    0%,100% { transform: translateY(0) scaleX(1); }
+    50% { transform: translateY(-15px) scaleX(1.02); }
+  }
+
+  /* === CLOUDS === */
+  .cloud {
+    position: fixed;
+    background: white;
+    border-radius: 50px;
+    opacity: 0.85;
+    animation: cloudFloat linear infinite;
+    z-index: 1;
+  }
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+  }
+  .cloud::before { width: 55%; height: 140%; top: -40%; left: 15%; }
+  .cloud::after { width: 40%; height: 120%; top: -25%; right: 15%; }
+
+  @keyframes cloudFloat {
+    from { transform: translateX(-200px); }
+    to { transform: translateX(110vw); }
+  }
+
+  /* === SCREENS === */
+  .screen {
+    display: none;
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  .screen.active { display: flex; }
+
+  /* === CARD === */
+  .card {
+    background: var(--white);
+    border-radius: 28px;
+    padding: 32px 36px;
+    box-shadow: 0 8px 40px rgba(26,58,74,0.18);
+    max-width: 560px;
+    width: 92%;
+    text-align: center;
+    position: relative;
+    animation: cardIn 0.4s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  @keyframes cardIn {
+    from { transform: scale(0.85) translateY(30px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  /* === TYPOGRAPHY === */
+  .title-big {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    color: var(--navy);
+    line-height: 1.1;
+  }
+  .title-med {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    color: var(--navy);
+  }
+  .task-text {
+    font-size: clamp(1.1rem, 3vw, 1.4rem);
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.5;
+  }
+  .hint-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--sea-dark);
+    margin-top: 8px;
+    min-height: 24px;
+  }
+  .feedback-text {
+    font-size: 1.1rem;
+    font-weight: 800;
+    min-height: 28px;
+    margin-top: 6px;
+  }
+  .feedback-text.ok { color: var(--green); }
+  .feedback-text.err { color: var(--coral); }
+
+  /* === BUTTONS === */
+  .btn {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 800;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 32px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    outline: none;
+    min-height: 52px;
+    min-width: 52px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); }
+  .btn:active { transform: scale(0.96); }
+
+  .btn-primary {
+    background: var(--sand);
+    color: var(--navy);
+    box-shadow: 0 4px 0 var(--sand-dark);
+  }
+  .btn-primary:hover { box-shadow: 0 6px 0 var(--sand-dark); }
+
+  .btn-sea {
+    background: var(--sea);
+    color: white;
+    box-shadow: 0 4px 0 var(--sea-dark);
+  }
+
+  .btn-coral {
+    background: var(--coral);
+    color: white;
+    box-shadow: 0 4px 0 #b35a44;
+  }
+
+  .btn-green {
+    background: var(--green);
+    color: white;
+    box-shadow: 0 4px 0 #4a9a58;
+  }
+
+  .btn-sm {
+    font-size: 1rem;
+    padding: 10px 22px;
+    min-height: 44px;
+  }
+
+  /* === MASCOT === */
+  .mascot {
+    font-size: clamp(4rem, 10vw, 6rem);
+    animation: mascotBob 2.5s ease-in-out infinite;
+    display: inline-block;
+    line-height: 1;
+  }
+  @keyframes mascotBob {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-10px) rotate(3deg); }
+  }
+
+  /* === PROGRESS BAR === */
+  .progress-bar-wrap {
+    position: fixed;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: rgba(255,255,255,0.85);
+    border-radius: 50px;
+    padding: 8px 18px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  }
+  .prog-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: #cde;
+    border: 2px solid var(--sea-dark);
+    transition: background 0.4s;
+    font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .prog-dot.done { background: var(--green); border-color: #4a9a58; }
+  .prog-dot.active { background: var(--sand); border-color: var(--sand-dark); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+
+  /* === SOUND BUTTON === */
+  #sound-btn {
+    position: fixed;
+    top: 14px;
+    right: 18px;
+    z-index: 200;
+    background: rgba(255,255,255,0.85);
+    border: 2px solid var(--sea);
+    border-radius: 50%;
+    width: 44px; height: 44px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.15s;
+  }
+  #sound-btn:hover { transform: scale(1.1); }
+
+  /* === NUMPAD === */
+  .numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+    max-width: 240px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .numpad-btn {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    background: var(--sea-light);
+    border: none;
+    border-radius: 14px;
+    padding: 14px;
+    cursor: pointer;
+    color: var(--navy);
+    transition: background 0.15s, transform 0.1s;
+    box-shadow: 0 3px 0 var(--sea);
+  }
+  .numpad-btn:hover { background: var(--sand); transform: translateY(-2px); }
+  .numpad-btn:active { transform: scale(0.93); }
+  .numpad-btn.del { background: var(--coral-light); box-shadow: 0 3px 0 var(--coral); }
+  .numpad-btn.ok-btn { background: var(--green); color: white; box-shadow: 0 3px 0 #4a9a58; }
+
+  .answer-display {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2.2rem;
+    color: var(--navy);
+    background: var(--sky);
+    border: 3px solid var(--sea);
+    border-radius: 14px;
+    padding: 10px 28px;
+    min-width: 120px;
+    min-height: 60px;
+    display: inline-block;
+    margin: 10px 0;
+    letter-spacing: 2px;
+  }
+
+  /* === CHOICE BUTTONS === */
+  .choice-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 14px;
+  }
+  .choice-btn {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.2rem;
+    background: var(--sea-light);
+    border: 3px solid var(--sea);
+    border-radius: 16px;
+    padding: 12px 22px;
+    cursor: pointer;
+    color: var(--navy);
+    transition: background 0.15s, transform 0.15s;
+    min-width: 80px;
+    min-height: 52px;
+  }
+  .choice-btn:hover { background: var(--sand); transform: scale(1.05); }
+  .choice-btn.correct { background: var(--green) !important; color: white; border-color: #4a9a58; }
+  .choice-btn.wrong { background: var(--coral) !important; color: white; border-color: #b35a44; animation: shake 0.35s; }
+
+  @keyframes shake {
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-8px)}
+    40%{transform:translateX(8px)}
+    60%{transform:translateX(-5px)}
+    80%{transform:translateX(5px)}
+  }
+
+  /* === DRAG ZONE === */
+  .drag-container {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 12px 0;
+  }
+  .draggable {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.4rem;
+    background: var(--sand);
+    border: 3px solid var(--sand-dark);
+    border-radius: 14px;
+    padding: 10px 18px;
+    cursor: grab;
+    color: var(--navy);
+    transition: transform 0.15s, box-shadow 0.15s;
+    user-select: none;
+  }
+  .draggable:hover { transform: scale(1.08) rotate(-2deg); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+  .draggable.dragging { opacity: 0.45; cursor: grabbing; }
+  .draggable.placed { opacity: 0.4; pointer-events: none; }
+
+  .drop-zone {
+    min-width: 80px;
+    min-height: 56px;
+    border: 3px dashed var(--sea);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: var(--sea-dark);
+    background: rgba(255,255,255,0.5);
+    transition: background 0.2s, border-color 0.2s;
+    padding: 8px;
+  }
+  .drop-zone.over { background: var(--sand); border-color: var(--sand-dark); }
+  .drop-zone.filled { border-style: solid; border-color: var(--green); background: rgba(107,191,122,0.15); color: var(--navy); }
+  .drop-zone.wrong-fill { border-color: var(--coral); background: rgba(224,122,95,0.1); }
+
+  /* === VISUAL GROUPS (game1) === */
+  .groups-display {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 14px 0;
+  }
+  .group-box {
+    background: rgba(91,168,196,0.12);
+    border: 2px solid var(--sea);
+    border-radius: 14px;
+    padding: 10px 14px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    min-width: 70px;
+  }
+  .coin { font-size: 1.5rem; animation: coinPop 0.3s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes coinPop { from{transform:scale(0)} to{transform:scale(1)} }
+
+  /* === DIVIDE GAME === */
+  .pirate-row {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin: 12px 0;
+    flex-wrap: wrap;
+  }
+  .pirate-bucket {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .pirate-emoji { font-size: 2rem; }
+  .pirate-pile {
+    min-width: 70px;
+    min-height: 50px;
+    border: 3px dashed var(--sea);
+    border-radius: 12px;
+    background: rgba(255,255,255,0.5);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 6px;
+    transition: background 0.2s;
+  }
+  .pirate-pile.over { background: var(--sand); border-color: var(--sand-dark); border-style: solid; }
+  .pirate-pile .coin { font-size: 1.1rem; }
+
+  .coins-bank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin: 10px 0;
+    padding: 10px;
+    background: rgba(255,255,255,0.4);
+    border-radius: 14px;
+  }
+  .coin-drag {
+    font-size: 1.4rem;
+    cursor: grab;
+    transition: transform 0.15s;
+    display: inline-block;
+  }
+  .coin-drag:hover { transform: scale(1.25) rotate(-5deg); }
+  .coin-drag.dragging { opacity: 0.4; cursor: grabbing; }
+
+  /* === SORT GAME === */
+  .sort-area {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 10px 0;
+  }
+  .sort-basket {
+    flex: 1;
+    min-width: 120px;
+    max-width: 180px;
+    min-height: 100px;
+    border: 3px dashed var(--sea);
+    border-radius: 18px;
+    padding: 10px;
+    background: rgba(255,255,255,0.5);
+    transition: background 0.2s;
+  }
+  .sort-basket.over { background: var(--sand); }
+  .sort-basket-label {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.3rem;
+    color: var(--navy);
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .sort-cards-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 12px 0;
+  }
+  .sort-card {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.1rem;
+    background: var(--sand);
+    border: 3px solid var(--sand-dark);
+    border-radius: 12px;
+    padding: 8px 14px;
+    cursor: grab;
+    color: var(--navy);
+  }
+  .sort-card:hover { transform: scale(1.07); }
+  .sort-card.dragging { opacity: 0.4; }
+  .sort-card.sorted-ok { opacity: 0.5; pointer-events: none; }
+
+  /* === STORM GAME === */
+  .storm-bg {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(180deg, #2A4A6A 0%, #1A3A5A 100%);
+    z-index: 5;
+    opacity: 0;
+    transition: opacity 0.5s;
+    pointer-events: none;
+  }
+  .storm-bg.active { opacity: 1; pointer-events: auto; }
+  .sign-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 14px 0;
+  }
+  .sign-card {
+    background: rgba(255,255,255,0.92);
+    border: 3px solid var(--sand);
+    border-radius: 14px;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: transform 0.15s, background 0.15s;
+    animation: signFloat 3s ease-in-out infinite;
+  }
+  .sign-card:nth-child(2) { animation-delay: 0.8s; }
+  .sign-card:nth-child(3) { animation-delay: 1.6s; }
+  @keyframes signFloat {
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-10px)}
+  }
+  .sign-card:hover { transform: scale(1.1) translateY(-4px); background: var(--sand); }
+  .sign-symbol { font-family: 'Fredoka One'; font-size: 2rem; color: var(--navy); }
+
+  .storm-timer-bar {
+    width: 100%;
+    height: 12px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 6px;
+    margin-top: 14px;
+    overflow: hidden;
+  }
+  .storm-timer-fill {
+    height: 100%;
+    background: var(--sand);
+    border-radius: 6px;
+    transition: width 0.1s linear;
+  }
+
+  /* === FINAL GAME === */
+  .expression-builder {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 12px 0;
+  }
+  .expr-slot {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.5rem;
+    background: var(--sky);
+    border: 3px solid var(--sea);
+    border-radius: 12px;
+    padding: 8px 16px;
+    min-width: 60px;
+    min-height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--navy);
+  }
+  .expr-label { font-family:'Fredoka One'; font-size:1.2rem; color:var(--sea-dark); }
+
+  /* === STARS === */
+  .stars-row { display:flex; gap:8px; justify-content:center; margin:10px 0; }
+  .star { font-size:2rem; animation:starPop 0.4s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes starPop{from{transform:scale(0)rotate(-90deg)}to{transform:scale(1)rotate(0)}}
+
+  /* === RESULT SCREEN === */
+  .result-card { max-width: 620px; }
+  .skill-row {
+    display:flex; align-items:center; gap:10px;
+    background: var(--sky);
+    border-radius:12px;
+    padding:10px 16px;
+    margin:6px 0;
+    font-size:1rem;
+    font-weight:700;
+    color:var(--navy);
+  }
+  .skill-bar { flex:1; height:14px; background:#dde; border-radius:7px; overflow:hidden; }
+  .skill-fill { height:100%; border-radius:7px; transition:width 1s ease; }
+  .skill-label { min-width:160px; text-align:left; }
+  .skill-pct { min-width:42px; text-align:right; font-family:'Fredoka One'; }
+
+  /* === CELEBRATION === */
+  .confetti {
+    position:fixed; top:0; left:0; width:100%; height:100%;
+    pointer-events:none; z-index:500; overflow:hidden;
+  }
+  .confetti-piece {
+    position:absolute;
+    width:12px; height:12px;
+    border-radius:3px;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0%{transform:translateY(-20px) rotate(0deg); opacity:1}
+    100%{transform:translateY(100vh) rotate(720deg); opacity:0}
+  }
+
+  /* === MISC === */
+  .separator { width:80%; height:2px; background:var(--sea-light); margin:12px auto; border-radius:2px; }
+  .small-text { font-size:0.9rem; color:#6688; font-weight:600; }
+  .mb-8{margin-bottom:8px}
+  .mb-16{margin-bottom:16px}
+  .mt-16{margin-top:16px}
+  .gap-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+
+  .ship-emoji { font-size:3rem; animation:shipSail 3s ease-in-out infinite; display:inline-block; }
+  @keyframes shipSail{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+</style>
+</head>
+<body>
+
+<!-- OCEAN BACKGROUND -->
+<div class="ocean-bg"></div>
+<div class="wave"></div>
+<div class="wave wave2"></div>
+
+<!-- CLOUDS -->
+<div class="cloud" style="width:100px;height:38px;top:8%;left:-200px;animation-duration:28s;animation-delay:0s"></div>
+<div class="cloud" style="width:70px;height:28px;top:18%;left:-200px;animation-duration:22s;animation-delay:8s"></div>
+<div class="cloud" style="width:130px;height:48px;top:5%;left:-200px;animation-duration:35s;animation-delay:15s"></div>
+
+<!-- STORM OVERLAY for game 5 -->
+<div class="storm-bg" id="storm-bg"></div>
+
+<!-- SOUND -->
+<button id="sound-btn" onclick="toggleSound()" title="Звук">🔊</button>
+
+<!-- PROGRESS -->
+<div class="progress-bar-wrap" id="progress-bar" style="display:none">
+  <span class="ship-emoji">⛵</span>
+  <div class="prog-dot active" id="pd0">1</div>
+  <div class="prog-dot" id="pd1">2</div>
+  <div class="prog-dot" id="pd2">3</div>
+  <div class="prog-dot" id="pd3">4</div>
+  <div class="prog-dot" id="pd4">5</div>
+  <div class="prog-dot" id="pd5">6</div>
+  <span>🏝️</span>
+</div>
+
+<!-- CONFETTI -->
+<div class="confetti" id="confetti"></div>
+
+<div id="game-container">
+
+  <!-- ===== SCREEN: START ===== -->
+  <div class="screen active" id="screen-start">
+    <div class="card" style="max-width:500px">
+      <div class="mascot">🐱</div>
+      <div class="title-big mb-8">Капитан Счёт<br>и Остров Задач</div>
+      <div class="separator"></div>
+      <div class="task-text mb-16">Помоги котику добраться до острова сокровищ! Решай задачи на умножение и деление 🪙</div>
+      <div style="display:flex;gap:10px;justify-content:center;align-items:center;margin-bottom:16px">
+        <span style="font-size:1.8rem">⛵</span>
+        <div style="font-size:0.85rem;font-weight:700;color:var(--sea-dark)">6 испытаний впереди</div>
+        <span style="font-size:1.8rem">🏝️</span>
+      </div>
+      <button class="btn btn-primary" style="font-size:1.3rem;padding:16px 48px" onclick="startGame()">Отплыть! ⛵</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: MINIGAME 1 — Трюм корабля ===== -->
+  <div class="screen" id="screen-g1">
+    <div class="card">
+      <div style="font-size:1.4rem;font-weight:800;color:var(--sea-dark);margin-bottom:4px">⚓ Испытание 1 — Трюм корабля</div>
+      <div class="separator"></div>
+      <div class="task-text mb-8" id="g1-task"></div>
+      <div class="groups-display" id="g1-groups"></div>
+      <div class="task-text" style="color:var(--sea-dark)">Выбери правильный пример:</div>
+      <div class="choice-grid" id="g1-choices"></div>
+      <div class="feedback-text" id="g1-feedback"></div>
+      <div class="hint-text" id="g1-hint"></div>
+      <div style="margin-top:14px">
+        <span id="g1-progress" style="font-weight:700;color:var(--sea-dark);font-size:0.95rem"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: MINIGAME 2 — Карта маршрута ===== -->
+  <div class="screen" id="screen-g2">
+    <div class="card">
+      <div style="font-size:1.4rem;font-weight:800;color:var(--sea-dark);margin-bottom:4px">🗺️ Испытание 2 — Карта маршрута</div>
+      <div class="separator"></div>
+      <div class="task-text mb-8" id="g2-task"></div>
+      <div id="g2-picture" style="font-size:2rem;margin:8px 0;min-height:40px"></div>
+      <div class="answer-display" id="g2-display">?</div>
+      <div class="numpad" id="g2-numpad">
+        <button class="numpad-btn" onclick="numpadPress('g2',7)">7</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',8)">8</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',9)">9</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',4)">4</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',5)">5</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',6)">6</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',1)">1</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',2)">2</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',3)">3</button>
+        <button class="numpad-btn del" onclick="numpadDel('g2')">⌫</button>
+        <button class="numpad-btn" onclick="numpadPress('g2',0)">0</button>
+        <button class="numpad-btn ok-btn" onclick="checkG2()">✓</button>
+      </div>
+      <div class="feedback-text" id="g2-feedback"></div>
+      <div class="hint-text" id="g2-hint"></div>
+      <div style="margin-top:10px"><span id="g2-progress" style="font-weight:700;color:var(--sea-dark);font-size:0.95rem"></span></div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: MINIGAME 3 — Делим добычу ===== -->
+  <div class="screen" id="screen-g3">
+    <div class="card">
+      <div style="font-size:1.4rem;font-weight:800;color:var(--sea-dark);margin-bottom:4px">⚖️ Испытание 3 — Делим добычу</div>
+      <div class="separator"></div>
+      <div class="task-text mb-8" id="g3-task"></div>
+      <div class="coins-bank" id="g3-bank"></div>
+      <div class="pirate-row" id="g3-pirates"></div>
+      <div class="feedback-text" id="g3-feedback"></div>
+      <div class="hint-text" id="g3-hint"></div>
+      <div class="gap-row">
+        <button class="btn btn-sea btn-sm" onclick="checkG3()">Проверить ✓</button>
+        <button class="btn btn-sm" style="background:#dde;color:var(--navy)" onclick="resetG3()">Сначала 🔄</button>
+      </div>
+      <div style="margin-top:10px"><span id="g3-progress" style="font-weight:700;color:var(--sea-dark);font-size:0.95rem"></span></div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: MINIGAME 4 — Связь ===== -->
+  <div class="screen" id="screen-g4">
+    <div class="card">
+      <div style="font-size:1.4rem;font-weight:800;color:var(--sea-dark);margin-bottom:4px">🔄 Испытание 4 — Связь</div>
+      <div class="separator"></div>
+      <div class="task-text mb-8" id="g4-instruction">Разложи примеры по корзинам: умножение или деление?</div>
+      <div class="sort-cards-row" id="g4-cards"></div>
+      <div class="sort-area">
+        <div class="sort-basket" id="g4-mult-basket"
+          ondragover="event.preventDefault();this.classList.add('over')"
+          ondragleave="this.classList.remove('over')"
+          ondrop="dropSort(event,'mult')">
+          <div class="sort-basket-label">✖️ Умножение</div>
+        </div>
+        <div class="sort-basket" id="g4-div-basket"
+          ondragover="event.preventDefault();this.classList.add('over')"
+          ondragleave="this.classList.remove('over')"
+          ondrop="dropSort(event,'div')">
+          <div class="sort-basket-label">➗ Деление</div>
+        </div>
+      </div>
+      <div class="feedback-text" id="g4-feedback"></div>
+      <div class="hint-text" id="g4-hint"></div>
+      <div style="margin-top:8px"><span id="g4-progress" style="font-weight:700;color:var(--sea-dark);font-size:0.95rem"></span></div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: MINIGAME 5 — Шторм задач ===== -->
+  <div class="screen" id="screen-g5">
+    <div class="card" style="background:rgba(255,255,255,0.95)">
+      <div style="font-size:1.4rem;font-weight:800;color:#2A5A8A;margin-bottom:4px">🌊 Испытание 5 — Шторм задач</div>
+      <div class="separator"></div>
+      <div class="task-text mb-8" id="g5-task"></div>
+      <div class="sign-row" id="g5-signs"></div>
+      <div class="storm-timer-bar"><div class="storm-timer-fill" id="g5-timer-fill" style="width:100%"></div></div>
+      <div class="feedback-text" id="g5-feedback"></div>
+      <div class="hint-text" id="g5-hint"></div>
+      <div style="margin-top:10px"><span id="g5-progress" style="font-weight:700;color:var(--sea-dark);font-size:0.95rem"></span></div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: MINIGAME 6 — Сокровищница ===== -->
+  <div class="screen" id="screen-g6">
+    <div class="card">
+      <div style="font-size:1.4rem;font-weight:800;color:var(--sea-dark);margin-bottom:4px">🏆 Испытание 6 — Сокровищница</div>
+      <div class="separator"></div>
+      <div class="task-text mb-8" id="g6-task"></div>
+      <div id="g6-picture" style="font-size:1.8rem;margin:6px 0;min-height:36px"></div>
+      <div style="margin:8px 0;font-weight:700;color:var(--sea-dark);font-size:0.95rem">Запиши пример:</div>
+      <div class="expression-builder" id="g6-expr">
+        <div class="expr-slot" id="g6-a">?</div>
+        <div class="expr-slot" id="g6-op">?</div>
+        <div class="expr-slot" id="g6-b">?</div>
+        <div class="expr-label">=</div>
+        <div class="expr-slot" id="g6-ans">?</div>
+      </div>
+      <div style="font-weight:700;color:var(--sea-dark);font-size:0.95rem;margin-top:6px">Нажимай кнопки:</div>
+      <div id="g6-controls" style="margin-top:8px"></div>
+      <div class="feedback-text" id="g6-feedback"></div>
+      <div class="hint-text" id="g6-hint"></div>
+      <div style="margin-top:10px"><span id="g6-progress" style="font-weight:700;color:var(--sea-dark);font-size:0.95rem"></span></div>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: MINI RESULT (between games) ===== -->
+  <div class="screen" id="screen-mini-result">
+    <div class="card" style="max-width:400px;text-align:center">
+      <div class="mascot">🐱</div>
+      <div class="title-med mb-8" id="mr-title">Отлично!</div>
+      <div class="stars-row" id="mr-stars"></div>
+      <div class="task-text mb-8" id="mr-msg"></div>
+      <button class="btn btn-primary" style="margin-top:8px" onclick="nextGame()">Дальше ⛵</button>
+    </div>
+  </div>
+
+  <!-- ===== SCREEN: FINAL RESULT ===== -->
+  <div class="screen" id="screen-result">
+    <div class="card result-card">
+      <div class="mascot">🐱</div>
+      <div class="title-big mb-8">🏝️ Остров найден!</div>
+      <div class="stars-row" id="final-stars"></div>
+      <div class="separator"></div>
+
+      <div style="font-family:'Fredoka One';font-size:1.2rem;color:var(--navy);margin-bottom:8px;text-align:left">📊 Отчёт для учителя</div>
+
+      <div id="report-skills"></div>
+      <div class="separator"></div>
+
+      <div style="text-align:left">
+        <div style="font-weight:800;font-size:0.95rem;color:var(--navy);margin-bottom:4px">🎯 Что получилось хорошо:</div>
+        <div id="report-good" style="font-size:0.9rem;color:#336;font-weight:600;margin-bottom:8px"></div>
+        <div style="font-weight:800;font-size:0.95rem;color:var(--navy);margin-bottom:4px">💡 Над чем поработать:</div>
+        <div id="report-improve" style="font-size:0.9rem;color:#633;font-weight:600;margin-bottom:8px"></div>
+        <div style="font-weight:800;font-size:0.95rem;color:var(--navy);margin-bottom:4px">⏱️ Время на игру:</div>
+        <div id="report-time" style="font-size:0.9rem;color:var(--sea-dark);font-weight:600"></div>
+      </div>
+
+      <div class="gap-row" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="restartGame()">Ещё раз 🔄</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /game-container -->
+
+<script>
+// ============================================================
+//  GLOBAL STATE
+// ============================================================
+let soundOn = true;
+let currentGame = 0;
+let gameStartTime = Date.now();
+
+// Stats per game [g1..g6]: {correct, wrong, hints}
+let stats = Array.from({length:6}, () => ({correct:0, wrong:0, hints:0, timeSpent:0, startTime:0}));
+let currentGameStartTime = 0;
+
+// ============================================================
+//  SOUND (Web Audio API — synthetic beeps)
+// ============================================================
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playBeep(freq=520, dur=0.12, type='sine', vol=0.25) {
+  if (!soundOn) return;
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+  } catch(e){}
+}
+function playCorrect() {
+  playBeep(520, 0.1); setTimeout(()=>playBeep(660, 0.1),110); setTimeout(()=>playBeep(780, 0.18),220);
+}
+function playWrong() {
+  playBeep(260, 0.2, 'sawtooth', 0.15); setTimeout(()=>playBeep(220, 0.2, 'sawtooth', 0.12),200);
+}
+function playWin() {
+  [520,660,780,1040].forEach((f,i)=>setTimeout(()=>playBeep(f,0.18),i*120));
+}
+function toggleSound() {
+  soundOn = !soundOn;
+  document.getElementById('sound-btn').textContent = soundOn ? '🔊' : '🔇';
+}
+
+// ============================================================
+//  SCREENS
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('storm-bg').classList.toggle('active', id === 'screen-g5');
+}
+
+function updateProgress() {
+  for (let i = 0; i < 6; i++) {
+    const dot = document.getElementById('pd'+i);
+    dot.classList.remove('done','active');
+    if (i < currentGame) dot.classList.add('done');
+    else if (i === currentGame) dot.classList.add('active');
+  }
+}
+
+// ============================================================
+//  GAME FLOW
+// ============================================================
+function startGame() {
+  gameStartTime = Date.now();
+  stats = Array.from({length:6}, () => ({correct:0, wrong:0, hints:0}));
+  currentGame = 0;
+  document.getElementById('progress-bar').style.display = 'flex';
+  updateProgress();
+  launchGame(0);
+}
+
+function launchGame(idx) {
+  currentGame = idx;
+  currentGameStartTime = Date.now();
+  updateProgress();
+  const games = [initG1, initG2, initG3, initG4, initG5, initG6];
+  games[idx]();
+}
+
+function showMiniResult(gameIdx) {
+  const st = stats[gameIdx];
+  const total = st.correct + st.wrong;
+  const acc = total > 0 ? Math.round(st.correct / total * 100) : 100;
+  const titles = ['','','','','',''];
+  let title, msg, stars;
+  if (acc >= 80) { title='🌟 Отлично!'; msg='Ты справился с этим испытанием!'; stars=3; }
+  else if (acc >= 50) { title='👍 Хорошо!'; msg='Почти всё правильно. Двигаемся дальше!'; stars=2; }
+  else { title='💪 Не сдавайся!'; msg='Это было сложно, но ты старался. Продолжаем!'; stars=1; }
+
+  document.getElementById('mr-title').textContent = title;
+  document.getElementById('mr-msg').textContent = msg;
+  const sr = document.getElementById('mr-stars');
+  sr.innerHTML = '';
+  for (let i=0;i<3;i++) {
+    const s = document.createElement('span');
+    s.className='star';
+    s.textContent = i<stars ? '⭐' : '☆';
+    s.style.animationDelay = i*0.12+'s';
+    sr.appendChild(s);
+  }
+  if (stars >= 2) playWin();
+  showScreen('screen-mini-result');
+}
+
+function nextGame() {
+  if (currentGame < 5) {
+    launchGame(currentGame + 1);
+  } else {
+    showResult();
+  }
+}
+
+function restartGame() {
+  showScreen('screen-start');
+  document.getElementById('progress-bar').style.display = 'none';
+}
+
+// ============================================================
+//  CONFETTI
+// ============================================================
+function launchConfetti() {
+  const c = document.getElementById('confetti');
+  c.innerHTML = '';
+  const colors = ['#E8C87A','#5BA8C4','#6BBF7A','#E07A5F','#8A7FBF','#F2A98A'];
+  for (let i=0;i<60;i++) {
+    const p = document.createElement('div');
+    p.className='confetti-piece';
+    p.style.left = Math.random()*100+'%';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (1.5+Math.random()*2)+'s';
+    p.style.animationDelay = Math.random()*1+'s';
+    p.style.width = p.style.height = (8+Math.random()*10)+'px';
+    p.style.borderRadius = Math.random()>0.5?'50%':'3px';
+    c.appendChild(p);
+    setTimeout(()=>p.remove(), 4000);
+  }
+}
+
+// ============================================================
+//  NUMPAD HELPER
+// ============================================================
+const numpadState = {g2:'', g6ans:'', g6a:'', g6b:''};
+function numpadPress(id, digit) {
+  if (numpadState[id].length < 2) {
+    numpadState[id] += digit;
+    const el = document.getElementById(id+'-display') || document.getElementById('g2-display');
+    if (id==='g2') document.getElementById('g2-display').textContent = numpadState.g2 || '?';
+  }
+}
+function numpadDel(id) {
+  numpadState[id] = numpadState[id].slice(0,-1);
+  if (id==='g2') document.getElementById('g2-display').textContent = numpadState.g2 || '?';
+}
+
+// ============================================================
+//  GAME 1 — Трюм корабля (visual array → choose expression)
+// ============================================================
+const G1_TASKS = [
+  {rows:2, perRow:3, emoji:'🪙'},
+  {rows:3, perRow:2, emoji:'🐟'},
+  {rows:2, perRow:4, emoji:'🦀'},
+  {rows:3, perRow:3, emoji:'⭐'},
+  {rows:4, perRow:2, emoji:'🦜'},
+];
+let g1Idx=0, g1Errors=0, g1HintLevel=0;
+
+function initG1() {
+  g1Idx=0; g1Errors=0;
+  showScreen('screen-g1');
+  renderG1();
+}
+function renderG1() {
+  const t = G1_TASKS[g1Idx];
+  document.getElementById('g1-task').textContent =
+    `Посмотри: ${t.rows} ряда по ${t.perRow} ${t.emoji}. Сколько всего? Выбери пример:`;
+  document.getElementById('g1-feedback').textContent='';
+  document.getElementById('g1-hint').textContent='';
+  document.getElementById('g1-progress').textContent=`Задача ${g1Idx+1} из ${G1_TASKS.length}`;
+  g1HintLevel=0;
+
+  // draw groups
+  const gEl = document.getElementById('g1-groups');
+  gEl.innerHTML='';
+  for (let r=0; r<t.rows; r++) {
+    const box = document.createElement('div');
+    box.className='group-box';
+    for (let c=0; c<t.perRow; c++) {
+      const coin = document.createElement('span');
+      coin.className='coin';
+      coin.textContent=t.emoji;
+      coin.style.animationDelay=(r*t.perRow+c)*0.05+'s';
+      box.appendChild(coin);
+    }
+    gEl.appendChild(box);
+  }
+
+  // choices
+  const correct = `${t.rows} × ${t.perRow}`;
+  const wrong1 = `${t.rows} + ${t.perRow}`;
+  const wrong2 = `${t.rows * t.perRow} ÷ ${t.rows}`;
+  const opts = shuffle([correct, wrong1, wrong2]);
+  const ch = document.getElementById('g1-choices');
+  ch.innerHTML='';
+  opts.forEach(opt => {
+    const b = document.createElement('button');
+    b.className='choice-btn';
+    b.textContent=opt;
+    b.onclick=()=>checkG1Choice(b, opt===correct, t);
+    ch.appendChild(b);
+  });
+}
+function checkG1Choice(btn, isCorrect, t) {
+  const allBtns = document.querySelectorAll('#g1-choices .choice-btn');
+  allBtns.forEach(b=>b.onclick=null);
+  if (isCorrect) {
+    btn.classList.add('correct');
+    document.getElementById('g1-feedback').textContent='✅ Правильно!';
+    document.getElementById('g1-feedback').className='feedback-text ok';
+    stats[0].correct++;
+    playCorrect();
+    setTimeout(()=>{
+      g1Idx++;
+      if (g1Idx < G1_TASKS.length) renderG1();
+      else showMiniResult(0);
+    },900);
+  } else {
+    btn.classList.add('wrong');
+    g1Errors++;
+    stats[0].wrong++;
+    playWrong();
+    document.getElementById('g1-feedback').textContent='❌ Не то! Подумай ещё.';
+    document.getElementById('g1-feedback').className='feedback-text err';
+    if (g1Errors >= 2) {
+      stats[0].hints++;
+      document.getElementById('g1-hint').textContent=`💡 Подсказка: рядов ${t.rows}, в каждом ряду ${t.perRow} — это умножение!`;
+    }
+    setTimeout(()=>{
+      allBtns.forEach(b=>{b.classList.remove('wrong','correct'); b.onclick=()=>checkG1Choice(b, b.textContent.includes('×')&&b.textContent===`${t.rows} × ${t.perRow}`, t);});
+      // re-attach correct handler
+      renderG1Choice(t);
+    }, 1000);
+  }
+}
+function renderG1Choice(t) {
+  const correct = `${t.rows} × ${t.perRow}`;
+  const allBtns = document.querySelectorAll('#g1-choices .choice-btn');
+  allBtns.forEach(b=>{
+    b.classList.remove('wrong','correct');
+    b.onclick=()=>checkG1Choice(b, b.textContent===correct, t);
+  });
+}
+
+// ============================================================
+//  GAME 2 — Карта маршрута (word problem → numpad)
+// ============================================================
+const G2_TASKS = [
+  {text:'На каждом острове 2 попугая. Островов 4. Сколько попугаев всего?', picture:'🏝️🏝️🏝️🏝️ → 🦜🦜 на каждом', ans:8, hint:'2 × 4 = ?'},
+  {text:'У капитана 3 сундука. В каждом 5 монет. Сколько монет всего?', picture:'🧰🧰🧰 → 🪙🪙🪙🪙🪙 в каждом', ans:15, hint:'3 × 5 = ?'},
+  {text:'В лодке 4 ряда. В каждом ряду 3 рыбы. Сколько рыб всего?', picture:'🐟🐟🐟 | 🐟🐟🐟 | 🐟🐟🐟 | 🐟🐟🐟', ans:12, hint:'4 × 3 = ?'},
+  {text:'Матрос поймал 5 крабов в день. За 2 дня — сколько всего?', picture:'🦀×5 за день, 2 дня', ans:10, hint:'5 × 2 = ?'},
+];
+let g2Idx=0, g2Errors=0, g2Locked=false;
+
+function initG2() {
+  g2Idx=0; g2Errors=0;
+  numpadState.g2='';
+  showScreen('screen-g2');
+  renderG2();
+}
+function renderG2() {
+  const t = G2_TASKS[g2Idx];
+  document.getElementById('g2-task').textContent=t.text;
+  document.getElementById('g2-picture').textContent=t.picture;
+  document.getElementById('g2-display').textContent='?';
+  document.getElementById('g2-feedback').textContent='';
+  document.getElementById('g2-hint').textContent='';
+  document.getElementById('g2-progress').textContent=`Задача ${g2Idx+1} из ${G2_TASKS.length}`;
+  numpadState.g2='';
+  g2Errors=0;
+  g2Locked=false;
+}
+function numpadPress(gameId, digit) {
+  if (gameId==='g2') {
+    if (g2Locked) return;
+    if (numpadState.g2.length < 2) {
+      numpadState.g2 += digit;
+      document.getElementById('g2-display').textContent = numpadState.g2 || '?';
+    }
+  }
+}
+function numpadDel(gameId) {
+  if (gameId==='g2') {
+    numpadState.g2 = numpadState.g2.slice(0,-1);
+    document.getElementById('g2-display').textContent = numpadState.g2 || '?';
+  }
+}
+function checkG2() {
+  if (g2Locked) return;
+  const t = G2_TASKS[g2Idx];
+  const val = parseInt(numpadState.g2);
+  if (isNaN(val)) { document.getElementById('g2-feedback').textContent='Введи число!'; return; }
+  if (val === t.ans) {
+    document.getElementById('g2-feedback').textContent='✅ Верно!';
+    document.getElementById('g2-feedback').className='feedback-text ok';
+    stats[1].correct++;
+    playCorrect();
+    g2Locked=true;
+    setTimeout(()=>{
+      g2Idx++;
+      if (g2Idx<G2_TASKS.length) renderG2();
+      else showMiniResult(1);
+    },900);
+  } else {
+    g2Errors++;
+    stats[1].wrong++;
+    playWrong();
+    document.getElementById('g2-feedback').textContent='❌ Не так. Попробуй ещё раз!';
+    document.getElementById('g2-feedback').className='feedback-text err';
+    if (g2Errors >= 2) {
+      stats[1].hints++;
+      document.getElementById('g2-hint').textContent='💡 '+t.hint;
+    }
+    numpadState.g2='';
+    document.getElementById('g2-display').textContent='?';
+  }
+}
+
+// ============================================================
+//  GAME 3 — Делим добычу (drag coins to pirates)
+// ============================================================
+const G3_TASKS = [
+  {total:6, pirates:2, pirate_emojis:['🏴‍☠️','🦜'], desc:'6 монет — 2 пиратам поровну. Сколько каждому?'},
+  {total:9, pirates:3, pirate_emojis:['🏴‍☠️','🦜','🐙'], desc:'9 рыб — 3 пиратам поровну. Сколько каждому?'},
+  {total:8, pirates:4, pirate_emojis:['🏴‍☠️','🦜','🐙','🦀'], desc:'8 звёзд — 4 пиратам поровну. Сколько каждому?'},
+];
+let g3Idx=0, g3BankCoins=[], g3PiratePiles=[], g3DragCoin=null, g3Errors=0;
+
+function initG3() {
+  g3Idx=0; g3Errors=0;
+  showScreen('screen-g3');
+  renderG3();
+}
+function renderG3() {
+  const t = G3_TASKS[g3Idx];
+  document.getElementById('g3-task').textContent=t.desc;
+  document.getElementById('g3-feedback').textContent='';
+  document.getElementById('g3-hint').textContent='';
+  document.getElementById('g3-progress').textContent=`Задача ${g3Idx+1} из ${G3_TASKS.length}`;
+  g3PiratePiles = Array.from({length:t.pirates},()=>[]);
+  g3BankCoins=[];
+
+  // bank
+  const bank = document.getElementById('g3-bank');
+  bank.innerHTML='';
+  const coinEmojis=['🪙','⭐','🐟'];
+  const coinEmoji = coinEmojis[g3Idx % coinEmojis.length];
+  for (let i=0;i<t.total;i++) {
+    const c = document.createElement('span');
+    c.className='coin-drag';
+    c.textContent=coinEmoji;
+    c.dataset.id=i;
+    c.draggable=true;
+    c.addEventListener('dragstart',e=>{
+      g3DragCoin=i;
+      setTimeout(()=>c.classList.add('dragging'),0);
+    });
+    c.addEventListener('dragend',()=>c.classList.remove('dragging'));
+    // touch support
+    c.addEventListener('touchstart',touchStartCoin,{passive:true});
+    bank.appendChild(c);
+    g3BankCoins.push({id:i, placed:false, el:c});
+  }
+
+  // pirates
+  const pr = document.getElementById('g3-pirates');
+  pr.innerHTML='';
+  for (let p=0;p<t.pirates;p++) {
+    const pb = document.createElement('div');
+    pb.className='pirate-bucket';
+    pb.innerHTML=`<div class="pirate-emoji">${t.pirate_emojis[p]}</div>`;
+    const pile = document.createElement('div');
+    pile.className='pirate-pile';
+    pile.dataset.pirate=p;
+    pile.addEventListener('dragover',e=>{e.preventDefault();pile.classList.add('over');});
+    pile.addEventListener('dragleave',()=>pile.classList.remove('over'));
+    pile.addEventListener('drop',e=>{e.preventDefault();pile.classList.remove('over');dropCoinToPirate(p,pile);});
+    pile.addEventListener('touchend',e=>touchDropCoin(e,p,pile),{passive:false});
+    pb.appendChild(pile);
+    pr.appendChild(pb);
+  }
+}
+function dropCoinToPirate(pirateIdx, pileEl) {
+  if (g3DragCoin===null) return;
+  const coin = g3BankCoins.find(c=>c.id===g3DragCoin&&!c.placed);
+  if (!coin) return;
+  coin.placed=true;
+  coin.el.style.display='none';
+  g3PiratePiles[pirateIdx].push(g3DragCoin);
+  const c=document.createElement('span');c.className='coin';
+  const t=G3_TASKS[g3Idx];
+  c.textContent=['🪙','⭐','🐟'][g3Idx%3];
+  pileEl.appendChild(c);
+  g3DragCoin=null;
+}
+let touchCoinId=null, touchGhost=null;
+function touchStartCoin(e){
+  const el=e.currentTarget;
+  touchCoinId=parseInt(el.dataset.id);
+  touchGhost=el.cloneNode(true);
+  touchGhost.style.cssText='position:fixed;pointer-events:none;font-size:1.8rem;z-index:999;opacity:0.8';
+  document.body.appendChild(touchGhost);
+  moveTouchGhost(e.touches[0]);
+  document.addEventListener('touchmove',moveTouchGhostE,{passive:false});
+  document.addEventListener('touchend',touchEndCoin,{once:true});
+}
+function moveTouchGhostE(e){e.preventDefault();moveTouchGhost(e.touches[0]);}
+function moveTouchGhost(touch){
+  if(touchGhost){touchGhost.style.left=(touch.clientX-20)+'px';touchGhost.style.top=(touch.clientY-20)+'px';}
+}
+function touchEndCoin(e){
+  document.removeEventListener('touchmove',moveTouchGhostE);
+  if(touchGhost){touchGhost.remove();touchGhost=null;}
+  if(touchCoinId===null)return;
+  const touch=e.changedTouches[0];
+  const el=document.elementFromPoint(touch.clientX,touch.clientY);
+  const pile=el?.closest('.pirate-pile');
+  if(pile){
+    const pirateIdx=parseInt(pile.dataset.pirate);
+    g3DragCoin=touchCoinId;
+    dropCoinToPirate(pirateIdx,pile);
+  }
+  touchCoinId=null;
+}
+function touchDropCoin(e,pirateIdx,pileEl){/* handled by touchend */}
+
+function checkG3() {
+  const t = G3_TASKS[g3Idx];
+  const placedAll = g3BankCoins.every(c=>c.placed);
+  if (!placedAll) {
+    document.getElementById('g3-feedback').textContent='Перетащи все монеты!';
+    document.getElementById('g3-feedback').className='feedback-text err';
+    return;
+  }
+  const expected = t.total/t.pirates;
+  const allEqual = g3PiratePiles.every(p=>p.length===expected);
+  if (allEqual) {
+    document.getElementById('g3-feedback').textContent=`✅ Правильно! Каждый получил по ${expected}. Это ${t.total} ÷ ${t.pirates} = ${expected}`;
+    document.getElementById('g3-feedback').className='feedback-text ok';
+    stats[2].correct++;
+    playCorrect();
+    setTimeout(()=>{
+      g3Idx++;
+      if (g3Idx<G3_TASKS.length) renderG3();
+      else showMiniResult(2);
+    },1400);
+  } else {
+    g3Errors++;
+    stats[2].wrong++;
+    playWrong();
+    document.getElementById('g3-feedback').textContent='❌ Не поровну! Попробуй разложить по-другому.';
+    document.getElementById('g3-feedback').className='feedback-text err';
+    if (g3Errors>=2) {
+      stats[2].hints++;
+      document.getElementById('g3-hint').textContent=`💡 Подсказка: ${t.total} монет раздели ${t.pirates} пиратам. ${t.total} ÷ ${t.pirates} = ?`;
+    }
+  }
+}
+function resetG3() {
+  renderG3();
+}
+
+// ============================================================
+//  GAME 4 — Связь (sort cards to baskets)
+// ============================================================
+const G4_CARDS = [
+  {expr:'3 × 4', type:'mult'},
+  {expr:'12 ÷ 3', type:'div'},
+  {expr:'2 × 5', type:'mult'},
+  {expr:'10 ÷ 5', type:'div'},
+  {expr:'4 × 2', type:'mult'},
+  {expr:'8 ÷ 2', type:'div'},
+];
+let g4DragCard=null, g4Sorted={mult:[], div:[]}, g4Errors=0;
+
+function initG4() {
+  g4Errors=0;
+  g4Sorted={mult:[],div:[]};
+  showScreen('screen-g4');
+  document.getElementById('g4-feedback').textContent='';
+  document.getElementById('g4-hint').textContent='';
+  document.getElementById('g4-progress').textContent='Разложи все 6 карточек';
+  document.getElementById('g4-instruction').textContent='Перетащи каждый пример в нужную корзину:';
+
+  const row = document.getElementById('g4-cards');
+  row.innerHTML='';
+  const shuffled = shuffle([...G4_CARDS]);
+  shuffled.forEach(card=>{
+    const el=document.createElement('div');
+    el.className='sort-card';
+    el.textContent=card.expr;
+    el.dataset.type=card.type;
+    el.dataset.expr=card.expr;
+    el.draggable=true;
+    el.addEventListener('dragstart',e=>{g4DragCard=card.expr; setTimeout(()=>el.classList.add('dragging'),0);});
+    el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+    // touch
+    el.addEventListener('touchstart',g4TouchStart,{passive:true});
+    row.appendChild(el);
+  });
+
+  // clear baskets content (keep label)
+  ['g4-mult-basket','g4-div-basket'].forEach(id=>{
+    const b=document.getElementById(id);
+    [...b.children].forEach(c=>{if(!c.classList.contains('sort-basket-label'))c.remove();});
+  });
+}
+function dropSort(event, type) {
+  event.preventDefault();
+  document.getElementById('g4-mult-basket').classList.remove('over');
+  document.getElementById('g4-div-basket').classList.remove('over');
+  if (!g4DragCard) return;
+  const card = G4_CARDS.find(c=>c.expr===g4DragCard);
+  if (!card) return;
+  const srcEl = [...document.querySelectorAll('.sort-card')].find(e=>e.dataset.expr===g4DragCard);
+  if (!srcEl || srcEl.classList.contains('sorted-ok')) return;
+
+  if (card.type === type) {
+    srcEl.classList.add('sorted-ok');
+    srcEl.style.opacity='0.45';
+    g4Sorted[type].push(card.expr);
+    const placed = document.createElement('div');
+    placed.className='sort-card';
+    placed.textContent=card.expr;
+    placed.style.cursor='default';
+    placed.style.background='rgba(107,191,122,0.25)';
+    placed.style.borderColor='#4a9a58';
+    document.getElementById('g4-'+type+'-basket').appendChild(placed);
+    stats[3].correct++;
+    playCorrect();
+    document.getElementById('g4-feedback').textContent='✅ Правильно!';
+    document.getElementById('g4-feedback').className='feedback-text ok';
+
+    const totalSorted = g4Sorted.mult.length + g4Sorted.div.length;
+    if (totalSorted === G4_CARDS.length) {
+      setTimeout(()=>showMiniResult(3), 800);
+    }
+  } else {
+    g4Errors++;
+    stats[3].wrong++;
+    playWrong();
+    document.getElementById('g4-feedback').textContent='❌ Не туда! Посмотри на знак.';
+    document.getElementById('g4-feedback').className='feedback-text err';
+    if (g4Errors>=3) {
+      stats[3].hints++;
+      document.getElementById('g4-hint').textContent='💡 Знак × — умножение, знак ÷ — деление';
+    }
+  }
+  g4DragCard=null;
+}
+let g4TouchCard=null, g4TouchGhost=null;
+function g4TouchStart(e){
+  const el=e.currentTarget;
+  g4TouchCard=el.dataset.expr;
+  g4TouchGhost=el.cloneNode(true);
+  g4TouchGhost.style.cssText='position:fixed;pointer-events:none;font-family:Fredoka One;font-size:1.1rem;background:#E8C87A;border:2px solid #C9A44A;border-radius:12px;padding:8px 14px;z-index:999;opacity:0.85;';
+  document.body.appendChild(g4TouchGhost);
+  const mv=ev=>{ev.preventDefault();g4TouchGhost.style.left=(ev.touches[0].clientX-40)+'px';g4TouchGhost.style.top=(ev.touches[0].clientY-20)+'px';};
+  document.addEventListener('touchmove',mv,{passive:false});
+  document.addEventListener('touchend',ev=>{
+    document.removeEventListener('touchmove',mv);
+    g4TouchGhost?.remove();g4TouchGhost=null;
+    const touch=ev.changedTouches[0];
+    const target=document.elementFromPoint(touch.clientX,touch.clientY);
+    const basket=target?.closest('.sort-basket');
+    if(basket){
+      const type=basket.id.includes('mult')?'mult':'div';
+      g4DragCard=g4TouchCard;
+      dropSort({preventDefault:()=>{}},type);
+    }
+    g4TouchCard=null;
+  },{once:true});
+}
+
+// ============================================================
+//  GAME 5 — Шторм задач (choose sign × or ÷)
+// ============================================================
+const G5_TASKS = [
+  {text:'На корабле 3 мачты. На каждой 4 флага. Сколько флагов всего?', ans:'×', hint:'Группы по 4 — умножаем!'},
+  {text:'15 рыб разделили на 3 пирата. Сколько рыб каждому?', ans:'÷', hint:'Делить поровну — это деление!'},
+  {text:'2 острова, на каждом 5 пальм. Сколько пальм?', ans:'×', hint:'Одинаковые группы — умножение!'},
+  {text:'8 монет раздали 4 матросам поровну. Сколько каждому?', ans:'÷', hint:'Раздали поровну — делим!'},
+  {text:'3 сундука, в каждом 4 жемчужины. Сколько жемчужин?', ans:'×', hint:'В каждом одинаково — умножение!'},
+  {text:'10 крабов разбежались в 5 нор. В каждой поровну. Сколько в норе?', ans:'÷', hint:'Разделить поровну — это ÷!'},
+];
+let g5Idx=0, g5Timer=null, g5TimeLeft=0, g5Locked=false, g5Errors=0;
+
+function initG5() {
+  g5Idx=0; g5Errors=0;
+  showScreen('screen-g5');
+  renderG5();
+}
+function renderG5() {
+  clearInterval(g5Timer);
+  g5Locked=false;
+  g5TimeLeft=100;
+  const t=G5_TASKS[g5Idx];
+  document.getElementById('g5-task').textContent=t.text;
+  document.getElementById('g5-feedback').textContent='';
+  document.getElementById('g5-hint').textContent='';
+  document.getElementById('g5-progress').textContent=`Задача ${g5Idx+1} из ${G5_TASKS.length}`;
+  document.getElementById('g5-timer-fill').style.width='100%';
+  document.getElementById('g5-timer-fill').style.background='var(--sand)';
+
+  const row=document.getElementById('g5-signs');
+  row.innerHTML='';
+  ['×','÷','?'].forEach(sym=>{
+    if(sym==='?') return;
+    const card=document.createElement('div');
+    card.className='sign-card';
+    card.innerHTML=`<div class="sign-symbol">${sym}</div>`;
+    card.onclick=()=>checkG5(sym,t);
+    row.appendChild(card);
+  });
+
+  g5Timer=setInterval(()=>{
+    g5TimeLeft-=2;
+    document.getElementById('g5-timer-fill').style.width=g5TimeLeft+'%';
+    if(g5TimeLeft<=30) document.getElementById('g5-timer-fill').style.background='var(--coral)';
+    if(g5TimeLeft<=0){
+      clearInterval(g5Timer);
+      if(!g5Locked) timeoutG5(t);
+    }
+  },200);
+}
+function checkG5(sym, t) {
+  if(g5Locked) return;
+  g5Locked=true;
+  clearInterval(g5Timer);
+  if(sym===t.ans){
+    document.getElementById('g5-feedback').textContent='✅ Правильно!';
+    document.getElementById('g5-feedback').className='feedback-text ok';
+    stats[4].correct++;
+    playCorrect();
+    setTimeout(()=>{g5Idx++;if(g5Idx<G5_TASKS.length)renderG5();else showMiniResult(4);},900);
+  } else {
+    g5Errors++;
+    stats[4].wrong++;
+    playWrong();
+    document.getElementById('g5-feedback').textContent=`❌ Нет! Здесь нужен ${t.ans}`;
+    document.getElementById('g5-feedback').className='feedback-text err';
+    stats[4].hints++;
+    document.getElementById('g5-hint').textContent='💡 '+t.hint;
+    setTimeout(()=>{g5Locked=false;g5Idx++;if(g5Idx<G5_TASKS.length)renderG5();else showMiniResult(4);},1400);
+  }
+}
+function timeoutG5(t) {
+  g5Errors++;
+  stats[4].wrong++;
+  document.getElementById('g5-feedback').textContent=`⏰ Время вышло! Ответ: ${t.ans}`;
+  document.getElementById('g5-feedback').className='feedback-text err';
+  stats[4].hints++;
+  document.getElementById('g5-hint').textContent='💡 '+t.hint;
+  setTimeout(()=>{g5Idx++;if(g5Idx<G5_TASKS.length)renderG5();else showMiniResult(4);},1400);
+}
+
+// ============================================================
+//  GAME 6 — Сокровищница (build full expression)
+// ============================================================
+const G6_TASKS = [
+  {text:'На корабле 4 сундука, в каждом 3 монеты. Запиши пример и найди ответ.', picture:'🧰🧰🧰🧰 → 🪙🪙🪙 в каждом', a:4, op:'×', b:3, ans:12},
+  {text:'12 попугаев разделили поровну на 4 острова. Сколько на каждом?', picture:'🦜🦜🦜🦜🦜🦜🦜🦜🦜🦜🦜🦜 → 4 острова', a:12, op:'÷', b:4, ans:3},
+  {text:'3 ряда по 5 звёзд. Запиши пример и найди ответ.', picture:'⭐⭐⭐⭐⭐|⭐⭐⭐⭐⭐|⭐⭐⭐⭐⭐', a:3, op:'×', b:5, ans:15},
+];
+let g6Idx=0, g6State={a:null, op:null, b:null, ans:null}, g6Errors=0, g6Phase='a';
+
+function initG6() {
+  g6Idx=0; g6Errors=0;
+  showScreen('screen-g6');
+  renderG6();
+}
+function renderG6() {
+  const t=G6_TASKS[g6Idx];
+  document.getElementById('g6-task').textContent=t.text;
+  document.getElementById('g6-picture').textContent=t.picture;
+  document.getElementById('g6-feedback').textContent='';
+  document.getElementById('g6-hint').textContent='';
+  document.getElementById('g6-progress').textContent=`Задача ${g6Idx+1} из ${G6_TASKS.length}`;
+  g6State={a:null,op:null,b:null,ans:null};
+  g6Phase='a';
+  updateG6Display();
+  renderG6Controls(t);
+}
+function updateG6Display() {
+  document.getElementById('g6-a').textContent=g6State.a!==null?g6State.a:'?';
+  document.getElementById('g6-op').textContent=g6State.op!==null?g6State.op:'?';
+  document.getElementById('g6-b').textContent=g6State.b!==null?g6State.b:'?';
+  document.getElementById('g6-ans').textContent=g6State.ans!==null?g6State.ans:'?';
+}
+function renderG6Controls(t) {
+  const ctrl=document.getElementById('g6-controls');
+  ctrl.innerHTML='';
+  const phases=[
+    {label:'Первое число:',key:'a',vals:[t.a, t.a+2, t.b]},
+    {label:'Знак:',key:'op',vals:[t.op, t.op==='×'?'÷':'×']},
+    {label:'Второе число:',key:'b',vals:[t.b, t.b+1, t.a]},
+    {label:'Ответ:',key:'ans',vals:[t.ans, t.ans+3, t.ans-2].filter(v=>v>0)},
+  ];
+  const phase=phases.find(p=>p.key===g6Phase);
+  if(!phase){
+    const btn=document.createElement('button');
+    btn.className='btn btn-green';
+    btn.textContent='Проверить ✓';
+    btn.onclick=checkG6Final;
+    ctrl.appendChild(btn);
+    return;
+  }
+  const label=document.createElement('div');
+  label.style.cssText='font-weight:800;color:var(--sea-dark);margin-bottom:6px;font-size:0.95rem';
+  label.textContent=phase.label;
+  ctrl.appendChild(label);
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;gap:10px;justify-content:center;flex-wrap:wrap';
+  shuffle([...phase.vals]).forEach(val=>{
+    const btn=document.createElement('button');
+    btn.className='choice-btn';
+    btn.textContent=val;
+    btn.onclick=()=>g6Choose(phase.key,val,t);
+    row.appendChild(btn);
+  });
+  ctrl.appendChild(row);
+}
+function g6Choose(key, val, t) {
+  const correct = {a:t.a, op:t.op, b:t.b, ans:t.ans};
+  if(String(val)===String(correct[key])){
+    g6State[key]=val;
+    updateG6Display();
+    stats[5].correct++;
+    playCorrect();
+    document.getElementById('g6-feedback').textContent='✅ Верно!';
+    document.getElementById('g6-feedback').className='feedback-text ok';
+    const order=['a','op','b','ans'];
+    const nextIdx=order.indexOf(key)+1;
+    g6Phase= nextIdx<order.length ? order[nextIdx] : 'done';
+    setTimeout(()=>{
+      document.getElementById('g6-feedback').textContent='';
+      renderG6Controls(t);
+      if(g6Phase==='done') checkG6Final();
+    },600);
+  } else {
+    g6Errors++;
+    stats[5].wrong++;
+    playWrong();
+    document.getElementById('g6-feedback').textContent='❌ Не то! Подумай ещё.';
+    document.getElementById('g6-feedback').className='feedback-text err';
+    if(g6Errors>=3){
+      stats[5].hints++;
+      document.getElementById('g6-hint').textContent=`💡 Подсказка: первое число — ${t.a}, знак — ${t.op}`;
+    }
+  }
+}
+function checkG6Final() {
+  const t=G6_TASKS[g6Idx];
+  if(g6State.a===t.a && g6State.op===t.op && g6State.b===t.b && g6State.ans===t.ans){
+    document.getElementById('g6-feedback').textContent=`🎉 ${t.a} ${t.op} ${t.b} = ${t.ans}. Ты записал пример правильно!`;
+    document.getElementById('g6-feedback').className='feedback-text ok';
+    playWin();
+    setTimeout(()=>{
+      g6Idx++;
+      if(g6Idx<G6_TASKS.length) renderG6();
+      else {
+        launchConfetti();
+        setTimeout(()=>showMiniResult(5),800);
+      }
+    },1400);
+  }
+}
+
+// ============================================================
+//  FINAL RESULT
+// ============================================================
+function showResult() {
+  const totalCorrect = stats.reduce((s,g)=>s+g.correct,0);
+  const totalWrong = stats.reduce((s,g)=>s+g.wrong,0);
+  const totalHints = stats.reduce((s,g)=>s+g.hints,0);
+  const total = totalCorrect+totalWrong;
+  const acc = total>0 ? Math.round(totalCorrect/total*100) : 100;
+  const elapsed = Math.round((Date.now()-gameStartTime)/1000);
+  const mins = Math.floor(elapsed/60), secs = elapsed%60;
+
+  launchConfetti();
+  showScreen('screen-result');
+  playWin();
+
+  // stars
+  const sr=document.getElementById('final-stars');
+  sr.innerHTML='';
+  const starCount = acc>=80?5:acc>=60?4:acc>=40?3:2;
+  for(let i=0;i<5;i++){
+    const s=document.createElement('span');s.className='star';
+    s.textContent=i<starCount?'⭐':'☆';
+    s.style.animationDelay=i*0.1+'s';
+    sr.appendChild(s);
+  }
+
+  // skills report
+  const skills=[
+    {name:'🗂️ Игра 1: Группы → пример',g:0},
+    {name:'📝 Игра 2: Текстовые задачи',g:1},
+    {name:'⚖️ Игра 3: Деление руками',g:2},
+    {name:'🔄 Игра 4: Сортировка знаков',g:3},
+    {name:'🌊 Игра 5: Выбор действия',g:4},
+    {name:'🏆 Игра 6: Полное решение',g:5},
+  ];
+  const colors=['#5BA8C4','#E8C87A','#6BBF7A','#8A7FBF','#E07A5F','#F2A98A'];
+  const rep=document.getElementById('report-skills');
+  rep.innerHTML='';
+  skills.forEach((sk,i)=>{
+    const st=stats[sk.g];
+    const tot=st.correct+st.wrong;
+    const pct=tot>0?Math.round(st.correct/tot*100):100;
+    const row=document.createElement('div');
+    row.className='skill-row';
+    row.innerHTML=`<div class="skill-label">${sk.name}</div>
+      <div class="skill-bar"><div class="skill-fill" style="width:0%;background:${colors[i]}" data-pct="${pct}"></div></div>
+      <div class="skill-pct">${pct}%</div>
+      <div style="font-size:0.8rem;min-width:60px;text-align:right;color:var(--sea-dark)">${tot>0?`${st.correct}/${tot}`:'—'} ${st.hints>0?`💡×${st.hints}`:''}</div>`;
+    rep.appendChild(row);
+  });
+  setTimeout(()=>{
+    document.querySelectorAll('.skill-fill').forEach(el=>{
+      el.style.width=el.dataset.pct+'%';
+    });
+  },200);
+
+  // good/improve
+  const goodSkills=skills.filter((_,i)=>{const st=stats[i];const tot=st.correct+st.wrong;return tot>0&&st.correct/tot>=0.8;});
+  const improvSkills=skills.filter((_,i)=>{const st=stats[i];const tot=st.correct+st.wrong;return tot>0&&st.correct/tot<0.6;});
+  document.getElementById('report-good').textContent=goodSkills.length>0?goodSkills.map(s=>s.name).join(', '):'Продолжай стараться!';
+  document.getElementById('report-improve').textContent=improvSkills.length>0?improvSkills.map(s=>s.name).join(', '):'Всё на отличном уровне!';
+  document.getElementById('report-time').textContent=`${mins} мин ${secs} сек`;
+}
+
+// ============================================================
+//  UTILS
+// ============================================================
+function shuffle(arr) {
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+</script>
+</body>
+</html>
