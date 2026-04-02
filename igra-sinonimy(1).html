@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Сова Семоника и Волшебный Лес Слов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --bg-forest: #E8F5E9;
+            --bg-sky: #E3F2FD;
+            --primary-green: #81C784;
+            --primary-green-dark: #66BB6A;
+            --accent-orange: #FFB74D;
+            --accent-orange-dark: #FFA726;
+            --synonym-green: #A5D6A7;
+            --antonym-peach: #FFCC80;
+            --bg-cream: #FFFDE7;
+            --text-dark: #424242;
+            --text-light: #757575;
+            --white: #FFFFFF;
+            --error: #EF5350;
+            --success: #66BB6A;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(180deg, var(--bg-sky) 0%, var(--bg-forest) 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-dark);
+        }
+        
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
+        
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+        
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        /* Start Screen */
+        #start-screen {
+            background: linear-gradient(180deg, var(--bg-sky) 0%, var(--bg-forest) 100%);
+        }
+        
+        .title {
+            font-size: clamp(28px, 6vw, 48px);
+            font-weight: 800;
+            text-align: center;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+            text-shadow: 2px 2px 0 var(--white);
+        }
+        
+        .subtitle {
+            font-size: clamp(14px, 3vw, 20px);
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 30px;
+            max-width: 500px;
+        }
+        
+        .owl-container {
+            width: clamp(150px, 30vw, 220px);
+            height: clamp(150px, 30vw, 220px);
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .owl {
+            width: 100%;
+            height: 100%;
+            animation: owl-bounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes owl-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .btn {
+            padding: 16px 48px;
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.1);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.1);
+        }
+        
+        .btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(180deg, var(--accent-orange) 0%, var(--accent-orange-dark) 100%);
+            color: var(--text-dark);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(180deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+            color: var(--white);
+        }
+        
+        /* HUD */
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 15px;
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 100%);
+        }
+        
+        #hud.active {
+            display: flex;
+        }
+        
+        .hud-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .mini-owl {
+            width: 40px;
+            height: 40px;
+        }
+        
+        .progress-container {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary-green);
+            opacity: 0.3;
+            transition: all 0.3s ease;
+        }
+        
+        .progress-dot.completed {
+            opacity: 1;
+            transform: scale(1.2);
+        }
+        
+        .progress-dot.current {
+            opacity: 1;
+            background: var(--accent-orange);
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+        
+        .hud-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .score-display {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        
+        .sound-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--white);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        
+        .sound-btn:active {
+            transform: scale(0.95);
+        }
+        
+        /* Game Canvas Area */
+        #game-area {
+            position: absolute;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        /* Mini-game specific styles */
+        .game-instruction {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--white);
+            padding: 20px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            text-align: center;
+            z-index: 200;
+            max-width: 90%;
+        }
+        
+        .game-instruction h2 {
+            font-size: clamp(18px, 4vw, 24px);
+            margin-bottom: 10px;
+        }
+        
+        .game-instruction p {
+            font-size: clamp(14px, 3vw, 18px);
+            color: var(--text-light);
+        }
+        
+        /* Leaf dragging */
+        .leaf {
+            position: absolute;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: clamp(16px, 3.5vw, 22px);
+            font-weight: 600;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            transition: transform 0.1s, box-shadow 0.1s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .leaf:active {
+            cursor: grabbing;
+        }
+        
+        .leaf.dragging {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+        
+        .leaf-synonym {
+            background: var(--synonym-green);
+            color: var(--text-dark);
+        }
+        
+        .leaf-antonym {
+            background: var(--antonym-peach);
+            color: var(--text-dark);
+        }
+        
+        /* Drop zones */
+        .drop-zone {
+            position: absolute;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 15px;
+            padding-top: 50px;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        
+        .drop-zone.highlight {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255,255,255,0.8);
+        }
+        
+        .drop-zone-label {
+            position: absolute;
+            top: 10px;
+            font-size: clamp(14px, 3vw, 18px);
+            font-weight: 700;
+        }
+        
+        .zone-synonym {
+            left: 5%;
+            top: 15%;
+            width: 42%;
+            height: 75%;
+            background: rgba(165, 214, 167, 0.5);
+            border: 3px dashed var(--primary-green);
+        }
+        
+        .zone-antonym {
+            right: 5%;
+            top: 15%;
+            width: 42%;
+            height: 75%;
+            background: rgba(255, 204, 128, 0.5);
+            border: 3px dashed var(--accent-orange);
+        }
+        
+        /* Bridge game */
+        .bridge-container {
+            position: absolute;
+            bottom: 20%;
+            left: 10%;
+            right: 10%;
+            height: 60%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .bridge-word {
+            font-size: clamp(24px, 5vw, 36px);
+            font-weight: 700;
+            background: var(--white);
+            padding: 15px 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .bridge-gap {
+            width: 100%;
+            height: 60px;
+            background: linear-gradient(90deg, #8B4513 0%, #A0522D 50%, #8B4513 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            position: relative;
+        }
+        
+        .bridge-plank {
+            width: 80px;
+            height: 40px;
+            background: #D2691E;
+            border-radius: 5px;
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .bridge-plank.visible {
+            opacity: 1;
+        }
+        
+        .bridge-options {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .bridge-option {
+            padding: 15px 25px;
+            font-size: clamp(18px, 4vw, 24px);
+            font-weight: 600;
+            background: var(--white);
+            border: 3px solid var(--primary-green);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .bridge-option:hover {
+            background: var(--primary-green);
+            color: var(--white);
+        }
+        
+        .bridge-option:active {
+            transform: scale(0.95);
+        }
+        
+        /* Lightning game */
+        .lightning-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .lightning-word {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: clamp(28px, 6vw, 42px);
+            font-weight: 700;
+            background: linear-gradient(180deg, #78909C 0%, #546E7A 100%);
+            color: var(--white);
+            padding: 20px 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+        
+        .lightning-options {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 90%;
+        }
+        
+        .lightning-option {
+            padding: 20px;
+            font-size: clamp(18px, 4vw, 26px);
+            font-weight: 600;
+            background: var(--white);
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        
+        .lightning-option:active {
+            transform: scale(0.95);
+        }
+        
+        .lightning-option.correct {
+            background: var(--success);
+            color: var(--white);
+        }
+        
+        .lightning-option.wrong {
+            background: var(--error);
+            color: var(--white);
+        }
+        
+        .timer-bar {
+            position: absolute;
+            bottom: 10%;
+            left: 10%;
+            right: 10%;
+            height: 15px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .timer-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-orange) 0%, var(--primary-green) 100%);
+            transition: width 0.1s linear;
+            border-radius: 10px;
+        }
+        
+        /* Song game */
+        .song-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .owl-speaker {
+            width: clamp(120px, 25vw, 180px);
+            height: clamp(120px, 25vw, 180px);
+            margin-bottom: 20px;
+        }
+        
+        .song-buttons {
+            display: flex;
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .song-btn {
+            padding: 20px 30px;
+            font-size: clamp(16px, 3.5vw, 22px);
+            font-weight: 700;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .song-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .song-btn-synonym {
+            background: var(--synonym-green);
+            color: var(--text-dark);
+        }
+        
+        .song-btn-antonym {
+            background: var(--antonym-peach);
+            color: var(--text-dark);
+        }
+        
+        .play-sound-btn {
+            padding: 15px 25px;
+            font-size: clamp(14px, 3vw, 18px);
+            font-weight: 600;
+            background: var(--white);
+            border: 2px solid var(--primary-green);
+            border-radius: 15px;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        
+        /* Tree game */
+        .tree-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .tree-trunk {
+            position: absolute;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(100px, 20vw, 150px);
+            height: clamp(200px, 40vh, 300px);
+            background: linear-gradient(90deg, #6D4C41 0%, #8D6E63 50%, #6D4C41 100%);
+            border-radius: 10px;
+        }
+        
+        .sentence-display {
+            position: absolute;
+            top: 10%;
+            left: 5%;
+            right: 5%;
+            background: var(--white);
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .sentence-text {
+            font-size: clamp(18px, 4vw, 26px);
+            font-weight: 600;
+        }
+        
+        .highlight-word {
+            background: var(--accent-orange);
+            padding: 2px 8px;
+            border-radius: 5px;
+        }
+        
+        .branch-options {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .branch-option {
+            padding: 15px 30px;
+            font-size: clamp(16px, 3.5vw, 22px);
+            font-weight: 600;
+            background: var(--white);
+            border: 3px solid var(--primary-green);
+            border-radius: 15px 15px 15px 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        
+        .branch-option:active {
+            transform: scale(0.95);
+        }
+        
+        /* Memory game */
+        .memory-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(8px, 2vw, 15px);
+            max-width: 600px;
+            width: 95%;
+        }
+        
+        .memory-card {
+            aspect-ratio: 1;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        
+        .memory-card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+        
+        .memory-card.flipped .memory-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .memory-card-front,
+        .memory-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(12px, 2.5vw, 16px);
+            font-weight: 600;
+            text-align: center;
+            padding: 5px;
+        }
+        
+        .memory-card-front {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--primary-green-dark) 100%);
+            color: var(--white);
+        }
+        
+        .memory-card-back {
+            background: var(--white);
+            transform: rotateY(180deg);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .memory-card-back.synonym {
+            border: 3px solid var(--synonym-green);
+        }
+        
+        .memory-card-back.antonym {
+            border: 3px solid var(--antonym-peach);
+        }
+        
+        .memory-card.matched .memory-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .memory-card.matched .memory-card-back {
+            opacity: 0.7;
+        }
+        
+        .memory-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            font-size: clamp(12px, 2.5vw, 16px);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .legend-dot {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        
+        .legend-dot.synonym {
+            background: var(--synonym-green);
+        }
+        
+        .legend-dot.antonym {
+            background: var(--antonym-peach);
+        }
+        
+        /* Feedback overlay */
+        .feedback-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 300;
+        }
+        
+        .feedback-overlay.active {
+            display: flex;
+        }
+        
+        .feedback-box {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 25px;
+            text-align: center;
+            max-width: 90%;
+            animation: popIn 0.3s ease;
+        }
+        
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .feedback-icon {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+        
+        .feedback-text {
+            font-size: clamp(16px, 4vw, 22px);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .feedback-explanation {
+            font-size: clamp(14px, 3vw, 18px);
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+        
+        /* Results screen */
+        #results-screen {
+            background: linear-gradient(180deg, var(--bg-sky) 0%, var(--bg-forest) 100%);
+        }
+        
+        .results-container {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 25px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+        
+        .results-title {
+            font-size: clamp(24px, 5vw, 36px);
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .results-score {
+            font-size: clamp(48px, 10vw, 72px);
+            font-weight: 800;
+            color: var(--primary-green);
+            margin-bottom: 10px;
+        }
+        
+        .results-stars {
+            font-size: 40px;
+            margin-bottom: 20px;
+        }
+        
+        .results-breakdown {
+            text-align: left;
+            margin: 20px 0;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .breakdown-name {
+            font-size: clamp(14px, 3vw, 18px);
+        }
+        
+        .breakdown-score {
+            font-size: clamp(16px, 3.5vw, 20px);
+            font-weight: 700;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        /* Teacher report */
+        #teacher-report {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            padding: 20px;
+        }
+        
+        #teacher-report.active {
+            display: flex;
+        }
+        
+        .report-content {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .report-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        
+        .close-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #eee;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        
+        .report-section {
+            margin-bottom: 20px;
+        }
+        
+        .report-section h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+        
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .report-table th,
+        .report-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .report-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+        }
+        
+        /* Particles */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particle-fall 2s ease-out forwards;
+        }
+        
+        @keyframes particle-fall {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(100px) rotate(360deg);
+            }
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .leaf {
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .bridge-options {
+                flex-direction: column;
+            }
+            
+            .song-buttons {
+                flex-direction: column;
+            }
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-left">
+                <svg class="mini-owl" viewBox="0 0 100 100">
+                    <ellipse cx="50" cy="55" rx="35" ry="40" fill="#8B7355"/>
+                    <ellipse cx="50" cy="55" rx="30" ry="35" fill="#C4A574"/>
+                    <circle cx="35" cy="45" r="15" fill="#FFF"/>
+                    <circle cx="65" cy="45" r="15" fill="#FFF"/>
+                    <circle cx="35" cy="45" r="10" fill="#2C2C2C"/>
+                    <circle cx="65" cy="45" r="10" fill="#2C2C2C"/>
+                    <circle cx="38" cy="42" r="3" fill="#FFF"/>
+                    <circle cx="68" cy="42" r="3" fill="#FFF"/>
+                    <path d="M45 60 Q50 70 55 60" stroke="#FF8C42" stroke-width="3" fill="none"/>
+                    <ellipse cx="50" cy="25" rx="15" ry="10" fill="#8B7355"/>
+                    <circle cx="42" cy="23" r="5" fill="#6B5344"/>
+                    <circle cx="58" cy="23" r="5" fill="#6B5344"/>
+                </svg>
+                <div class="progress-container" id="progress-dots"></div>
+            </div>
+            <div class="hud-right">
+                <div class="score-display" id="score-display">0</div>
+                <button class="sound-btn" id="sound-toggle" aria-label="Включить/выключить звук">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#424242" stroke-width="2" id="sound-icon">
+                        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" id="sound-waves"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen active">
+            <h1 class="title">Сова Семоника</h1>
+            <p class="subtitle">Помоги Сове собрать слова-друзья и слова-противоположности в Волшебном Лесу!</p>
+            <div class="owl-container">
+                <svg class="owl" viewBox="0 0 200 220">
+                    <ellipse cx="100" cy="130" rx="70" ry="80" fill="#8B7355"/>
+                    <ellipse cx="100" cy="130" rx="60" ry="70" fill="#C4A574"/>
+                    <ellipse cx="100" cy="150" rx="35" ry="45" fill="#E8DCC8"/>
+                    <circle cx="70" cy="100" r="28" fill="#FFF"/>
+                    <circle cx="130" cy="100" r="28" fill="#FFF"/>
+                    <circle cx="70" cy="100" r="18" fill="#2C2C2C"/>
+                    <circle cx="130" cy="100" r="18" fill="#2C2C2C"/>
+                    <circle cx="76" cy="94" r="6" fill="#FFF"/>
+                    <circle cx="136" cy="94" r="6" fill="#FFF"/>
+                    <circle cx="70" cy="100" r="32" fill="none" stroke="#FFD54F" stroke-width="4"/>
+                    <circle cx="130" cy="100" r="32" fill="none" stroke="#FFD54F" stroke-width="4"/>
+                    <line x1="102" y1="100" x2="98" y2="100" stroke="#FFD54F" stroke-width="4"/>
+                    <path d="M90 120 Q100 135 110 120 Q100 125 90 120" fill="#FF8C42"/>
+                    <ellipse cx="55" cy="55" rx="20" ry="25" fill="#8B7355"/>
+                    <ellipse cx="145" cy="55" rx="20" ry="25" fill="#8B7355"/>
+                    <ellipse cx="55" cy="50" rx="10" ry="15" fill="#6B5344"/>
+                    <ellipse cx="145" cy="50" rx="10" ry="15" fill="#6B5344"/>
+                    <ellipse cx="35" cy="140" rx="20" ry="40" fill="#8B7355"/>
+                    <ellipse cx="165" cy="140" rx="20" ry="40" fill="#8B7355"/>
+                    <ellipse cx="75" cy="200" rx="15" ry="10" fill="#FF8C42"/>
+                    <ellipse cx="125" cy="200" rx="15" ry="10" fill="#FF8C42"/>
+                    <ellipse cx="100" cy="35" rx="25" ry="8" fill="#81C784"/>
+                    <rect x="80" y="10" width="40" height="28" fill="#81C784"/>
+                    <circle cx="100" cy="8" r="8" fill="#FFB74D"/>
+                </svg>
+            </div>
+            <button class="btn btn-primary" id="start-btn">Начать игру</button>
+        </div>
+        
+        <!-- Game Area -->
+        <div id="game-area"></div>
+        
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen">
+            <div class="results-container">
+                <h2 class="results-title">Отлично!</h2>
+                <div class="results-score" id="final-score">0</div>
+                <div class="results-stars" id="results-stars"></div>
+                <div class="results-breakdown" id="results-breakdown"></div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="restart-btn">Играть снова</button>
+                    <button class="btn btn-secondary" id="teacher-btn">Отчёт учителя</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Teacher Report Modal -->
+    <div id="teacher-report">
+        <div class="report-content">
+            <div class="report-header">
+                <h2 class="report-title">Отчёт учителя</h2>
+                <button class="close-btn" id="close-report">&times;</button>
+            </div>
+            <div class="report-section">
+                <h3>Общие результаты</h3>
+                <table class="report-table" id="report-summary">
+                    <tr><th>Показатель</th><th>Значение</th></tr>
+                </table>
+            </div>
+            <div class="report-section">
+                <h3>По мини-играм</h3>
+                <table class="report-table" id="report-details">
+                    <tr><th>Мини-игра</th><th>Точность</th><th>Время</th><th>Подсказки</th></tr>
+                </table>
+            </div>
+            <div class="report-section">
+                <h3>Рекомендации</h3>
+                <p id="report-recommendation"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== GAME DATA ====================
+        const GAMES_DATA = {
+            sorting: {
+                pairs: [
+                    { word: 'большой', type: 'synonym', pair: 'огромный' },
+                    { word: 'грустный', type: 'antonym', pair: 'весёлый' },
+                    { word: 'быстрый', type: 'synonym', pair: 'стремительный' },
+                    { word: 'тёмный', type: 'antonym', pair: 'светлый' },
+                    { word: 'смелый', type: 'synonym', pair: 'храбрый' },
+                    { word: 'старый', type: 'antonym', pair: 'молодой' },
+                    { word: 'красивый', type: 'synonym', pair: 'прекрасный' },
+                    { word: 'горячий', type: 'antonym', pair: 'холодный' }
+                ]
+            },
+            bridge: {
+                tasks: [
+                    { word: 'быстрый', options: ['медленный', 'стремительный', 'тихий'], correct: 1, pair: ['быстрый', 'стремительный'] },
+                    { word: 'большой', options: ['огромный', 'маленький', 'крупный'], correct: 0, pair: ['большой', 'огромный'] },
+                    { word: 'весёлый', options: ['радостный', 'грустный', 'смешной'], correct: 0, pair: ['весёлый', 'радостный'] },
+                    { word: 'умный', options: ['мудрый', 'глупый', 'талантливый'], correct: 0, pair: ['умный', 'мудрый'] },
+                    { word: 'добрый', options: ['злой', 'хороший', 'отзывчивый'], correct: 2, pair: ['добрый', 'отзывчивый'] }
+                ]
+            },
+            lightning: {
+                tasks: [
+                    { word: 'большой', options: ['маленький', 'огромный', 'средний', 'крупный'], correct: 0 },
+                    { word: 'горячий', options: ['тёплый', 'огненный', 'холодный', 'жаркий'], correct: 2 },
+                    { word: 'весёлый', options: ['смешной', 'грустный', 'радостный', 'счастливый'], correct: 1 },
+                    { word: 'быстрый', options: ['стремительный', 'медленный', 'тихий', 'шустрый'], correct: 1 },
+                    { word: 'тёмный', options: ['чёрный', 'мрачный', 'ночной', 'светлый'], correct: 3 },
+                    { word: 'старый', options: ['древний', 'новый', 'молодой', 'ветхий'], correct: 1 }
+                ]
+            },
+            song: {
+                pairs: [
+                    { word1: 'храбрый', word2: 'смелый', type: 'synonym' },
+                    { word1: 'трудный', word2: 'лёгкий', type: 'antonym' },
+                    { word1: 'красивый', word2: 'прекрасный', type: 'synonym' },
+                    { word1: 'громкий', word2: 'тихий', type: 'antonym' },
+                    { word1: 'мудрый', word2: 'умный', type: 'synonym' },
+                    { word1: 'высокий', word2: 'низкий', type: 'antonym' }
+                ]
+            },
+            tree: {
+                sentences: [
+                    { text: 'Мальчик бежал {быстро}', highlight: 'быстро', options: ['медленно', 'стремительно'], types: ['antonym', 'synonym'] },
+                    { text: 'Девочка была {весёлая}', highlight: 'весёлая', options: ['грустная', 'радостная'], types: ['antonym', 'synonym'] },
+                    { text: 'Солнце было {яркое}', highlight: 'яркое', options: ['тусклое', 'светлое'], types: ['antonym', 'synonym'] },
+                    { text: 'Задача была {трудная}', highlight: 'трудная', options: ['лёгкая', 'сложная'], types: ['antonym', 'synonym'] },
+                    { text: 'Кот был {большой}', highlight: 'большой', options: ['маленький', 'огромный'], types: ['antonym', 'synonym'] }
+                ]
+            },
+            memory: {
+                pairs: [
+                    { word1: 'добрый', word2: 'отзывчивый', type: 'synonym' },
+                    { word1: 'громкий', word2: 'тихий', type: 'antonym' },
+                    { word1: 'чистый', word2: 'грязный', type: 'antonym' },
+                    { word1: 'холодный', word2: 'ледяной', type: 'synonym' },
+                    { word1: 'широкий', word2: 'узкий', type: 'antonym' },
+                    { word1: 'богатый', word2: 'бедный', type: 'antonym' }
+                ]
+            }
+        };
+
+        // ==================== GAME STATE ====================
+        let gameState = {
+            currentGame: 0,
+            totalGames: 6,
+            score: 0,
+            maxScore: 0,
+            soundEnabled: true,
+            metrics: {
+                startTime: 0,
+                gameResults: []
+            }
+        };
+
+        // ==================== AUDIO SYSTEM ====================
+        const AudioSystem = {
+            ctx: null,
+            init() {
+                if (this.ctx) return;
+                this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+            },
+            resume() {
+                if (this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            },
+            play(type) {
+                if (!gameState.soundEnabled || !this.ctx) return;
+                this.resume();
+                const now = this.ctx.currentTime;
+                const oscillator = this.ctx.createOscillator();
+                const gainNode = this.ctx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(this.ctx.destination);
+                
+                switch(type) {
+                    case 'success':
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(523, now);
+                        oscillator.frequency.setValueAtTime(659, now + 0.1);
+                        oscillator.frequency.setValueAtTime(784, now + 0.2);
+                        gainNode.gain.setValueAtTime(0.3, now);
+                        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                        oscillator.start(now);
+                        oscillator.stop(now + 0.4);
+                        break;
+                    case 'error':
+                        oscillator.type = 'sawtooth';
+                        oscillator.frequency.setValueAtTime(200, now);
+                        oscillator.frequency.linearRampToValueAtTime(150, now + 0.2);
+                        gainNode.gain.setValueAtTime(0.2, now);
+                        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                        oscillator.start(now);
+                        oscillator.stop(now + 0.3);
+                        break;
+                    case 'click':
+                        oscillator.type = 'sine';
+                        oscillator.frequency.setValueAtTime(800, now);
+                        gainNode.gain.setValueAtTime(0.15, now);
+                        gainNode.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                        oscillator.start(now);
+                        oscillator.stop(now + 0.05);
+                        break;
+                    case 'win':
+                        const notes = [523, 587, 659, 784, 880, 1047];
+                        notes.forEach((freq, i) => {
+                            const osc = this.ctx.createOscillator();
+                            const gain = this.ctx.createGain();
+                            osc.connect(gain);
+                            gain.connect(this.ctx.destination);
+                            osc.type = 'sine';
+                            osc.frequency.setValueAtTime(freq, now + i * 0.1);
+                            gain.gain.setValueAtTime(0.2, now + i * 0.1);
+                            gain.gain.linearRampToValueAtTime(0.01, now + i * 0.1 + 0.15);
+                            osc.start(now + i * 0.1);
+                            osc.stop(now + i * 0.1 + 0.15);
+                        });
+                        break;
+                }
+            },
+            speak(text) {
+                if (!gameState.soundEnabled || !('speechSynthesis' in window)) return;
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ru-RU';
+                utterance.rate = 0.9;
+                utterance.pitch = 1.1;
+                speechSynthesis.cancel();
+                speechSynthesis.speak(utterance);
+            }
+        };
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function createParticles(x, y, color, count = 10) {
+            const container = document.getElementById('game-container');
+            for (let i = 0; i < count; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                particle.style.width = Math.random() * 10 + 5 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.background = color;
+                particle.style.transform = `translate(${(Math.random() - 0.5) * 100}px, 0)`;
+                container.appendChild(particle);
+                setTimeout(() => particle.remove(), 2000);
+            }
+        }
+
+        function showFeedback(correct, text, explanation, callback) {
+            const overlay = document.createElement('div');
+            overlay.className = 'feedback-overlay active';
+            overlay.innerHTML = `
+                <div class="feedback-box">
+                    <svg class="feedback-icon" viewBox="0 0 60 60">
+                        ${correct ? 
+                            '<circle cx="30" cy="30" r="28" fill="#66BB6A"/><path d="M20 30 L27 37 L40 23" stroke="#FFF" stroke-width="4" fill="none" stroke-linecap="round"/>' :
+                            '<circle cx="30" cy="30" r="28" fill="#EF5350"/><path d="M22 22 L38 38 M38 22 L22 38" stroke="#FFF" stroke-width="4" stroke-linecap="round"/>'
+                        }
+                    </svg>
+                    <div class="feedback-text">${text}</div>
+                    ${explanation ? `<div class="feedback-explanation">${explanation}</div>` : ''}
+                    <button class="btn btn-${correct ? 'secondary' : 'primary'}" style="padding: 10px 30px; font-size: 16px;">Продолжить</button>
+                </div>
+            `;
+            document.getElementById('game-container').appendChild(overlay);
+            const btn = overlay.querySelector('button');
+            btn.addEventListener('click', () => {
+                overlay.remove();
+                if (callback) callback();
+            });
+            AudioSystem.play(correct ? 'success' : 'error');
+        }
+
+        // ==================== SCREEN MANAGEMENT ====================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            if (screenId) {
+                const screen = document.getElementById(screenId);
+                if (screen) screen.classList.add('active');
+            }
+        }
+
+        function updateHUD() {
+            const dots = document.getElementById('progress-dots');
+            dots.innerHTML = '';
+            for (let i = 0; i < gameState.totalGames; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (i < gameState.currentGame) dot.classList.add('completed');
+                if (i === gameState.currentGame) dot.classList.add('current');
+                dots.appendChild(dot);
+            }
+            document.getElementById('score-display').textContent = gameState.score;
+        }
+
+        // ==================== MINI-GAME 1: SORTING ====================
+        function startSortingGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const instruction = document.createElement('div');
+            instruction.className = 'game-instruction';
+            instruction.innerHTML = `
+                <h2>Собери листья-друзья</h2>
+                <p>Перетащи листья на нужную полянку: синонимы или антонимы</p>
+                <button class="btn btn-secondary" style="margin-top: 15px; padding: 10px 25px;">Понятно!</button>
+            `;
+            gameArea.appendChild(instruction);
+            instruction.querySelector('button').addEventListener('click', () => {
+                instruction.remove();
+                runSortingGame();
+            });
+        }
+
+        function runSortingGame() {
+            const gameArea = document.getElementById('game-area');
+            const pairs = shuffleArray(GAMES_DATA.sorting.pairs).slice(0, 6);
+            let sorted = 0;
+            let correct = 0;
+            const startTime = Date.now();
+            
+            const zoneSynonym = document.createElement('div');
+            zoneSynonym.className = 'drop-zone zone-synonym';
+            zoneSynonym.innerHTML = '<div class="drop-zone-label" style="color: #388E3C;">СИНОНИМЫ</div>';
+            gameArea.appendChild(zoneSynonym);
+            
+            const zoneAntonym = document.createElement('div');
+            zoneAntonym.className = 'drop-zone zone-antonym';
+            zoneAntonym.innerHTML = '<div class="drop-zone-label" style="color: #E65100;">АНТОНИМЫ</div>';
+            gameArea.appendChild(zoneAntonym);
+            
+            const leaves = [];
+            function positionLeaf(leaf, index) {
+                const angle = (index / pairs.length) * Math.PI * 2;
+                const radius = Math.min(gameArea.offsetWidth, gameArea.offsetHeight) * 0.15;
+                const centerX = gameArea.offsetWidth / 2;
+                const centerY = gameArea.offsetHeight / 2;
+                leaf.style.left = (centerX + Math.cos(angle) * radius - 50) + 'px';
+                leaf.style.top = (centerY + Math.sin(angle) * radius + 50) + 'px';
+            }
+            
+            pairs.forEach((pair, i) => {
+                const leaf = document.createElement('div');
+                leaf.className = `leaf ${pair.type === 'synonym' ? 'leaf-synonym' : 'leaf-antonym'}`;
+                leaf.textContent = pair.word;
+                leaf.dataset.type = pair.type;
+                leaf.dataset.index = i;
+                positionLeaf(leaf, i);
+                gameArea.appendChild(leaf);
+                leaves.push({ element: leaf, sorted: false, pair });
+            });
+            
+            let draggedLeaf = null;
+            let dragOffsetX = 0, dragOffsetY = 0;
+            
+            function handleDragStart(e) {
+                const touch = e.touches ? e.touches[0] : e;
+                const leaf = e.target.closest('.leaf');
+                if (!leaf) return;
+                e.preventDefault();
+                draggedLeaf = leaf;
+                draggedLeaf.classList.add('dragging');
+                const rect = leaf.getBoundingClientRect();
+                dragOffsetX = touch.clientX - rect.left;
+                dragOffsetY = touch.clientY - rect.top;
+                leaves.forEach(l => l.element.style.zIndex = '10');
+                draggedLeaf.style.zIndex = '100';
+            }
+            
+            function handleDragMove(e) {
+                if (!draggedLeaf) return;
+                e.preventDefault();
+                const touch = e.touches ? e.touches[0] : e;
+                const x = touch.clientX - dragOffsetX;
+                const y = touch.clientY - dragOffsetY;
+                draggedLeaf.style.left = x + 'px';
+                draggedLeaf.style.top = y + 'px';
+                const leafRect = draggedLeaf.getBoundingClientRect();
+                const synonymRect = zoneSynonym.getBoundingClientRect();
+                const antonymRect = zoneAntonym.getBoundingClientRect();
+                zoneSynonym.classList.remove('highlight');
+                zoneAntonym.classList.remove('highlight');
+                if (leafRect.left < synonymRect.right && leafRect.right > synonymRect.left &&
+                    leafRect.top < synonymRect.bottom && leafRect.bottom > synonymRect.top) {
+                    zoneSynonym.classList.add('highlight');
+                }
+                if (leafRect.left < antonymRect.right && leafRect.right > antonymRect.left &&
+                    leafRect.top < antonymRect.bottom && leafRect.bottom > antonymRect.top) {
+                    zoneAntonym.classList.add('highlight');
+                }
+            }
+            
+            function handleDragEnd(e) {
+                if (!draggedLeaf) return;
+                draggedLeaf.classList.remove('dragging');
+                zoneSynonym.classList.remove('highlight');
+                zoneAntonym.classList.remove('highlight');
+                const leafRect = draggedLeaf.getBoundingClientRect();
+                const synonymRect = zoneSynonym.getBoundingClientRect();
+                const antonymRect = zoneAntonym.getBoundingClientRect();
+                const leafData = leaves.find(l => l.element === draggedLeaf);
+                const droppedInSynonym = leafRect.left < synonymRect.right && leafRect.right > synonymRect.left &&
+                                         leafRect.top < synonymRect.bottom && leafRect.bottom > synonymRect.top;
+                const droppedInAntonym = leafRect.left < antonymRect.right && leafRect.right > antonymRect.left &&
+                                         leafRect.top < antonymRect.bottom && leafRect.bottom > antonymRect.top;
+                
+                if ((droppedInSynonym || droppedInAntonym) && leafData && !leafData.sorted) {
+                    const dropType = droppedInSynonym ? 'synonym' : 'antonym';
+                    if (leafData.pair.type === dropType) {
+                        correct++;
+                        gameState.score += 10;
+                        updateHUD();
+                        AudioSystem.play('success');
+                        const zone = droppedInSynonym ? zoneSynonym : zoneAntonym;
+                        const zoneRect = zone.getBoundingClientRect();
+                        draggedLeaf.style.left = (zoneRect.left + 20 + (sorted % 3) * 80) + 'px';
+                        draggedLeaf.style.top = (zoneRect.top + 60 + Math.floor(sorted / 3) * 45) + 'px';
+                        draggedLeaf.style.cursor = 'default';
+                        draggedLeaf.style.pointerEvents = 'none';
+                        leafData.sorted = true;
+                        sorted++;
+                        createParticles(leafRect.left + leafRect.width/2, leafRect.top, '#66BB6A');
+                    } else {
+                        AudioSystem.play('error');
+                        positionLeaf(draggedLeaf, parseInt(draggedLeaf.dataset.index));
+                    }
+                } else if (leafData && !leafData.sorted) {
+                    positionLeaf(draggedLeaf, parseInt(draggedLeaf.dataset.index));
+                }
+                draggedLeaf = null;
+                if (sorted === pairs.length) {
+                    setTimeout(() => {
+                        gameState.metrics.gameResults.push({
+                            name: 'Сортировка листьев',
+                            correct: correct,
+                            total: pairs.length,
+                            time: Math.round((Date.now() - startTime) / 1000),
+                            hints: 0
+                        });
+                        showFeedback(true, `Отлично! ${correct} из ${pairs.length}`, 'Ты научился различать синонимы и антонимы!', nextGame);
+                    }, 500);
+                }
+            }
+            
+            gameArea.addEventListener('mousedown', handleDragStart);
+            gameArea.addEventListener('touchstart', handleDragStart, { passive: false });
+            document.addEventListener('mousemove', handleDragMove);
+            document.addEventListener('touchmove', handleDragMove, { passive: false });
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchend', handleDragEnd);
+        }
+
+        // ==================== MINI-GAME 2: BRIDGE ====================
+        function startBridgeGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const instruction = document.createElement('div');
+            instruction.className = 'game-instruction';
+            instruction.innerHTML = `
+                <h2>Построй мостик</h2>
+                <p>Выбери слово-синоним, чтобы построить мост через ручей</p>
+                <button class="btn btn-secondary" style="margin-top: 15px; padding: 10px 25px;">Понятно!</button>
+            `;
+            gameArea.appendChild(instruction);
+            instruction.querySelector('button').addEventListener('click', () => {
+                instruction.remove();
+                runBridgeGame();
+            });
+        }
+
+        function runBridgeGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const tasks = shuffleArray(GAMES_DATA.bridge.tasks);
+            let currentTask = 0;
+            let correct = 0;
+            const startTime = Date.now();
+            
+            function showTask() {
+                if (currentTask >= tasks.length) {
+                    gameState.metrics.gameResults.push({
+                        name: 'Мостик синонимов',
+                        correct: correct,
+                        total: tasks.length,
+                        time: Math.round((Date.now() - startTime) / 1000),
+                        hints: 0
+                    });
+                    showFeedback(true, `Мост построен! ${correct} из ${tasks.length}`, 'Ты отлично подбираешь синонимы!', nextGame);
+                    return;
+                }
+                const task = tasks[currentTask];
+                gameArea.innerHTML = `
+                    <div class="bridge-container">
+                        <div class="bridge-word">${task.word}</div>
+                        <div style="font-size: 18px; margin-bottom: 10px; color: #757575;">найди синоним</div>
+                        <div class="bridge-gap">
+                            ${Array(6).fill('<div class="bridge-plank"></div>').join('')}
+                        </div>
+                        <div class="bridge-options">
+                            ${task.options.map((opt, i) => `<button class="bridge-option" data-index="${i}">${opt}</button>`).join('')}
+                        </div>
+                    </div>
+                `;
+                const planks = gameArea.querySelectorAll('.bridge-plank');
+                planks.forEach((p, i) => setTimeout(() => p.classList.add('visible'), i * 100));
+                gameArea.querySelectorAll('.bridge-option').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const index = parseInt(btn.dataset.index);
+                        if (index === task.correct) {
+                            correct++;
+                            gameState.score += 15;
+                            updateHUD();
+                            AudioSystem.play('success');
+                            btn.style.background = '#66BB6A';
+                            btn.style.color = '#FFF';
+                            createParticles(btn.getBoundingClientRect().left + btn.offsetWidth/2, btn.getBoundingClientRect().top, '#66BB6A');
+                            setTimeout(() => { currentTask++; showTask(); }, 800);
+                        } else {
+                            AudioSystem.play('error');
+                            btn.style.background = '#EF5350';
+                            btn.style.color = '#FFF';
+                            setTimeout(() => { btn.style.background = '#FFF'; btn.style.color = '#424242'; }, 500);
+                        }
+                    });
+                });
+            }
+            showTask();
+        }
+
+        // ==================== MINI-GAME 3: LIGHTNING ====================
+        function startLightningGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const instruction = document.createElement('div');
+            instruction.className = 'game-instruction';
+            instruction.innerHTML = `
+                <h2>Молния противоположностей</h2>
+                <p>Найди антоним быстро! Успей до конца таймера</p>
+                <button class="btn btn-secondary" style="margin-top: 15px; padding: 10px 25px;">Понятно!</button>
+            `;
+            gameArea.appendChild(instruction);
+            instruction.querySelector('button').addEventListener('click', () => {
+                instruction.remove();
+                runLightningGame();
+            });
+        }
+
+        function runLightningGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const tasks = shuffleArray(GAMES_DATA.lightning.tasks);
+            let currentTask = 0;
+            let correct = 0;
+            const startTime = Date.now();
+            const taskTime = 8000;
+            let timerInterval = null;
+            
+            function showTask() {
+                if (currentTask >= tasks.length) {
+                    if (timerInterval) clearInterval(timerInterval);
+                    gameState.metrics.gameResults.push({
+                        name: 'Молния антонимов',
+                        correct: correct,
+                        total: tasks.length,
+                        time: Math.round((Date.now() - startTime) / 1000),
+                        hints: 0
+                    });
+                    showFeedback(true, `Отлично! ${correct} из ${tasks.length}`, 'Ты быстро находишь антонимы!', nextGame);
+                    return;
+                }
+                const task = tasks[currentTask];
+                let timeLeft = taskTime;
+                gameArea.innerHTML = `
+                    <div class="lightning-container">
+                        <div class="lightning-word">${task.word}</div>
+                        <div style="position: absolute; top: 35%; left: 50%; transform: translateX(-50%); font-size: 16px; color: #757575;">найди антоним</div>
+                        <div class="lightning-options">
+                            ${shuffleArray(task.options.map((opt, i) => ({ opt, originalIndex: i }))).map(item => `<button class="lightning-option" data-index="${item.originalIndex}">${item.opt}</button>`).join('')}
+                        </div>
+                        <div class="timer-bar"><div class="timer-fill" style="width: 100%"></div></div>
+                    </div>
+                `;
+                const timerFill = gameArea.querySelector('.timer-fill');
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    timeLeft -= 100;
+                    const percent = (timeLeft / taskTime) * 100;
+                    timerFill.style.width = Math.max(0, percent) + '%';
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        currentTask++;
+                        showTask();
+                    }
+                }, 100);
+                gameArea.querySelectorAll('.lightning-option').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        clearInterval(timerInterval);
+                        const index = parseInt(btn.dataset.index);
+                        if (index === task.correct) {
+                            correct++;
+                            gameState.score += 20;
+                            updateHUD();
+                            AudioSystem.play('success');
+                            btn.classList.add('correct');
+                            createParticles(btn.getBoundingClientRect().left + btn.offsetWidth/2, btn.getBoundingClientRect().top, '#66BB6A');
+                        } else {
+                            AudioSystem.play('error');
+                            btn.classList.add('wrong');
+                            gameArea.querySelectorAll('.lightning-option').forEach(b => {
+                                if (parseInt(b.dataset.index) === task.correct) b.classList.add('correct');
+                            });
+                        }
+                        setTimeout(() => { currentTask++; showTask(); }, 1000);
+                    });
+                });
+            }
+            showTask();
+        }
+
+        // ==================== MINI-GAME 4: SONG ====================
+        function startSongGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const instruction = document.createElement('div');
+            instruction.className = 'game-instruction';
+            instruction.innerHTML = `
+                <h2>Песенка пар слов</h2>
+                <p>Послушай пару слов и определи: это синонимы или антонимы?</p>
+                <button class="btn btn-secondary" style="margin-top: 15px; padding: 10px 25px;">Понятно!</button>
+            `;
+            gameArea.appendChild(instruction);
+            instruction.querySelector('button').addEventListener('click', () => {
+                instruction.remove();
+                runSongGame();
+            });
+        }
+
+        function runSongGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const pairs = shuffleArray(GAMES_DATA.song.pairs);
+            let currentPair = 0;
+            let correct = 0;
+            const startTime = Date.now();
+            
+            function showPair() {
+                if (currentPair >= pairs.length) {
+                    gameState.metrics.gameResults.push({
+                        name: 'Песенка пар',
+                        correct: correct,
+                        total: pairs.length,
+                        time: Math.round((Date.now() - startTime) / 1000),
+                        hints: 0
+                    });
+                    showFeedback(true, `Прекрасно! ${correct} из ${pairs.length}`, 'Ты научился слышать разницу между синонимами и антонимами!', nextGame);
+                    return;
+                }
+                const pair = pairs[currentPair];
+                gameArea.innerHTML = `
+                    <div class="song-container">
+                        <svg class="owl-speaker" viewBox="0 0 200 220">
+                            <ellipse cx="100" cy="130" rx="70" ry="80" fill="#8B7355"/>
+                            <ellipse cx="100" cy="130" rx="60" ry="70" fill="#C4A574"/>
+                            <ellipse cx="100" cy="150" rx="35" ry="45" fill="#E8DCC8"/>
+                            <circle cx="70" cy="100" r="28" fill="#FFF"/>
+                            <circle cx="130" cy="100" r="28" fill="#FFF"/>
+                            <circle cx="70" cy="100" r="18" fill="#2C2C2C"/>
+                            <circle cx="130" cy="100" r="18" fill="#2C2C2C"/>
+                            <circle cx="76" cy="94" r="6" fill="#FFF"/>
+                            <circle cx="136" cy="94" r="6" fill="#FFF"/>
+                            <circle cx="70" cy="100" r="32" fill="none" stroke="#FFD54F" stroke-width="4"/>
+                            <circle cx="130" cy="100" r="32" fill="none" stroke="#FFD54F" stroke-width="4"/>
+                            <line x1="102" y1="100" x2="98" y2="100" stroke="#FFD54F" stroke-width="4"/>
+                            <path d="M90 120 Q100 135 110 120 Q100 125 90 120" fill="#FF8C42"/>
+                            <ellipse cx="55" cy="55" rx="20" ry="25" fill="#8B7355"/>
+                            <ellipse cx="145" cy="55" rx="20" ry="25" fill="#8B7355"/>
+                        </svg>
+                        <button class="play-sound-btn" id="play-pair">Прослушать пару</button>
+                        <div style="font-size: 20px; margin-top: 20px; color: #757575;">Пара ${currentPair + 1} из ${pairs.length}</div>
+                        <div class="song-buttons">
+                            <button class="song-btn song-btn-synonym" data-type="synonym">Синонимы</button>
+                            <button class="song-btn song-btn-antonym" data-type="antonym">Антонимы</button>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('play-pair').addEventListener('click', () => AudioSystem.speak(`${pair.word1} и ${pair.word2}`));
+                gameArea.querySelectorAll('.song-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const type = btn.dataset.type;
+                        if (type === pair.type) {
+                            correct++;
+                            gameState.score += 15;
+                            updateHUD();
+                            AudioSystem.play('success');
+                            createParticles(btn.getBoundingClientRect().left + btn.offsetWidth/2, btn.getBoundingClientRect().top, type === 'synonym' ? '#66BB6A' : '#FFB74D');
+                        } else {
+                            AudioSystem.play('error');
+                        }
+                        currentPair++;
+                        setTimeout(showPair, 500);
+                    });
+                });
+            }
+            showPair();
+        }
+
+        // ==================== MINI-GAME 5: TREE ====================
+        function startTreeGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const instruction = document.createElement('div');
+            instruction.className = 'game-instruction';
+            instruction.innerHTML = `
+                <h2>Вырасти дерево предложений</h2>
+                <p>Замени выделенное слово: выбери синоним или антоним</p>
+                <button class="btn btn-secondary" style="margin-top: 15px; padding: 10px 25px;">Понятно!</button>
+            `;
+            gameArea.appendChild(instruction);
+            instruction.querySelector('button').addEventListener('click', () => {
+                instruction.remove();
+                runTreeGame();
+            });
+        }
+
+        function runTreeGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const sentences = shuffleArray(GAMES_DATA.tree.sentences);
+            let currentSentence = 0;
+            let correct = 0;
+            const startTime = Date.now();
+            
+            function showSentence() {
+                if (currentSentence >= sentences.length) {
+                    gameState.metrics.gameResults.push({
+                        name: 'Дерево предложений',
+                        correct: correct,
+                        total: sentences.length * 2,
+                        time: Math.round((Date.now() - startTime) / 1000),
+                        hints: 0
+                    });
+                    showFeedback(true, `Дерево выросло! ${correct} из ${sentences.length * 2}`, 'Ты умеешь использовать синонимы и антонимы в предложениях!', nextGame);
+                    return;
+                }
+                const sentence = sentences[currentSentence];
+                const textWithHighlight = sentence.text.replace(`{${sentence.highlight}}`, `<span class="highlight-word">${sentence.highlight}</span>`);
+                gameArea.innerHTML = `
+                    <div class="tree-container">
+                        <div class="sentence-display"><div class="sentence-text">${textWithHighlight}</div></div>
+                        <div class="branch-options">
+                            <div style="font-size: 16px; margin-bottom: 10px; color: #757575;">Замени слово:</div>
+                            ${sentence.options.map((opt, i) => `<button class="branch-option" data-index="${i}" data-type="${sentence.types[i]}">${opt}<span style="font-size: 12px; display: block; color: #757575;">(${sentence.types[i] === 'synonym' ? 'синоним' : 'антоним'})</span></button>`).join('')}
+                        </div>
+                        <div class="tree-trunk"></div>
+                    </div>
+                `;
+                let answered = 0;
+                gameArea.querySelectorAll('.branch-option').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        correct++;
+                        gameState.score += 10;
+                        updateHUD();
+                        AudioSystem.play('success');
+                        btn.style.background = '#66BB6A';
+                        btn.style.color = '#FFF';
+                        btn.disabled = true;
+                        const newIndex = sentence.text.replace(`{${sentence.highlight}}`, sentence.options[parseInt(btn.dataset.index)]);
+                        AudioSystem.speak(newIndex);
+                        createParticles(btn.getBoundingClientRect().left + btn.offsetWidth/2, btn.getBoundingClientRect().top, '#66BB6A');
+                        answered++;
+                        if (answered >= 2) setTimeout(() => { currentSentence++; showSentence(); }, 1500);
+                    });
+                });
+            }
+            showSentence();
+        }
+
+        // ==================== MINI-GAME 6: MEMORY ====================
+        function startMemoryGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const instruction = document.createElement('div');
+            instruction.className = 'game-instruction';
+            instruction.innerHTML = `
+                <h2>Парад Слов</h2>
+                <p>Найди все пары! Запоминай расположение слов</p>
+                <button class="btn btn-secondary" style="margin-top: 15px; padding: 10px 25px;">Понятно!</button>
+            `;
+            gameArea.appendChild(instruction);
+            instruction.querySelector('button').addEventListener('click', () => {
+                instruction.remove();
+                runMemoryGame();
+            });
+        }
+
+        function runMemoryGame() {
+            const gameArea = document.getElementById('game-area');
+            gameArea.innerHTML = '';
+            const pairs = shuffleArray(GAMES_DATA.memory.pairs).slice(0, 6);
+            const startTime = Date.now();
+            let matchedPairs = 0;
+            let attempts = 0;
+            let correctAttempts = 0;
+            const cards = [];
+            pairs.forEach((pair, i) => {
+                cards.push({ word: pair.word1, pairId: i, type: pair.type });
+                cards.push({ word: pair.word2, pairId: i, type: pair.type });
+            });
+            const shuffledCards = shuffleArray(cards);
+            let flippedCards = [];
+            let canFlip = true;
+            const grid = document.createElement('div');
+            grid.className = 'memory-container';
+            grid.innerHTML = `
+                <div class="memory-grid">
+                    ${shuffledCards.map((card, i) => `<div class="memory-card" data-index="${i}" data-pair="${card.pairId}" data-type="${card.type}"><div class="memory-card-inner"><div class="memory-card-front">?</div><div class="memory-card-back ${card.type}">${card.word}</div></div></div>`).join('')}
+                </div>
+                <div class="memory-legend"><div class="legend-item"><div class="legend-dot synonym"></div><span>Синонимы</span></div><div class="legend-item"><div class="legend-dot antonym"></div><span>Антонимы</span></div></div>
+            `;
+            gameArea.appendChild(grid);
+            grid.querySelectorAll('.memory-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    if (!canFlip || card.classList.contains('flipped') || card.classList.contains('matched')) return;
+                    card.classList.add('flipped');
+                    flippedCards.push(card);
+                    AudioSystem.play('click');
+                    if (flippedCards.length === 2) {
+                        canFlip = false;
+                        attempts++;
+                        const [card1, card2] = flippedCards;
+                        if (card1.dataset.pair === card2.dataset.pair) {
+                            correctAttempts++;
+                            matchedPairs++;
+                            gameState.score += 25;
+                            updateHUD();
+                            AudioSystem.play('success');
+                            card1.classList.add('matched');
+                            card2.classList.add('matched');
+                            createParticles(card1.getBoundingClientRect().left + card1.offsetWidth/2, card1.getBoundingClientRect().top, '#66BB6A');
+                            createParticles(card2.getBoundingClientRect().left + card2.offsetWidth/2, card2.getBoundingClientRect().top, '#66BB6A');
+                            flippedCards = [];
+                            canFlip = true;
+                            if (matchedPairs === pairs.length) {
+                                setTimeout(() => {
+                                    gameState.metrics.gameResults.push({
+                                        name: 'Парад слов',
+                                        correct: correctAttempts,
+                                        total: attempts,
+                                        time: Math.round((Date.now() - startTime) / 1000),
+                                        hints: 0
+                                    });
+                                    showFeedback(true, `Все пары найдены!`, `Точность: ${Math.round((correctAttempts / attempts) * 100)}%`, () => { showResults(); });
+                                }, 500);
+                            }
+                        } else {
+                            AudioSystem.play('error');
+                            setTimeout(() => {
+                                card1.classList.remove('flipped');
+                                card2.classList.remove('flipped');
+                                flippedCards = [];
+                                canFlip = true;
+                            }, 1000);
+                        }
+                    }
+                });
+            });
+        }
+
+        // ==================== RESULTS ====================
+        function showResults() {
+            const results = gameState.metrics.gameResults;
+            const totalCorrect = results.reduce((sum, r) => sum + r.correct, 0);
+            const totalTasks = results.reduce((sum, r) => sum + r.total, 0);
+            const totalTime = results.reduce((sum, r) => sum + r.time, 0);
+            const accuracy = Math.round((totalCorrect / totalTasks) * 100);
+            let stars = '';
+            if (accuracy >= 90) stars = '★★★';
+            else if (accuracy >= 70) stars = '★★☆';
+            else stars = '★☆☆';
+            document.getElementById('final-score').textContent = gameState.score;
+            document.getElementById('results-stars').textContent = stars;
+            const breakdown = document.getElementById('results-breakdown');
+            breakdown.innerHTML = results.map(r => `<div class="breakdown-item"><span class="breakdown-name">${r.name}</span><span class="breakdown-score">${r.correct}/${r.total}</span></div>`).join('');
+            showScreen('results-screen');
+            document.getElementById('hud').classList.remove('active');
+            AudioSystem.play('win');
+        }
+
+        function showTeacherReport() {
+            const results = gameState.metrics.gameResults;
+            const totalCorrect = results.reduce((sum, r) => sum + r.correct, 0);
+            const totalTasks = results.reduce((sum, r) => sum + r.total, 0);
+            const totalTime = results.reduce((sum, r) => sum + r.time, 0);
+            const accuracy = Math.round((totalCorrect / totalTasks) * 100);
+            document.getElementById('report-summary').innerHTML = `<tr><th>Показатель</th><th>Значение</th></tr><tr><td>Общий счёт</td><td>${gameState.score}</td></tr><tr><td>Точность</td><td>${accuracy}%</td></tr><tr><td>Время игры</td><td>${totalTime} сек</td></tr><tr><td>Мини-игр пройдено</td><td>${results.length}</td></tr>`;
+            document.getElementById('report-details').innerHTML = `<tr><th>Мини-игра</th><th>Точность</th><th>Время</th><th>Подсказки</th></tr>${results.map(r => `<tr><td>${r.name}</td><td>${Math.round((r.correct / r.total) * 100)}%</td><td>${r.time} сек</td><td>${r.hints}</td></tr>`).join('')}`;
+            const recommendations = [];
+            results.forEach(r => {
+                const acc = (r.correct / r.total) * 100;
+                if (acc < 70) {
+                    if (r.name.includes('Сортировка')) recommendations.push('Повторить понятия синонимов и антонимов');
+                    else if (r.name.includes('Мостик')) recommendations.push('Тренировать подбор синонимов');
+                    else if (r.name.includes('Молния')) recommendations.push('Тренировать подбор антонимов (без ограничения времени)');
+                }
+            });
+            if (recommendations.length === 0) recommendations.push('Отличное понимание темы! Можно переходить к следующему разделу.');
+            document.getElementById('report-recommendation').textContent = recommendations.join('. ') + '.';
+            document.getElementById('teacher-report').classList.add('active');
+        }
+
+        const games = [startSortingGame, startBridgeGame, startLightningGame, startSongGame, startTreeGame, startMemoryGame];
+
+        function nextGame() {
+            gameState.currentGame++;
+            if (gameState.currentGame < games.length) {
+                updateHUD();
+                games[gameState.currentGame]();
+            } else {
+                showResults();
+            }
+        }
+
+        function startGame() {
+            gameState.currentGame = 0;
+            gameState.score = 0;
+            gameState.metrics.startTime = Date.now();
+            gameState.metrics.gameResults = [];
+            AudioSystem.init();
+            document.getElementById('hud').classList.add('active');
+            updateHUD();
+            showScreen(null);
+            games[0]();
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        document.getElementById('start-btn').addEventListener('click', () => {
+            AudioSystem.play('click');
+            startGame();
+        });
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            AudioSystem.play('click');
+            restartGame();
+        });
+        document.getElementById('teacher-btn').addEventListener('click', () => {
+            showTeacherReport();
+        });
+        document.getElementById('close-report').addEventListener('click', () => {
+            document.getElementById('teacher-report').classList.remove('active');
+        });
+        document.getElementById('sound-toggle').addEventListener('click', () => {
+            gameState.soundEnabled = !gameState.soundEnabled;
+            const waves = document.getElementById('sound-waves');
+            if (waves) waves.style.display = gameState.soundEnabled ? 'block' : 'none';
+        });
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
