@@ -1,0 +1,2071 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Академия Волшебных Действий</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&family=Unbounded:wght@700;900&display=swap');
+
+  :root {
+    --bg: #2a1f5e;
+    --bg2: #1a1240;
+    --lavender: #c4b8e8;
+    --lavender2: #9b8fd4;
+    --amber: #e8a832;
+    --amber2: #f5c84a;
+    --panel: rgba(74,95,165,0.35);
+    --panel2: rgba(74,95,165,0.55);
+    --text: #f0ecff;
+    --textdark: #2a2050;
+    --correct: #52c97a;
+    --wrong: #c4614a;
+    --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg2);
+    color: var(--text);
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #app {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* ===== ANIMATED BACKGROUND ===== */
+  #bg-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    position: absolute;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+    padding: 20px;
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ===== HUD ===== */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background: rgba(26,18,64,0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid rgba(196,184,232,0.2);
+    transform: translateY(-100%);
+    transition: transform 0.5s ease;
+  }
+  #hud.visible { transform: translateY(0); }
+
+  .hud-pages {
+    display: flex;
+    gap: 6px;
+  }
+  .hud-page {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: rgba(196,184,232,0.2);
+    border: 2px solid rgba(196,184,232,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .hud-page.done {
+    background: var(--amber);
+    border-color: var(--amber2);
+    animation: pageDone 0.5s ease;
+  }
+  .hud-page.current {
+    background: rgba(232,168,50,0.3);
+    border-color: var(--amber);
+    box-shadow: 0 0 12px rgba(232,168,50,0.5);
+  }
+  @keyframes pageDone {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.4); }
+    100% { transform: scale(1); }
+  }
+
+  .hud-lives {
+    display: flex;
+    gap: 5px;
+  }
+  .life {
+    font-size: 20px;
+    transition: all 0.3s ease;
+  }
+  .life.lost {
+    opacity: 0.25;
+    filter: grayscale(1);
+    transform: scale(0.8);
+  }
+
+  .hud-score {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 14px;
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  /* ===== START SCREEN ===== */
+  #screen-start .title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(22px, 5vw, 42px);
+    font-weight: 900;
+    text-align: center;
+    line-height: 1.2;
+    color: var(--amber2);
+    text-shadow: 0 0 30px rgba(232,168,50,0.6), 0 4px 0 rgba(0,0,0,0.3);
+    margin-bottom: 8px;
+    animation: titleFloat 3s ease-in-out infinite;
+  }
+  @keyframes titleFloat {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .mascot-container {
+    position: relative;
+    margin: 10px 0;
+  }
+  .mascot {
+    font-size: clamp(80px, 15vw, 120px);
+    display: block;
+    animation: mascotBob 2s ease-in-out infinite;
+    filter: drop-shadow(0 8px 20px rgba(0,0,0,0.4));
+    cursor: pointer;
+  }
+  @keyframes mascotBob {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-12px) rotate(3deg); }
+  }
+
+  .bubble {
+    position: absolute;
+    top: -15px; right: -20px;
+    background: white;
+    color: var(--textdark);
+    border-radius: 16px 16px 16px 4px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: var(--shadow);
+    animation: bubblePop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    transform-origin: bottom left;
+  }
+  @keyframes bubblePop {
+    0% { transform: scale(0); }
+    100% { transform: scale(1); }
+  }
+
+  .subtitle {
+    font-size: clamp(13px, 2.5vw, 17px);
+    text-align: center;
+    color: var(--lavender);
+    max-width: 420px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--amber), var(--amber2));
+    color: var(--textdark);
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(14px, 3vw, 18px);
+    font-weight: 700;
+    border: none;
+    border-radius: 20px;
+    padding: 14px 36px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(232,168,50,0.5), 0 3px 0 rgba(0,0,0,0.2);
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.4s;
+  }
+  .btn-primary:hover::after { left: 100%; }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(232,168,50,0.6), 0 3px 0 rgba(0,0,0,0.2); }
+  .btn-primary:active { transform: translateY(0px); }
+
+  .btn-secondary {
+    background: var(--panel2);
+    color: var(--lavender);
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    border: 2px solid rgba(196,184,232,0.3);
+    border-radius: 14px;
+    padding: 10px 24px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn-secondary:hover { background: rgba(74,95,165,0.7); border-color: var(--lavender2); }
+
+  /* ===== GAME SCREENS ===== */
+  .game-panel {
+    background: var(--panel);
+    border: 2px solid rgba(196,184,232,0.25);
+    border-radius: 28px;
+    padding: clamp(16px, 3vw, 28px);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,0.1);
+    width: 100%;
+    max-width: 680px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  .game-panel::-webkit-scrollbar { width: 4px; }
+  .game-panel::-webkit-scrollbar-thumb { background: var(--lavender2); border-radius: 4px; }
+
+  .game-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(16px, 3.5vw, 22px);
+    font-weight: 700;
+    text-align: center;
+    color: var(--amber2);
+    margin-bottom: 6px;
+  }
+  .game-instruction {
+    text-align: center;
+    font-size: clamp(13px, 2.5vw, 16px);
+    color: var(--lavender);
+    margin-bottom: 16px;
+    line-height: 1.4;
+  }
+
+  /* GAME 1 - Пузырьки */
+  .bubbles-area {
+    position: relative;
+    height: 260px;
+    overflow: hidden;
+    border-radius: 16px;
+    background: rgba(26,18,64,0.4);
+    border: 1px solid rgba(196,184,232,0.15);
+  }
+  .word-bubble {
+    position: absolute;
+    background: linear-gradient(135deg, rgba(74,95,165,0.8), rgba(155,143,212,0.6));
+    border: 2px solid rgba(196,184,232,0.4);
+    border-radius: 50px;
+    padding: 10px 20px;
+    font-size: clamp(15px, 3vw, 19px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    animation: bubbleFloat linear infinite;
+  }
+  .word-bubble:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 24px rgba(196,184,232,0.4);
+  }
+  .word-bubble.correct-hit {
+    animation: correctBubble 0.5s ease forwards !important;
+    pointer-events: none;
+  }
+  .word-bubble.wrong-hit {
+    animation: wrongBubble 0.4s ease forwards !important;
+    pointer-events: none;
+  }
+  @keyframes bubbleFloat {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+    100% { transform: translateY(0); }
+  }
+  @keyframes correctBubble {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); background: linear-gradient(135deg, rgba(82,201,122,0.9), rgba(100,220,140,0.8)); }
+    100% { transform: scale(0) translateY(-40px); opacity: 0; }
+  }
+  @keyframes wrongBubble {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-8px); background: rgba(196,97,74,0.6); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-5px); }
+    80% { transform: translateX(5px); }
+    100% { transform: translateX(0); }
+  }
+
+  .cauldron {
+    text-align: center;
+    font-size: 48px;
+    margin-top: 10px;
+    position: relative;
+    animation: cauldronBubble 1.5s ease-in-out infinite;
+  }
+  @keyframes cauldronBubble {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.05); filter: drop-shadow(0 0 15px rgba(82,201,122,0.5)); }
+  }
+  .cauldron-count {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 13px;
+    color: var(--correct);
+    margin-top: 4px;
+  }
+
+  /* GAME 2 - Вопросы */
+  .question-word {
+    text-align: center;
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(24px, 6vw, 42px);
+    font-weight: 900;
+    color: var(--amber2);
+    margin: 20px 0;
+    text-shadow: 0 0 20px rgba(232,168,50,0.4);
+    animation: wordAppear 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes wordAppear {
+    0% { transform: scale(0.5) rotate(-5deg); opacity: 0; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .q-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .q-option {
+    background: var(--panel2);
+    border: 2px solid rgba(196,184,232,0.25);
+    border-radius: 16px;
+    padding: 14px 20px;
+    font-size: clamp(14px, 2.5vw, 17px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+  }
+  .q-option:hover { border-color: var(--lavender2); background: rgba(155,143,212,0.3); transform: translateX(4px); }
+  .q-option.correct { background: rgba(82,201,122,0.25); border-color: var(--correct); color: #a0f0bc; animation: optionCorrect 0.4s ease; }
+  .q-option.wrong { background: rgba(196,97,74,0.25); border-color: var(--wrong); color: #f0b0a0; animation: optionWrong 0.4s ease; }
+  @keyframes optionCorrect {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+  }
+  @keyframes optionWrong {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  /* GAME 3 - Сортировка */
+  .sort-words-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    min-height: 60px;
+    padding: 10px;
+    border-radius: 12px;
+    background: rgba(26,18,64,0.3);
+    margin-bottom: 12px;
+  }
+  .sort-word {
+    background: linear-gradient(135deg, rgba(74,95,165,0.8), rgba(155,143,212,0.6));
+    border: 2px solid rgba(196,184,232,0.4);
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: clamp(14px, 2.5vw, 17px);
+    font-weight: 700;
+    cursor: grab;
+    transition: all 0.2s ease;
+    animation: wordIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes wordIn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .sort-word:hover { transform: scale(1.05) rotate(-2deg); box-shadow: 0 4px 16px rgba(155,143,212,0.4); }
+  .sort-word.dragging { opacity: 0.4; cursor: grabbing; }
+
+  .sort-baskets {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  .sort-basket {
+    border-radius: 16px;
+    padding: 10px;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    border: 2px dashed rgba(196,184,232,0.3);
+    transition: all 0.2s ease;
+    position: relative;
+  }
+  .sort-basket.over { border-style: solid; transform: scale(1.02); }
+  .sort-basket.basket-verb { background: rgba(82,201,122,0.1); border-color: rgba(82,201,122,0.4); }
+  .sort-basket.basket-verb.over { background: rgba(82,201,122,0.2); border-color: var(--correct); box-shadow: 0 0 20px rgba(82,201,122,0.3); }
+  .sort-basket.basket-not { background: rgba(196,97,74,0.1); border-color: rgba(196,97,74,0.4); }
+  .sort-basket.basket-not.over { background: rgba(196,97,74,0.2); border-color: var(--wrong); box-shadow: 0 0 20px rgba(196,97,74,0.3); }
+  .sort-basket.basket-unsure { background: rgba(232,168,50,0.1); border-color: rgba(232,168,50,0.4); }
+  .sort-basket.basket-unsure.over { background: rgba(232,168,50,0.2); border-color: var(--amber); box-shadow: 0 0 20px rgba(232,168,50,0.3); }
+  .basket-label {
+    font-size: clamp(10px, 2vw, 13px);
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .basket-icon { font-size: 24px; }
+  .sort-basket .sort-word {
+    font-size: 12px;
+    padding: 5px 10px;
+  }
+
+  /* GAME 4 - Машина времени */
+  .time-machine-visual {
+    text-align: center;
+    margin: 10px 0;
+    position: relative;
+  }
+  .time-machine-emoji {
+    font-size: 64px;
+    display: inline-block;
+    animation: machineRun 0.5s steps(2) infinite paused;
+    cursor: pointer;
+  }
+  .time-machine-emoji.running {
+    animation-play-state: running;
+  }
+  @keyframes machineRun {
+    0% { transform: rotate(-5deg) scale(1.02); }
+    100% { transform: rotate(5deg) scale(0.98); }
+  }
+
+  .time-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 10px 0;
+  }
+  .time-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 2px solid rgba(196,184,232,0.3);
+    background: transparent;
+    color: var(--lavender);
+    cursor: default;
+    transition: all 0.3s ease;
+  }
+  .time-tab.active { background: var(--amber); border-color: var(--amber2); color: var(--textdark); transform: scale(1.08); }
+
+  .verb-transform-display {
+    text-align: center;
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(18px, 4vw, 28px);
+    font-weight: 700;
+    color: var(--amber2);
+    margin: 12px 0;
+    min-height: 40px;
+    transition: all 0.3s ease;
+  }
+
+  .time-sentence {
+    text-align: center;
+    font-size: clamp(14px, 2.5vw, 17px);
+    color: var(--lavender);
+    margin: 8px 0 14px;
+    line-height: 1.6;
+  }
+  .time-sentence .blank {
+    display: inline-block;
+    width: 100px;
+    border-bottom: 3px solid var(--amber);
+    margin: 0 6px;
+  }
+
+  /* GAME 5 - Предложение */
+  .sentence-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(26,18,64,0.3);
+    margin-bottom: 12px;
+    min-height: 60px;
+  }
+  .sent-word {
+    background: linear-gradient(135deg, rgba(74,95,165,0.8), rgba(155,143,212,0.6));
+    border: 2px solid rgba(196,184,232,0.4);
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: clamp(14px, 2.5vw, 17px);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .sent-word:hover { transform: translateY(-3px); box-shadow: 0 4px 16px rgba(155,143,212,0.4); }
+  .sent-word.is-verb {
+    background: linear-gradient(135deg, rgba(82,201,122,0.5), rgba(100,220,140,0.4));
+    border-color: var(--correct);
+  }
+
+  .sentence-result {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(74,95,165,0.2);
+    border: 2px solid rgba(196,184,232,0.2);
+    min-height: 52px;
+    align-items: center;
+  }
+  .sentence-result.flying {
+    animation: sentenceFly 0.8s ease;
+  }
+  @keyframes sentenceFly {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.04) translateY(-4px); }
+    60% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+  }
+
+  .result-word {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: clamp(14px, 2.5vw, 17px);
+    font-weight: 700;
+    animation: wordSlotIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    background: rgba(155,143,212,0.25);
+    border: 1px solid rgba(196,184,232,0.25);
+  }
+  .result-word.verb-slot {
+    background: rgba(232,168,50,0.25);
+    border-color: var(--amber);
+    color: var(--amber2);
+  }
+  @keyframes wordSlotIn {
+    0% { transform: scale(0) translateY(-20px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .slot-empty {
+    padding: 6px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    color: rgba(196,184,232,0.4);
+    border: 2px dashed rgba(196,184,232,0.2);
+  }
+
+  /* GAME 6 - Допрос тролля */
+  .troll-container {
+    text-align: center;
+    margin: 10px 0;
+  }
+  .troll-emoji {
+    font-size: 64px;
+    display: inline-block;
+    animation: trollWiggle 3s ease-in-out infinite;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+  }
+  @keyframes trollWiggle {
+    0%,80%,100% { transform: rotate(0deg); }
+    85% { transform: rotate(-8deg); }
+    92% { transform: rotate(8deg); }
+  }
+
+  .troll-bubble {
+    background: rgba(255,255,255,0.95);
+    color: var(--textdark);
+    border-radius: 20px;
+    padding: 14px 18px;
+    font-size: clamp(14px, 2.5vw, 17px);
+    font-weight: 700;
+    margin: 10px auto;
+    max-width: 400px;
+    position: relative;
+    box-shadow: var(--shadow);
+    animation: bubbleIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes bubbleIn {
+    0% { transform: scale(0.7) translateY(10px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .troll-bubble::after {
+    content: '';
+    position: absolute;
+    top: -10px; left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: rgba(255,255,255,0.95);
+    border-top: none;
+  }
+
+  .troll-yn {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin: 10px 0;
+  }
+  .btn-yn {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(16px, 3vw, 22px);
+    font-weight: 700;
+    border: none;
+    border-radius: 20px;
+    padding: 14px 32px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  .btn-yn.yes { background: linear-gradient(135deg, #52c97a, #3da060); color: white; }
+  .btn-yn.no { background: linear-gradient(135deg, #c4614a, #a04838); color: white; }
+  .btn-yn:hover { transform: translateY(-3px) scale(1.05); }
+  .btn-yn:active { transform: scale(0.97); }
+
+  .troll-reasons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .reason-btn {
+    background: var(--panel2);
+    border: 2px solid rgba(196,184,232,0.25);
+    border-radius: 14px;
+    padding: 10px 16px;
+    font-size: clamp(13px, 2vw, 15px);
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text);
+    transition: all 0.2s ease;
+  }
+  .reason-btn:hover { border-color: var(--amber); background: rgba(232,168,50,0.15); }
+  .reason-btn.r-correct { border-color: var(--correct); background: rgba(82,201,122,0.15); color: #a0f0bc; }
+  .reason-btn.r-wrong { border-color: var(--wrong); background: rgba(196,97,74,0.15); color: #f0b0a0; }
+
+  /* ===== FEEDBACK TOAST ===== */
+  #feedback-toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(26,18,64,0.95);
+    border-radius: 20px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    z-index: 200;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.3s ease;
+    text-align: center;
+    max-width: 340px;
+    border: 2px solid rgba(196,184,232,0.2);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow);
+  }
+  #feedback-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  #feedback-toast.good { border-color: var(--correct); color: #a0f0bc; }
+  #feedback-toast.bad { border-color: var(--wrong); color: #f0b0a0; }
+  #feedback-toast.hint { border-color: var(--amber); color: var(--amber2); }
+
+  /* ===== PARTICLES ===== */
+  #particles-canvas {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    z-index: 150;
+    pointer-events: none;
+  }
+
+  /* ===== TRANSITION SCREEN ===== */
+  #transition-screen {
+    position: fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at center, rgba(74,95,165,0.98), rgba(26,18,64,0.99));
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  #transition-screen.show { opacity: 1; pointer-events: all; }
+
+  .transition-mascot { font-size: 80px; animation: mascotBob 2s ease-in-out infinite; }
+  .transition-text {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(18px, 4vw, 28px);
+    color: var(--amber2);
+    text-align: center;
+    margin: 16px;
+    max-width: 400px;
+    line-height: 1.4;
+  }
+  .transition-sub {
+    font-size: 15px;
+    color: var(--lavender);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  /* ===== FINAL SCREEN ===== */
+  #screen-final .big-emoji {
+    font-size: 80px;
+    animation: victoryBounce 1s ease-in-out infinite;
+  }
+  @keyframes victoryBounce {
+    0%,100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-15px) scale(1.08); }
+  }
+
+  .final-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(20px, 5vw, 36px);
+    font-weight: 900;
+    text-align: center;
+    color: var(--amber2);
+    text-shadow: 0 0 30px rgba(232,168,50,0.6);
+    margin: 12px 0 8px;
+    animation: titleFloat 3s ease-in-out infinite;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0;
+  }
+  .stat-card {
+    background: var(--panel2);
+    border-radius: 16px;
+    padding: 12px;
+    text-align: center;
+    border: 1px solid rgba(196,184,232,0.2);
+  }
+  .stat-val {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 24px;
+    color: var(--amber2);
+    font-weight: 700;
+  }
+  .stat-lbl {
+    font-size: 12px;
+    color: var(--lavender);
+    margin-top: 2px;
+  }
+
+  /* ===== TEACHER REPORT ===== */
+  #report-panel {
+    display: none;
+    margin-top: 12px;
+  }
+  #report-panel.visible { display: block; }
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .report-table th {
+    background: rgba(74,95,165,0.5);
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: 700;
+    color: var(--lavender);
+    border-radius: 4px;
+  }
+  .report-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid rgba(196,184,232,0.1);
+    color: var(--text);
+  }
+  .report-table tr:last-child td { border-bottom: none; }
+
+  .sound-btn {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 200;
+    background: var(--panel2);
+    border: 2px solid rgba(196,184,232,0.3);
+    border-radius: 50%;
+    width: 44px; height: 44px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .sound-btn:hover { transform: scale(1.1); }
+
+  /* Progress bar in game */
+  .progress-wrap {
+    height: 6px;
+    background: rgba(196,184,232,0.15);
+    border-radius: 3px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--lavender2), var(--amber));
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  @media (max-width: 480px) {
+    .sort-baskets { grid-template-columns: 1fr 1fr 1fr; }
+    .sort-basket { padding: 7px; min-height: 65px; }
+    .basket-icon { font-size: 18px; }
+    .basket-label { font-size: 10px; }
+    .troll-yn { gap: 8px; }
+    .btn-yn { padding: 12px 22px; font-size: 15px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<canvas id="particles-canvas"></canvas>
+
+<div id="app">
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-pages" id="hud-pages"></div>
+    <div class="hud-lives" id="hud-lives"></div>
+    <div class="hud-score" id="hud-score">⭐ 0</div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="screen-start" class="screen active">
+    <div class="mascot-container">
+      <span class="mascot" id="mascot-start" title="Глашка">🦉</span>
+      <div class="bubble" id="start-bubble">Привет! Я Глашка!</div>
+    </div>
+    <div class="title">Академия<br>Волшебных Действий</div>
+    <div class="subtitle">Помоги мне починить книгу заклинаний! Злой тролль Нечто разбросал все глаголы по сказочному лесу 🌿</div>
+    <button class="btn-primary" onclick="startGame()">🪄 Начать приключение!</button>
+  </div>
+
+  <!-- GAME 1: КОТЁЛ -->
+  <div id="screen-g1" class="screen">
+    <div class="game-panel">
+      <div class="game-title">🫧 Котёл заклинаний</div>
+      <div class="progress-wrap"><div class="progress-bar" id="g1-progress" style="width:0%"></div></div>
+      <div class="game-instruction">Нажимай только на <b>глаголы</b> — слова-действия! Они упадут в котёл ✨</div>
+      <div class="bubbles-area" id="bubbles-area"></div>
+      <div class="cauldron">🪄</div>
+      <div class="cauldron-count" id="cauldron-count">Глаголов поймано: 0</div>
+    </div>
+  </div>
+
+  <!-- GAME 2: ВОПРОС -->
+  <div id="screen-g2" class="screen">
+    <div class="game-panel">
+      <div class="game-title">🔍 Поймай вопрос</div>
+      <div class="progress-wrap"><div class="progress-bar" id="g2-progress" style="width:0%"></div></div>
+      <div class="game-instruction">К слову на экране выбери правильный вопрос:</div>
+      <div class="question-word" id="g2-word">...</div>
+      <div class="q-options" id="g2-options"></div>
+    </div>
+  </div>
+
+  <!-- GAME 3: СОРТИРОВКА -->
+  <div id="screen-g3" class="screen">
+    <div class="game-panel">
+      <div class="game-title">🗂️ Лесная сортировка</div>
+      <div class="progress-wrap"><div class="progress-bar" id="g3-progress" style="width:0%"></div></div>
+      <div class="game-instruction">Перетащи каждое слово в нужную корзину:</div>
+      <div class="sort-words-pool" id="sort-pool"></div>
+      <div class="sort-baskets">
+        <div class="sort-basket basket-verb" id="basket-verb" ondrop="onDrop(event,'verb')" ondragover="onDragOver(event)">
+          <span class="basket-icon">✅</span>
+          <span class="basket-label">ГЛАГОЛ</span>
+        </div>
+        <div class="sort-basket basket-unsure" id="basket-unsure" ondrop="onDrop(event,'unsure')" ondragover="onDragOver(event)">
+          <span class="basket-icon">🤔</span>
+          <span class="basket-label">НЕ УВЕРЕН</span>
+        </div>
+        <div class="sort-basket basket-not" id="basket-not" ondrop="onDrop(event,'not')" ondragover="onDragOver(event)">
+          <span class="basket-icon">❌</span>
+          <span class="basket-label">НЕ ГЛАГОЛ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME 4: МАШИНА ВРЕМЕНИ -->
+  <div id="screen-g4" class="screen">
+    <div class="game-panel">
+      <div class="game-title">⏳ Машина времени</div>
+      <div class="progress-wrap"><div class="progress-bar" id="g4-progress" style="width:0%"></div></div>
+      <div class="game-instruction">Вставь глагол в нужном <b>времени</b> в предложение:</div>
+      <div class="time-machine-visual">
+        <span class="time-machine-emoji" id="time-machine">⚙️</span>
+      </div>
+      <div class="time-tabs">
+        <div class="time-tab" id="tab-past">Прошедшее</div>
+        <div class="time-tab active" id="tab-pres">Настоящее</div>
+        <div class="time-tab" id="tab-fut">Будущее</div>
+      </div>
+      <div class="time-sentence" id="g4-sentence"></div>
+      <div class="q-options" id="g4-options"></div>
+    </div>
+  </div>
+
+  <!-- GAME 5: ПРЕДЛОЖЕНИЕ -->
+  <div id="screen-g5" class="screen">
+    <div class="game-panel">
+      <div class="game-title">🧩 Сломанное предложение</div>
+      <div class="progress-wrap"><div class="progress-bar" id="g5-progress" style="width:0%"></div></div>
+      <div class="game-instruction">Нажимай на слова, чтобы собрать предложение. Глагол <b>обязателен!</b></div>
+      <div class="sentence-words" id="g5-words"></div>
+      <div class="sentence-result" id="g5-result"><span class="slot-empty">Нажми на слова выше ↑</span></div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:12px;">
+        <button class="btn-secondary" onclick="g5Clear()">🔄 Сбросить</button>
+        <button class="btn-primary" onclick="g5Check()">Проверить ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME 6: ТРОЛЛЬ -->
+  <div id="screen-g6" class="screen">
+    <div class="game-panel">
+      <div class="game-title">🧙 Допрос тролля</div>
+      <div class="progress-wrap"><div class="progress-bar" id="g6-progress" style="width:0%"></div></div>
+      <div class="troll-container">
+        <span class="troll-emoji" id="troll">👹</span>
+      </div>
+      <div class="troll-bubble" id="troll-bubble">...</div>
+      <div id="g6-phase-yn" style="display:none">
+        <div class="troll-yn">
+          <button class="btn-yn yes" onclick="g6Answer(true)">✅ ДА!</button>
+          <button class="btn-yn no" onclick="g6Answer(false)">❌ НЕТ!</button>
+        </div>
+      </div>
+      <div id="g6-phase-reason" style="display:none">
+        <div style="text-align:center;font-size:14px;color:var(--lavender);margin-bottom:8px;">Почему ты так думаешь?</div>
+        <div class="troll-reasons" id="g6-reasons"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL SCREEN -->
+  <div id="screen-final" class="screen">
+    <div class="game-panel" style="max-width:560px">
+      <div class="big-emoji">📖</div>
+      <div class="final-title">Книга починена!</div>
+      <div style="text-align:center;color:var(--lavender);margin-bottom:12px;font-size:15px;">Ты отличный волшебник! Тролль Нечто сдался 🏳️</div>
+      <div class="stats-grid" id="final-stats"></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn-secondary" onclick="toggleReport()">📊 Отчёт учителю</button>
+        <button class="btn-primary" onclick="restartGame()">🔄 Играть снова</button>
+      </div>
+      <div id="report-panel">
+        <div style="font-family:'Unbounded',sans-serif;font-size:14px;color:var(--amber);margin:14px 0 8px;">📋 Отчёт учителю</div>
+        <table class="report-table" id="report-table"></table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- TRANSITION SCREEN -->
+<div id="transition-screen">
+  <div class="transition-mascot">🦉</div>
+  <div class="transition-text" id="transition-text"></div>
+  <div class="transition-sub" id="transition-sub"></div>
+  <button class="btn-primary" id="transition-btn" onclick="transitionNext()">Продолжить →</button>
+</div>
+
+<!-- Feedback Toast -->
+<div id="feedback-toast"></div>
+
+<!-- Sound button -->
+<button class="sound-btn" id="sound-btn" onclick="toggleSound()">🔊</button>
+
+<script>
+// ============================
+// STATE
+// ============================
+const STATE = {
+  currentGame: 0,
+  lives: 3,
+  score: 0,
+  soundOn: true,
+  gameStats: Array(6).fill(null).map(() => ({ correct: 0, wrong: 0, hints: 0 })),
+  g1: { caught: 0, total: 0 },
+  g2: { idx: 0, questions: [] },
+  g3: { remaining: [], placed: {} },
+  g4: { idx: 0, questions: [] },
+  g5: { idx: 0, selected: [], questions: [] },
+  g6: { idx: 0, phase: 'yn', questions: [], currentAnswer: null },
+};
+
+// ============================
+// AUDIO (Web Audio API tones)
+// ============================
+let audioCtx = null;
+function getAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function playTone(freq, type='sine', dur=0.15, gain=0.3) {
+  if (!STATE.soundOn) return;
+  try {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.connect(g); g.connect(ctx.destination);
+    osc.type = type; osc.frequency.value = freq;
+    g.gain.setValueAtTime(gain, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+function playCorrect() { playTone(880,'sine',0.1,0.25); setTimeout(()=>playTone(1100,'sine',0.1,0.2),100); }
+function playWrong()   { playTone(220,'sawtooth',0.2,0.2); }
+function playComplete(){ playTone(660,'sine',0.15,0.2); setTimeout(()=>playTone(880,'sine',0.15,0.2),120); setTimeout(()=>playTone(1100,'sine',0.25,0.2),240); }
+function toggleSound() {
+  STATE.soundOn = !STATE.soundOn;
+  document.getElementById('sound-btn').textContent = STATE.soundOn ? '🔊' : '🔇';
+}
+
+// ============================
+// BACKGROUND CANVAS
+// ============================
+const bgCanvas = document.getElementById('bg-canvas');
+const bgCtx = bgCanvas.getContext('2d');
+let stars = [];
+function initBg() {
+  bgCanvas.width = window.innerWidth; bgCanvas.height = window.innerHeight;
+  stars = Array.from({length:80}, () => ({
+    x: Math.random()*bgCanvas.width,
+    y: Math.random()*bgCanvas.height,
+    r: Math.random()*2.5+0.5,
+    speed: Math.random()*0.3+0.1,
+    opacity: Math.random()*0.6+0.2,
+    twinkle: Math.random()*Math.PI*2,
+  }));
+}
+function drawBg(t) {
+  bgCtx.clearRect(0,0,bgCanvas.width,bgCanvas.height);
+  const grad = bgCtx.createRadialGradient(bgCanvas.width/2,bgCanvas.height/2,0,bgCanvas.width/2,bgCanvas.height/2,bgCanvas.height);
+  grad.addColorStop(0,'#2a1f5e'); grad.addColorStop(1,'#100c30');
+  bgCtx.fillStyle=grad; bgCtx.fillRect(0,0,bgCanvas.width,bgCanvas.height);
+
+  stars.forEach(s => {
+    s.twinkle += 0.03; s.y -= s.speed;
+    if (s.y < 0) { s.y = bgCanvas.height; s.x = Math.random()*bgCanvas.width; }
+    const op = s.opacity * (0.7 + 0.3*Math.sin(s.twinkle));
+    bgCtx.beginPath(); bgCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    bgCtx.fillStyle=`rgba(196,184,232,${op})`; bgCtx.fill();
+  });
+
+  // Floating glowing orbs
+  for(let i=0;i<3;i++){
+    const x = bgCanvas.width*(0.2+i*0.3) + Math.sin(t*0.0004+i)*40;
+    const y = bgCanvas.height*0.4 + Math.cos(t*0.0003+i*1.5)*60;
+    const r = bgCanvas.width*0.15+Math.sin(t*0.001+i)*20;
+    const g2 = bgCtx.createRadialGradient(x,y,0,x,y,r);
+    g2.addColorStop(0,`rgba(74,95,165,0.12)`);
+    g2.addColorStop(1,'rgba(74,95,165,0)');
+    bgCtx.beginPath(); bgCtx.arc(x,y,r,0,Math.PI*2);
+    bgCtx.fillStyle=g2; bgCtx.fill();
+  }
+}
+
+// ============================
+// PARTICLES CANVAS
+// ============================
+const pCanvas = document.getElementById('particles-canvas');
+const pCtx = pCanvas.getContext('2d');
+let particles = [];
+function initParticles() { pCanvas.width=window.innerWidth; pCanvas.height=window.innerHeight; }
+function spawnParticles(x,y,color,count=12,type='star') {
+  for(let i=0;i<count;i++){
+    const angle = (Math.PI*2/count)*i + Math.random()*0.5;
+    const speed = Math.random()*5+2;
+    particles.push({
+      x,y,
+      vx: Math.cos(angle)*speed,
+      vy: Math.sin(angle)*speed - Math.random()*3,
+      life:1, decay:0.02+Math.random()*0.02,
+      size:Math.random()*8+4,
+      color, type,
+      rot:Math.random()*Math.PI*2,
+      rotSpeed:(Math.random()-0.5)*0.2,
+    });
+  }
+}
+function drawParticles() {
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  particles = particles.filter(p=>p.life>0);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.life-=p.decay; p.rot+=p.rotSpeed;
+    pCtx.save(); pCtx.globalAlpha=p.life;
+    pCtx.translate(p.x,p.y); pCtx.rotate(p.rot);
+    pCtx.fillStyle=p.color;
+    if(p.type==='star') {
+      // 5-pointed star
+      pCtx.beginPath();
+      for(let i=0;i<5;i++){
+        const a=i*Math.PI*2/5-Math.PI/2;
+        const a2=a+Math.PI/5;
+        if(i===0) pCtx.moveTo(Math.cos(a)*p.size,Math.sin(a)*p.size);
+        else pCtx.lineTo(Math.cos(a)*p.size,Math.sin(a)*p.size);
+        pCtx.lineTo(Math.cos(a2)*p.size*0.4,Math.sin(a2)*p.size*0.4);
+      }
+      pCtx.closePath(); pCtx.fill();
+    } else {
+      pCtx.beginPath(); pCtx.arc(0,0,p.size/2,0,Math.PI*2); pCtx.fill();
+    }
+    pCtx.restore();
+  });
+}
+
+// ============================
+// MAIN LOOP
+// ============================
+let raf;
+function loop(t) {
+  drawBg(t);
+  drawParticles();
+  raf = requestAnimationFrame(loop);
+}
+
+// ============================
+// FEEDBACK TOAST
+// ============================
+let toastTimer;
+function showFeedback(msg, type='good', dur=2200) {
+  const el = document.getElementById('feedback-toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ el.className=''; }, dur);
+}
+
+// ============================
+// SCREEN SWITCHING
+// ============================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if(el) { el.classList.add('active'); }
+}
+
+function updateHUD() {
+  const hud = document.getElementById('hud');
+  if(STATE.currentGame===0) { hud.classList.remove('visible'); return; }
+  hud.classList.add('visible');
+
+  // Pages
+  const pagesEl = document.getElementById('hud-pages');
+  pagesEl.innerHTML = '';
+  const icons = ['🫧','🔍','🗂️','⏳','🧩','🧙'];
+  for(let i=0;i<6;i++){
+    const d = document.createElement('div');
+    d.className = 'hud-page' + (i<STATE.currentGame-1?' done':i===STATE.currentGame-1?' current':'');
+    d.textContent = i<STATE.currentGame-1 ? '✓' : icons[i];
+    pagesEl.appendChild(d);
+  }
+
+  // Lives
+  const livesEl = document.getElementById('hud-lives');
+  livesEl.innerHTML = '';
+  for(let i=0;i<3;i++){
+    const d = document.createElement('div');
+    d.className='life'+(i>=STATE.lives?' lost':'');
+    d.textContent='🧪';
+    livesEl.appendChild(d);
+  }
+
+  // Score
+  document.getElementById('hud-score').textContent = `⭐ ${STATE.score}`;
+}
+
+// ============================
+// START
+// ============================
+function startGame() {
+  playTone(440,'sine',0.2,0.3);
+  STATE.currentGame=1;
+  STATE.lives=3;
+  STATE.score=0;
+  STATE.gameStats=Array(6).fill(null).map(()=>({correct:0,wrong:0,hints:0}));
+  updateHUD();
+  initGame1();
+  showScreen('screen-g1');
+}
+
+function restartGame() {
+  STATE.currentGame=0;
+  updateHUD();
+  showScreen('screen-start');
+}
+
+// ============================
+// TRANSITION BETWEEN GAMES
+// ============================
+const TRANSITIONS = [
+  null,
+  { text:'Страница 1 заполнена! ✨', sub:'Глашка нашла первые глаголы в котле!', next:2 },
+  { text:'Великолепно! Ты умеешь задавать нужный вопрос! 🔍', sub:'Теперь отсортируем слова по корзинам!', next:3 },
+  { text:'Молодец! Все слова разложены! 🗂️', sub:'Тролль спрятал глаголы во времени — к машине!', next:4 },
+  { text:'Время подчинилось тебе! ⏳', sub:'Осталось собрать сломанные предложения!', next:5 },
+  { text:'Предложения снова летят! 🧩', sub:'Последнее испытание — допрос тролля!', next:6 },
+  { text:'🎉 Тролль сдался!', sub:'Книга заклинаний полностью починена!', next:0 },
+];
+
+let transitionNextGame = 0;
+function showTransition(fromGame) {
+  const t = TRANSITIONS[fromGame];
+  if(!t) return;
+  document.getElementById('transition-text').textContent = t.text;
+  document.getElementById('transition-sub').textContent = t.sub;
+  transitionNextGame = t.next;
+  document.getElementById('transition-screen').classList.add('show');
+  playComplete();
+  // Confetti
+  const cx=window.innerWidth/2, cy=window.innerHeight/2;
+  for(let i=0;i<5;i++){
+    setTimeout(()=>{
+      spawnParticles(cx+(Math.random()-0.5)*300, cy+(Math.random()-0.5)*200,'#e8a832',10,'star');
+      spawnParticles(cx+(Math.random()-0.5)*300, cy+(Math.random()-0.5)*200,'#c4b8e8',8,'circle');
+      spawnParticles(cx+(Math.random()-0.5)*300, cy+(Math.random()-0.5)*200,'#52c97a',8,'circle');
+    },i*200);
+  }
+}
+
+function transitionNext() {
+  document.getElementById('transition-screen').classList.remove('show');
+  STATE.currentGame = transitionNextGame;
+  updateHUD();
+  if(transitionNextGame===2){ initGame2(); showScreen('screen-g2'); }
+  else if(transitionNextGame===3){ initGame3(); showScreen('screen-g3'); }
+  else if(transitionNextGame===4){ initGame4(); showScreen('screen-g4'); }
+  else if(transitionNextGame===5){ initGame5(); showScreen('screen-g5'); }
+  else if(transitionNextGame===6){ initGame6(); showScreen('screen-g6'); }
+  else if(transitionNextGame===0){ showFinalScreen(); }
+}
+
+function loseLife(feedbackMsg) {
+  STATE.lives--;
+  updateHUD();
+  playWrong();
+  // Screen shake
+  document.getElementById('app').style.animation='none';
+  setTimeout(()=>{ document.getElementById('app').style.animation='shake 0.4s ease'; },10);
+  if(STATE.lives<=0){ STATE.lives=1; showFeedback('🧪 Последнее зелье! Подсказка: '+feedbackMsg,'bad',3000); }
+  else { showFeedback(feedbackMsg,'bad'); }
+}
+
+// Add shake animation
+const shakeStyle=document.createElement('style');
+shakeStyle.textContent='@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}';
+document.head.appendChild(shakeStyle);
+
+// ============================
+// GAME 1: КОТЁЛ (Bubbles)
+// ============================
+const G1_WORDS = [
+  {w:'прыгает',isVerb:true},{w:'бежит',isVerb:true},{w:'поёт',isVerb:true},
+  {w:'рисует',isVerb:true},{w:'читает',isVerb:true},{w:'играет',isVerb:true},
+  {w:'летит',isVerb:true},{w:'смеётся',isVerb:true},{w:'танцует',isVerb:true},
+  {w:'думает',isVerb:true},{w:'строит',isVerb:true},{w:'мечтает',isVerb:true},
+  {w:'кошка',isVerb:false},{w:'весёлый',isVerb:false},{w:'книга',isVerb:false},
+  {w:'бег',isVerb:false},{w:'красивый',isVerb:false},{w:'лес',isVerb:false},
+  {w:'плавание',isVerb:false},{w:'тихий',isVerb:false},{w:'стол',isVerb:false},
+  {w:'игрушка',isVerb:false},{w:'добрый',isVerb:false},{w:'облако',isVerb:false},
+];
+
+let g1Bubbles=[];
+let g1AnimInterval=null;
+let g1SpawnInterval=null;
+let g1WordQueue=[];
+let g1CaughtCount=0;
+let g1TotalVerbs=0;
+let g1Finished=false;
+
+function initGame1() {
+  g1CaughtCount=0;
+  g1Finished=false;
+  g1Bubbles=[];
+  STATE.g1.caught=0;
+  STATE.g1.total=0;
+  document.getElementById('cauldron-count').textContent='Глаголов поймано: 0';
+  document.getElementById('g1-progress').style.width='0%';
+  // Shuffle word queue
+  g1WordQueue = [...G1_WORDS].sort(()=>Math.random()-0.5);
+  g1TotalVerbs = G1_WORDS.filter(w=>w.isVerb).length;
+  STATE.g1.total = g1TotalVerbs;
+  const area = document.getElementById('bubbles-area');
+  area.innerHTML='';
+
+  if(g1AnimInterval) clearInterval(g1AnimInterval);
+  if(g1SpawnInterval) clearInterval(g1SpawnInterval);
+
+  // Spawn first batch
+  for(let i=0;i<4;i++) spawnBubble(i*500);
+
+  g1SpawnInterval = setInterval(()=>{
+    if(g1WordQueue.length>0) spawnBubble(0);
+  },2500);
+}
+
+function g1CheckComplete() {
+  if(g1Finished) return;
+  if(g1CaughtCount >= g1TotalVerbs) {
+    g1Finished=true;
+    clearInterval(g1SpawnInterval);
+    // Remove remaining bubbles with fade
+    document.querySelectorAll('.word-bubble').forEach(el=>{
+      el.style.transition='opacity 0.4s';
+      el.style.opacity='0';
+      setTimeout(()=>el.remove(),400);
+    });
+    setTimeout(()=>showTransition(1), 800);
+  }
+}
+
+function spawnBubble(delay=0) {
+  if(g1WordQueue.length===0) return;
+  const item = g1WordQueue.shift();
+  const area = document.getElementById('bubbles-area');
+  const w = area.offsetWidth || 300;
+
+  setTimeout(()=>{
+    const el = document.createElement('div');
+    el.className='word-bubble';
+    el.textContent = item.w;
+    el.dataset.isVerb = item.isVerb;
+    const left = 20+Math.random()*(w-160);
+    const top = 20+Math.random()*160;
+    el.style.left=left+'px';
+    el.style.top=top+'px';
+    el.style.animationDuration=(2+Math.random()*2)+'s';
+    el.style.animationDelay=Math.random()*1+'s';
+
+    el.addEventListener('click',()=>handleBubbleClick(el,item));
+    el.addEventListener('touchend',e=>{e.preventDefault();handleBubbleClick(el,item);},{passive:false});
+    area.appendChild(el);
+  },delay);
+}
+
+function handleBubbleClick(el,item) {
+  if(el.dataset.clicked) return;
+  el.dataset.clicked='1';
+
+  if(item.isVerb){
+    el.classList.add('correct-hit');
+    playCorrect();
+    g1CaughtCount++;
+    STATE.g1.caught++;
+    STATE.score+=10;
+    STATE.gameStats[0].correct++;
+    const total = G1_WORDS.filter(w=>w.isVerb).length;
+    document.getElementById('g1-progress').style.width=(g1CaughtCount/total*100)+'%';
+    document.getElementById('cauldron-count').textContent=`Глаголов поймано: ${g1CaughtCount}`;
+    document.getElementById('hud-score').textContent=`⭐ ${STATE.score}`;
+    spawnParticles(
+      el.getBoundingClientRect().left + el.offsetWidth/2,
+      el.getBoundingClientRect().top + el.offsetHeight/2,
+      '#52c97a', 8, 'star'
+    );
+    showFeedback(`✅ "${item.w}" — глагол! Что делает? — ${item.w}!`,'good',1800);
+    setTimeout(()=>{ el.remove(); g1CheckComplete(); },500);
+  } else {
+    el.classList.add('wrong-hit');
+    playWrong();
+    STATE.gameStats[0].wrong++;
+    loseLife(`"${item.w}" — это не глагол! Глаголы отвечают на вопрос "что делает?"`);
+    setTimeout(()=>el.classList.remove('wrong-hit'),400);
+  }
+}
+
+// ============================
+// GAME 2: ПОЙМАЙ ВОПРОС
+// ============================
+const G2_DATA = [
+  {w:'прыгает',correct:'Что делает?',opts:['Что делает?','Кто это?','Какой?']},
+  {w:'спит',correct:'Что делает?',opts:['Что делает?','Что это?','Какая?']},
+  {w:'кошка',correct:'Кто это?',opts:['Кто это?','Что делает?','Какой?']},
+  {w:'весёлый',correct:'Какой?',opts:['Какой?','Что делает?','Кто?']},
+  {w:'нарисовал',correct:'Что сделал?',opts:['Что сделал?','Что это?','Какое?']},
+  {w:'бежит',correct:'Что делает?',opts:['Что делает?','Кто?','Какой?']},
+  {w:'стол',correct:'Что это?',opts:['Что это?','Что делает?','Какой?']},
+  {w:'думала',correct:'Что делала?',opts:['Что делала?','Кто?','Какая?']},
+  {w:'будет петь',correct:'Что будет делать?',opts:['Что будет делать?','Что это?','Какой?']},
+  {w:'красивый',correct:'Какой?',opts:['Какой?','Что делает?','Кто?']},
+];
+let g2Idx=0;
+
+function initGame2(){
+  g2Idx=0;
+  STATE.g2.questions=[...G2_DATA].sort(()=>Math.random()-0.5);
+  renderG2();
+}
+
+function renderG2(){
+  if(g2Idx>=STATE.g2.questions.length){ showTransition(2); return; }
+  const q=STATE.g2.questions[g2Idx];
+  document.getElementById('g2-progress').style.width=(g2Idx/STATE.g2.questions.length*100)+'%';
+  const wordEl=document.getElementById('g2-word');
+  wordEl.textContent=q.w;
+  wordEl.style.animation='none';
+  setTimeout(()=>wordEl.style.animation='',10);
+
+  const opts=document.getElementById('g2-options');
+  opts.innerHTML='';
+  const shuffled=[...q.opts].sort(()=>Math.random()-0.5);
+  shuffled.forEach(opt=>{
+    const btn=document.createElement('div');
+    btn.className='q-option';
+    btn.textContent=opt;
+    btn.addEventListener('click',()=>handleG2(btn,opt,q));
+    opts.appendChild(btn);
+  });
+}
+
+function handleG2(btn,opt,q){
+  const opts=document.getElementById('g2-options');
+  opts.querySelectorAll('.q-option').forEach(b=>b.style.pointerEvents='none');
+
+  if(opt===q.correct){
+    btn.classList.add('correct');
+    playCorrect();
+    STATE.score+=15;
+    STATE.gameStats[1].correct++;
+    document.getElementById('hud-score').textContent=`⭐ ${STATE.score}`;
+    spawnParticles(btn.getBoundingClientRect().left+btn.offsetWidth/2, btn.getBoundingClientRect().top, '#e8a832', 10,'star');
+    showFeedback(`✅ Верно! "${q.w}" — ${q.correct}`,'good');
+    setTimeout(()=>{ g2Idx++; renderG2(); },1200);
+  } else {
+    btn.classList.add('wrong');
+    playWrong();
+    STATE.gameStats[1].wrong++;
+    loseLife(`К слову "${q.w}" подходит вопрос "${q.correct}"`);
+    // Highlight correct
+    opts.querySelectorAll('.q-option').forEach(b=>{
+      if(b.textContent===q.correct) { b.classList.add('correct'); b.style.pointerEvents='none'; }
+    });
+    setTimeout(()=>{ g2Idx++; renderG2(); },2000);
+  }
+  document.getElementById('g2-progress').style.width=((g2Idx+1)/STATE.g2.questions.length*100)+'%';
+}
+
+// ============================
+// GAME 3: СОРТИРОВКА
+// ============================
+const G3_WORDS = [
+  {w:'прыгает',correct:'verb'},{w:'бег',correct:'not'},{w:'рисует',correct:'verb'},
+  {w:'плавание',correct:'not'},{w:'летит',correct:'verb'},{w:'красивый',correct:'not'},
+  {w:'смеётся',correct:'verb'},{w:'дерево',correct:'not'},{w:'строит',correct:'verb'},
+  {w:'тихий',correct:'not'},{w:'поёт',correct:'verb'},{w:'школа',correct:'not'},
+];
+let g3Dragging=null;
+
+function initGame3(){
+  const pool=document.getElementById('sort-pool');
+  pool.innerHTML='';
+  ['basket-verb','basket-unsure','basket-not'].forEach(id=>{
+    const b=document.getElementById(id);
+    // Remove dropped words but keep icon+label
+    b.querySelectorAll('.sort-word').forEach(e=>e.remove());
+  });
+
+  const shuffled=[...G3_WORDS].sort(()=>Math.random()-0.5);
+  STATE.g3.remaining=shuffled.map(w=>w.w);
+  STATE.g3.placed={};
+
+  shuffled.forEach((item,i)=>{
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='sort-word';
+      el.textContent=item.w;
+      el.dataset.word=item.w;
+      el.dataset.correct=item.correct;
+      el.draggable=true;
+      el.addEventListener('dragstart',e=>{
+        g3Dragging=el;
+        setTimeout(()=>el.classList.add('dragging'),0);
+      });
+      el.addEventListener('dragend',()=>el.classList.remove('dragging'));
+      // Touch support
+      el.addEventListener('touchstart',g3TouchStart,{passive:false});
+      el.addEventListener('touchmove',g3TouchMove,{passive:false});
+      el.addEventListener('touchend',g3TouchEnd,{passive:false});
+      pool.appendChild(el);
+    },i*120);
+  });
+
+  document.getElementById('g3-progress').style.width='0%';
+}
+
+// Touch drag for mobile
+let g3TouchEl=null, g3Clone=null, g3OffX=0, g3OffY=0;
+function g3TouchStart(e){
+  g3TouchEl=e.currentTarget;
+  const touch=e.touches[0];
+  const rect=g3TouchEl.getBoundingClientRect();
+  g3OffX=touch.clientX-rect.left; g3OffY=touch.clientY-rect.top;
+  g3Clone=g3TouchEl.cloneNode(true);
+  g3Clone.style.cssText=`position:fixed;z-index:999;pointer-events:none;opacity:0.85;left:${touch.clientX-g3OffX}px;top:${touch.clientY-g3OffY}px;`;
+  document.body.appendChild(g3Clone);
+  g3TouchEl.style.opacity='0.3';
+  e.preventDefault();
+}
+function g3TouchMove(e){
+  if(!g3Clone) return;
+  const touch=e.touches[0];
+  g3Clone.style.left=(touch.clientX-g3OffX)+'px';
+  g3Clone.style.top=(touch.clientY-g3OffY)+'px';
+  // Highlight basket
+  ['basket-verb','basket-unsure','basket-not'].forEach(id=>{
+    const b=document.getElementById(id);
+    const r=b.getBoundingClientRect();
+    if(touch.clientX>=r.left&&touch.clientX<=r.right&&touch.clientY>=r.top&&touch.clientY<=r.bottom)
+      b.classList.add('over');
+    else b.classList.remove('over');
+  });
+  e.preventDefault();
+}
+function g3TouchEnd(e){
+  if(!g3Clone||!g3TouchEl) return;
+  const touch=e.changedTouches[0];
+  g3Clone.remove(); g3Clone=null;
+  g3TouchEl.style.opacity='';
+  ['basket-verb','basket-unsure','basket-not'].forEach(id=>{
+    const b=document.getElementById(id);
+    b.classList.remove('over');
+    const r=b.getBoundingClientRect();
+    if(touch.clientX>=r.left&&touch.clientX<=r.right&&touch.clientY>=r.top&&touch.clientY<=r.bottom){
+      const basket=id.replace('basket-','');
+      handleG3Drop(g3TouchEl,basket);
+    }
+  });
+  g3TouchEl=null;
+  e.preventDefault();
+}
+
+function onDragOver(e){ e.preventDefault(); e.currentTarget.classList.add('over'); }
+document.querySelectorAll('.sort-basket').forEach(b=>{
+  b.addEventListener('dragleave',()=>b.classList.remove('over'));
+});
+function onDrop(e,basket){
+  e.preventDefault();
+  document.getElementById('basket-'+basket).classList.remove('over');
+  if(!g3Dragging) return;
+  handleG3Drop(g3Dragging,basket);
+  g3Dragging=null;
+}
+
+function handleG3Drop(el,basket){
+  const word=el.dataset.word;
+  const correct=el.dataset.correct;
+  STATE.g3.placed[word]=basket;
+
+  el.remove();
+
+  if(basket==='unsure'){
+    // Give hint
+    STATE.gameStats[2].hints++;
+    showFeedback(`🤔 Попробуй задать вопрос к слову "${word}". Если можно спросить "что делает?" — это глагол!`,'hint',3000);
+    // Put back in pool with highlight
+    const pool=document.getElementById('sort-pool');
+    el.style.borderColor='rgba(232,168,50,0.8)';
+    pool.appendChild(el);
+    updateG3Progress();
+    return;
+  }
+
+  if(basket===correct){
+    playCorrect();
+    STATE.score+=12;
+    STATE.gameStats[2].correct++;
+    document.getElementById('hud-score').textContent=`⭐ ${STATE.score}`;
+    const targetBasket=document.getElementById('basket-'+basket);
+    el.style.fontSize='12px'; el.style.padding='5px 10px';
+    const color = basket==='verb'?'rgba(82,201,122,0.5)':basket==='not'?'rgba(196,97,74,0.3)':'rgba(232,168,50,0.3)';
+    el.style.background=color;
+    targetBasket.appendChild(el);
+    spawnParticles(
+      targetBasket.getBoundingClientRect().left+targetBasket.offsetWidth/2,
+      targetBasket.getBoundingClientRect().top+30,
+      basket==='verb'?'#52c97a':'#c4614a',6,'circle'
+    );
+    const msg = basket==='verb'?`✅ "${word}" — глагол! Что делает? — ${word}!`:`✅ "${word}" — не глагол, правильно!`;
+    showFeedback(msg,'good');
+  } else {
+    playWrong();
+    STATE.gameStats[2].wrong++;
+    const hint = correct==='verb'?`"${word}" — это глагол! Отвечает на вопрос "что делает?"`:
+      `"${word}" — не глагол! Это существительное.`;
+    loseLife(hint);
+    el.style.fontSize='12px'; el.style.padding='5px 10px';
+    el.style.borderColor='var(--wrong)';
+    el.style.background='rgba(196,97,74,0.3)';
+    document.getElementById('basket-'+correct).appendChild(el);
+  }
+
+  updateG3Progress();
+
+  const pool=document.getElementById('sort-pool');
+  if(pool.querySelectorAll('.sort-word').length===0){
+    setTimeout(()=>showTransition(3),800);
+  }
+}
+
+function updateG3Progress(){
+  const total=G3_WORDS.length;
+  const placed=Object.keys(STATE.g3.placed).length;
+  document.getElementById('g3-progress').style.width=(placed/total*100)+'%';
+}
+
+// ============================
+// GAME 4: МАШИНА ВРЕМЕНИ
+// ============================
+const G4_DATA=[
+  {base:'читать',sentence:'Вчера Маша ___ книгу.',past:'читала',pres:'читает',fut:'будет читать',target:'past',targetForms:{past:'читала',pres:'читает',fut:'будет читать'}},
+  {base:'рисовать',sentence:'Сейчас Коля ___ картину.',past:'рисовал',pres:'рисует',fut:'будет рисовать',target:'pres',targetForms:{past:'рисовал',pres:'рисует',fut:'будет рисовать'}},
+  {base:'прыгать',sentence:'Завтра Аня ___ через скакалку.',past:'прыгала',pres:'прыгает',fut:'будет прыгать',target:'fut',targetForms:{past:'прыгала',pres:'прыгает',fut:'будет прыгать'}},
+  {base:'петь',sentence:'Сейчас птица ___ песню.',past:'пела',pres:'поёт',fut:'будет петь',target:'pres',targetForms:{past:'пела',pres:'поёт',fut:'будет петь'}},
+  {base:'строить',sentence:'Вчера папа ___ домик.',past:'строил',pres:'строит',fut:'будет строить',target:'past',targetForms:{past:'строил',pres:'строит',fut:'будет строить'}},
+  {base:'танцевать',sentence:'Завтра мы ___ на празднике.',past:'танцевали',pres:'танцуем',fut:'будем танцевать',target:'fut',targetForms:{past:'танцевали',pres:'танцуем',fut:'будем танцевать'}},
+  {base:'играть',sentence:'Вчера дети ___ в мяч.',past:'играли',pres:'играют',fut:'будут играть',target:'past',targetForms:{past:'играли',pres:'играют',fut:'будут играть'}},
+  {base:'думать',sentence:'Сейчас Лёша ___ о задаче.',past:'думал',pres:'думает',fut:'будет думать',target:'pres',targetForms:{past:'думал',pres:'думает',fut:'будет думать'}},
+];
+let g4Idx=0;
+const TNAMES={past:'Прошедшее',pres:'Настоящее',fut:'Будущее'};
+
+function initGame4(){
+  g4Idx=0;
+  STATE.g4.questions=[...G4_DATA].sort(()=>Math.random()-0.5);
+  renderG4();
+}
+
+function renderG4(){
+  if(g4Idx>=STATE.g4.questions.length){ showTransition(4); return; }
+  const q=STATE.g4.questions[g4Idx];
+  document.getElementById('g4-progress').style.width=(g4Idx/STATE.g4.questions.length*100)+'%';
+
+  // Update time tabs
+  ['past','pres','fut'].forEach(t=>{
+    document.getElementById('tab-'+t).className='time-tab'+(t===q.target?' active':'');
+  });
+
+  // Animate machine
+  const machine=document.getElementById('time-machine');
+  machine.classList.add('running');
+  setTimeout(()=>machine.classList.remove('running'),600);
+
+  // Set sentence
+  const sent=q.sentence.replace('___','<span class="blank"></span>');
+  document.getElementById('g4-sentence').innerHTML=`<span style="color:var(--lavender)">${sent}</span><br><small style="color:rgba(196,184,232,0.6)">Нужно: <b style="color:var(--amber)">${TNAMES[q.target]} время</b></small>`;
+
+  // Options: all 3 forms shuffled
+  const options=[q.targetForms.past,q.targetForms.pres,q.targetForms.fut];
+  const shuffled=[...options].sort(()=>Math.random()-0.5);
+  const optsEl=document.getElementById('g4-options');
+  optsEl.innerHTML='';
+  shuffled.forEach(opt=>{
+    const btn=document.createElement('div');
+    btn.className='q-option';
+    btn.textContent=opt;
+    btn.addEventListener('click',()=>handleG4(btn,opt,q,optsEl));
+    optsEl.appendChild(btn);
+  });
+}
+
+function handleG4(btn,opt,q,optsEl){
+  optsEl.querySelectorAll('.q-option').forEach(b=>b.style.pointerEvents='none');
+  const correct=q.targetForms[q.target];
+  if(opt===correct){
+    btn.classList.add('correct');
+    playCorrect();
+    STATE.score+=15;
+    STATE.gameStats[3].correct++;
+    document.getElementById('hud-score').textContent=`⭐ ${STATE.score}`;
+    spawnParticles(btn.getBoundingClientRect().left+btn.offsetWidth/2,btn.getBoundingClientRect().top,'#e8a832',10,'star');
+    showFeedback(`✅ ${TNAMES[q.target]} время: "${opt}"!`,'good');
+    setTimeout(()=>{ g4Idx++; renderG4(); },1300);
+  } else {
+    btn.classList.add('wrong');
+    playWrong();
+    STATE.gameStats[3].wrong++;
+    optsEl.querySelectorAll('.q-option').forEach(b=>{ if(b.textContent===correct) b.classList.add('correct'); });
+    loseLife(`Нужно ${TNAMES[q.target].toLowerCase()} время: "${correct}"`);
+    setTimeout(()=>{ g4Idx++; renderG4(); },2000);
+  }
+  document.getElementById('g4-progress').style.width=((g4Idx+1)/STATE.g4.questions.length*100)+'%';
+}
+
+// ============================
+// GAME 5: СЛОМАННОЕ ПРЕДЛОЖЕНИЕ
+// ============================
+const G5_SENTENCES=[
+  {words:['Маша','читает','интересную','книгу'], verb:'читает', correct:['Маша','читает','интересную','книгу']},
+  {words:['Кот','спит','на','диване'], verb:'спит', correct:['Кот','спит','на','диване']},
+  {words:['Дети','играют','во','дворе'], verb:'играют', correct:['Дети','играют','во','дворе']},
+  {words:['Птица','поёт','весёлую','песню'], verb:'поёт', correct:['Птица','поёт','весёлую','песню']},
+  {words:['Папа','строит','новый','дом'], verb:'строит', correct:['Папа','строит','новый','дом']},
+  {words:['Аня','рисует','красивый','цветок'], verb:'рисует', correct:['Аня','рисует','красивый','цветок']},
+];
+let g5Selected=[];
+let g5CurrentWords=[];
+let g5Idx=0;
+
+function initGame5(){
+  g5Idx=0;
+  STATE.g5.questions=[...G5_SENTENCES].sort(()=>Math.random()-0.5);
+  g5LoadNext();
+}
+
+function g5LoadNext(){
+  if(g5Idx>=STATE.g5.questions.length){ showTransition(5); return; }
+  const q=STATE.g5.questions[g5Idx];
+  g5Selected=[];
+  g5CurrentWords=[...q.words].sort(()=>Math.random()-0.5);
+  document.getElementById('g5-progress').style.width=(g5Idx/STATE.g5.questions.length*100)+'%';
+
+  const wordsEl=document.getElementById('g5-words');
+  wordsEl.innerHTML='';
+  g5CurrentWords.forEach(w=>{
+    const el=document.createElement('div');
+    el.className='sent-word'+(w===q.verb?' is-verb':'');
+    el.textContent=w;
+    el.dataset.word=w;
+    el.addEventListener('click',()=>g5SelectWord(el,w,q));
+    wordsEl.appendChild(el);
+  });
+
+  const res=document.getElementById('g5-result');
+  res.innerHTML='<span class="slot-empty">Нажми на слова выше ↑</span>';
+}
+
+function g5SelectWord(el,w,q){
+  if(el.dataset.selected==='1') return;
+  el.dataset.selected='1';
+  el.style.opacity='0.35';
+  el.style.pointerEvents='none';
+  g5Selected.push({w,isVerb:w===q.verb});
+
+  const res=document.getElementById('g5-result');
+  if(res.querySelector('.slot-empty')) res.innerHTML='';
+  const rw=document.createElement('div');
+  rw.className='result-word'+(w===q.verb?' verb-slot':'');
+  rw.textContent=w;
+  res.appendChild(rw);
+  playTone(660+g5Selected.length*40,'sine',0.08,0.15);
+}
+
+function g5Clear(){
+  g5Selected=[];
+  const wordsEl=document.getElementById('g5-words');
+  wordsEl.querySelectorAll('.sent-word').forEach(el=>{
+    el.dataset.selected='';
+    el.style.opacity='';
+    el.style.pointerEvents='';
+  });
+  document.getElementById('g5-result').innerHTML='<span class="slot-empty">Нажми на слова выше ↑</span>';
+}
+
+function g5Check(){
+  const q=STATE.g5.questions[g5Idx];
+  if(g5Selected.length===0){ showFeedback('Сначала выбери слова!','hint'); return; }
+  if(!g5Selected.some(s=>s.isVerb)){
+    playWrong();
+    STATE.gameStats[4].wrong++;
+    loseLife(`Без глагола предложение не летит! Добавь глагол "${q.verb}"!`);
+    return;
+  }
+  if(g5Selected.length!==q.words.length){
+    showFeedback(`Добавь ещё слова! Нужно ${q.words.length} слов.`,'hint');
+    return;
+  }
+
+  // Check order (flexible — just need all words)
+  const selectedWords=g5Selected.map(s=>s.w);
+  const hasAll=q.words.every(w=>selectedWords.includes(w));
+  if(hasAll){
+    playCorrect();
+    STATE.score+=20;
+    STATE.gameStats[4].correct++;
+    document.getElementById('hud-score').textContent=`⭐ ${STATE.score}`;
+    document.getElementById('g5-result').classList.add('flying');
+    spawnParticles(window.innerWidth/2,window.innerHeight/2,'#e8a832',16,'star');
+    spawnParticles(window.innerWidth/2,window.innerHeight/2,'#52c97a',10,'circle');
+    showFeedback(`🚀 Предложение летит! Глагол "${q.verb}" — сердце предложения!`,'good',2000);
+    setTimeout(()=>{
+      document.getElementById('g5-result').classList.remove('flying');
+      g5Idx++;
+      g5LoadNext();
+    },2000);
+  } else {
+    playWrong();
+    STATE.gameStats[4].wrong++;
+    loseLife('Проверь — все ли слова выбраны?');
+  }
+  document.getElementById('g5-progress').style.width=((g5Idx+1)/STATE.g5.questions.length*100)+'%';
+}
+
+// ============================
+// GAME 6: ДОПРОС ТРОЛЛЯ
+// ============================
+const G6_DATA=[
+  {w:'летит',isVerb:true,question:'«Летит» — это глагол?',
+   reasons:[
+     {text:'Да! Отвечает на вопрос "что делает?"',correct:true},
+     {text:'Нет, это просто слово',correct:false},
+     {text:'Не знаю',correct:false},
+   ]},
+  {w:'прыжок',isVerb:false,question:'«Прыжок» — это глагол?',
+   reasons:[
+     {text:'Нет! Отвечает на вопрос "что?"',correct:true},
+     {text:'Да, он обозначает движение',correct:false},
+     {text:'Да, отвечает на вопрос "что делает?"',correct:false},
+   ]},
+  {w:'рисует',isVerb:true,question:'«Рисует» — это глагол?',
+   reasons:[
+     {text:'Да! Обозначает действие — "что делает?"',correct:true},
+     {text:'Нет, это существительное',correct:false},
+     {text:'Нет, это прилагательное',correct:false},
+   ]},
+  {w:'красивый',isVerb:false,question:'«Красивый» — это глагол?',
+   reasons:[
+     {text:'Нет! Отвечает на вопрос "какой?"',correct:true},
+     {text:'Да, обозначает состояние',correct:false},
+     {text:'Да, можно спросить "что делает?"',correct:false},
+   ]},
+  {w:'плавание',isVerb:false,question:'«Плавание» — это глагол?',
+   reasons:[
+     {text:'Нет! Это существительное — "что?"',correct:true},
+     {text:'Да, оно обозначает действие',correct:false},
+     {text:'Да, отвечает на вопрос "что делает?"',correct:false},
+   ]},
+  {w:'смеётся',isVerb:true,question:'«Смеётся» — это глагол?',
+   reasons:[
+     {text:'Да! Что делает? — смеётся!',correct:true},
+     {text:'Нет, это слово про чувства',correct:false},
+     {text:'Нет, это прилагательное',correct:false},
+   ]},
+  {w:'мечтает',isVerb:true,question:'«Мечтает» — это глагол?',
+   reasons:[
+     {text:'Да! Отвечает на вопрос "что делает?"',correct:true},
+     {text:'Нет, это существительное',correct:false},
+     {text:'Не уверен',correct:false},
+   ]},
+  {w:'бег',isVerb:false,question:'«Бег» — это глагол?',
+   reasons:[
+     {text:'Нет! Это существительное — "что?"',correct:true},
+     {text:'Да, связан с движением',correct:false},
+     {text:'Да, отвечает на "что делает?"',correct:false},
+   ]},
+];
+let g6Idx=0;
+let g6Phase='yn';
+let g6CurrentAnswer=null;
+
+function initGame6(){
+  g6Idx=0;
+  STATE.g6.questions=[...G6_DATA].sort(()=>Math.random()-0.5);
+  renderG6();
+}
+
+function renderG6(){
+  if(g6Idx>=STATE.g6.questions.length){ showTransition(6); return; }
+  const q=STATE.g6.questions[g6Idx];
+  g6Phase='yn';
+  g6CurrentAnswer=null;
+  document.getElementById('g6-progress').style.width=(g6Idx/STATE.g6.questions.length*100)+'%';
+
+  const trollBubble=document.getElementById('troll-bubble');
+  trollBubble.textContent=q.question;
+  trollBubble.style.animation='none';
+  setTimeout(()=>trollBubble.style.animation='',10);
+
+  document.getElementById('g6-phase-yn').style.display='block';
+  document.getElementById('g6-phase-reason').style.display='none';
+  document.getElementById('g6-reasons').innerHTML='';
+
+  // Troll wiggle
+  const troll=document.getElementById('troll');
+  troll.style.animation='none';
+  setTimeout(()=>troll.style.animation='',10);
+}
+
+function g6Answer(isYes){
+  const q=STATE.g6.questions[g6Idx];
+  const correctYN = q.isVerb;
+  g6CurrentAnswer=isYes;
+
+  if(isYes===correctYN){
+    // Correct Y/N → now ask why
+    document.getElementById('g6-phase-yn').style.display='none';
+    document.getElementById('g6-phase-reason').style.display='block';
+    const reasonsEl=document.getElementById('g6-reasons');
+    reasonsEl.innerHTML='';
+    const shuffled=[...q.reasons].sort(()=>Math.random()-0.5);
+    shuffled.forEach(r=>{
+      const btn=document.createElement('div');
+      btn.className='reason-btn';
+      btn.textContent=r.text;
+      btn.addEventListener('click',()=>g6Reason(btn,r,q));
+      reasonsEl.appendChild(btn);
+    });
+    document.getElementById('troll-bubble').textContent='Хм... а почему?';
+    playTone(550,'sine',0.1,0.2);
+  } else {
+    playWrong();
+    STATE.gameStats[5].wrong++;
+    const hint=q.isVerb?`"${q.w}" — это глагол! Отвечает на вопрос "что делает?"`:`"${q.w}" — не глагол! Задай вопрос "что делает?" — не получается!`;
+    loseLife(hint);
+    // Show correct
+    document.getElementById('troll-bubble').textContent=`Неверно! ${hint}`;
+    document.getElementById('g6-phase-yn').style.display='none';
+    setTimeout(()=>{ g6Idx++; renderG6(); },2500);
+  }
+}
+
+function g6Reason(btn,r,q){
+  document.getElementById('g6-reasons').querySelectorAll('.reason-btn').forEach(b=>b.style.pointerEvents='none');
+  if(r.correct){
+    btn.classList.add('r-correct');
+    playCorrect();
+    STATE.score+=20;
+    STATE.gameStats[5].correct++;
+    document.getElementById('hud-score').textContent=`⭐ ${STATE.score}`;
+    document.getElementById('troll-bubble').textContent='Ладно, убедил! 😤';
+    spawnParticles(btn.getBoundingClientRect().left+btn.offsetWidth/2,btn.getBoundingClientRect().top,'#e8a832',12,'star');
+    showFeedback(`🎉 Отлично! Ты объяснил троллю!`,'good',2000);
+    setTimeout(()=>{ g6Idx++; renderG6(); },2000);
+  } else {
+    btn.classList.add('r-wrong');
+    playWrong();
+    STATE.gameStats[5].wrong++;
+    // Show correct reason
+    document.getElementById('g6-reasons').querySelectorAll('.reason-btn').forEach(b=>{
+      const text=b.textContent;
+      if(q.reasons.find(rr=>rr.text===text&&rr.correct)) b.classList.add('r-correct');
+    });
+    loseLife('Найди точное объяснение про вопрос "что делает?"');
+    setTimeout(()=>{ g6Idx++; renderG6(); },2500);
+  }
+  document.getElementById('g6-progress').style.width=((g6Idx+1)/STATE.g6.questions.length*100)+'%';
+}
+
+// ============================
+// FINAL SCREEN
+// ============================
+function showFinalScreen(){
+  const s=STATE.gameStats;
+  const totalCorrect=s.reduce((a,b)=>a+b.correct,0);
+  const totalWrong=s.reduce((a,b)=>a+b.wrong,0);
+  const totalHints=s.reduce((a,b)=>a+b.hints,0);
+  const pct=Math.round(totalCorrect/(totalCorrect+totalWrong||1)*100);
+
+  document.getElementById('final-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${STATE.score}</div><div class="stat-lbl">Очков набрано ⭐</div></div>
+    <div class="stat-card"><div class="stat-val">${pct}%</div><div class="stat-lbl">Точность ответов</div></div>
+    <div class="stat-card"><div class="stat-val">${totalCorrect}</div><div class="stat-lbl">Верных ответов ✅</div></div>
+    <div class="stat-card"><div class="stat-val">${totalWrong}</div><div class="stat-lbl">Ошибок ❌</div></div>
+  `;
+
+  const names=['Котёл','Вопрос','Сортировка','Машина времени','Предложение','Допрос тролля'];
+  const tbody=document.getElementById('report-table');
+  tbody.innerHTML=`<tr><th>Мини-игра</th><th>Верно</th><th>Ошибки</th><th>Подсказки</th></tr>`;
+  s.forEach((stat,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td>${names[i]}</td><td style="color:#52c97a">${stat.correct}</td><td style="color:#c4614a">${stat.wrong}</td><td style="color:#e8a832">${stat.hints}</td>`;
+    tbody.appendChild(tr);
+  });
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><b>ИТОГО</b></td><td style="color:#52c97a"><b>${totalCorrect}</b></td><td style="color:#c4614a"><b>${totalWrong}</b></td><td style="color:#e8a832"><b>${totalHints}</b></td>`;
+  tbody.appendChild(tr);
+
+  showScreen('screen-final');
+  document.getElementById('hud').classList.remove('visible');
+
+  // Victory particles!
+  for(let i=0;i<10;i++){
+    setTimeout(()=>{
+      spawnParticles(Math.random()*window.innerWidth, Math.random()*window.innerHeight*0.5,'#e8a832',8,'star');
+      spawnParticles(Math.random()*window.innerWidth, Math.random()*window.innerHeight*0.5,'#52c97a',6,'circle');
+      spawnParticles(Math.random()*window.innerWidth, Math.random()*window.innerHeight*0.5,'#c4b8e8',6,'circle');
+    },i*300);
+  }
+  playComplete();
+}
+
+function toggleReport(){
+  const rp=document.getElementById('report-panel');
+  rp.classList.toggle('visible');
+}
+
+// ============================
+// RESIZE
+// ============================
+window.addEventListener('resize',()=>{ initBg(); initParticles(); });
+
+// ============================
+// INIT
+// ============================
+initBg();
+initParticles();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
