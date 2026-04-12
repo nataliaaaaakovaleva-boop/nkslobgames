@@ -1,0 +1,2256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Волшебная Башня — Прилагательное</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Comfortaa:wght@400;700&display=swap');
+
+  :root {
+    --bg: #F5F0E8;
+    --purple: #7B6FC4;
+    --purple-light: #C5BFEE;
+    --purple-dark: #2D2A5E;
+    --gold: #E8A838;
+    --gold-light: #F7D98A;
+    --green: #5BBF8A;
+    --pink: #E87BAA;
+    --blue: #5BA8E8;
+    --orange: #E8845B;
+    --teal: #5BBFC4;
+    --red-soft: #E87B7B;
+    --white: #FFFFFF;
+    --shadow: rgba(45,42,94,0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+  }
+
+  #ui {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: all;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .screen.active { opacity: 1; }
+  .screen.hidden { display: none; }
+
+  /* ===== START SCREEN ===== */
+  #startScreen {
+    background: linear-gradient(160deg, #E8E0F8 0%, #F5F0E8 50%, #FFF3D0 100%);
+  }
+
+  .tower-preview {
+    width: 120px;
+    height: 180px;
+    margin-bottom: 16px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .game-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(24px, 6vw, 40px);
+    font-weight: 700;
+    color: var(--purple-dark);
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+
+  .game-subtitle {
+    font-size: clamp(14px, 3.5vw, 18px);
+    color: var(--purple);
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .fairy-intro {
+    background: white;
+    border-radius: 20px;
+    padding: 16px 20px;
+    max-width: min(340px, 90vw);
+    text-align: center;
+    font-size: clamp(13px, 3.2vw, 15px);
+    color: var(--purple-dark);
+    line-height: 1.5;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 20px var(--shadow);
+    position: relative;
+  }
+
+  .fairy-intro::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 10px solid transparent;
+    border-bottom-color: white;
+  }
+
+  .btn {
+    background: linear-gradient(135deg, var(--purple) 0%, #9B8FD4 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 14px 40px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(16px, 4vw, 20px);
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(123,111,196,0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+    pointer-events: all;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(123,111,196,0.5); }
+  .btn:active { transform: translateY(1px); box-shadow: 0 3px 10px rgba(123,111,196,0.3); }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold) 0%, #F0C060 100%);
+    box-shadow: 0 6px 20px rgba(232,168,56,0.4);
+    color: var(--purple-dark);
+  }
+
+  .btn-green {
+    background: linear-gradient(135deg, var(--green) 0%, #7BD4A8 100%);
+    box-shadow: 0 6px 20px rgba(91,191,138,0.4);
+  }
+
+  /* ===== HUD ===== */
+  #hud {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px var(--shadow);
+    z-index: 100;
+    pointer-events: all;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  #hud.visible { opacity: 1; }
+
+  .hud-floors {
+    display: flex;
+    gap: 6px;
+  }
+
+  .floor-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2.5px solid #ddd;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.4s;
+    font-weight: 700;
+  }
+  .floor-dot.done {
+    border-color: var(--gold);
+    background: var(--gold-light);
+    color: var(--purple-dark);
+  }
+  .floor-dot.active {
+    border-color: var(--purple);
+    background: var(--purple-light);
+    color: var(--purple-dark);
+    transform: scale(1.15);
+    box-shadow: 0 0 0 3px rgba(123,111,196,0.3);
+  }
+
+  .hud-score {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 800;
+    color: var(--purple-dark);
+    font-size: 16px;
+  }
+
+  .hud-star { font-size: 20px; }
+
+  .btn-sound {
+    background: none;
+    border: 2px solid var(--purple-light);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .btn-sound:hover { background: var(--purple-light); }
+
+  /* ===== GAME SCREENS ===== */
+  #gameArea {
+    position: fixed;
+    top: 60px; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 16px;
+    overflow-y: auto;
+    opacity: 0;
+    transition: opacity 0.4s;
+    pointer-events: none;
+  }
+  #gameArea.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .mini-game-container {
+    width: 100%;
+    max-width: 600px;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+  .mini-game-container.active {
+    display: flex;
+  }
+
+  .task-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    width: 100%;
+    box-shadow: 0 4px 20px var(--shadow);
+    text-align: center;
+  }
+
+  .fairy-bubble {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+
+  .fairy-icon {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    animation: fairy-bounce 2s ease-in-out infinite;
+  }
+
+  @keyframes fairy-bounce {
+    0%,100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-6px) rotate(3deg); }
+  }
+
+  .bubble-text {
+    background: var(--purple-light);
+    border-radius: 16px 16px 16px 4px;
+    padding: 12px 16px;
+    font-size: clamp(13px, 3.2vw, 15px);
+    color: var(--purple-dark);
+    font-weight: 600;
+    line-height: 1.4;
+    flex: 1;
+    position: relative;
+  }
+
+  .task-title {
+    font-size: clamp(15px, 3.8vw, 18px);
+    font-weight: 800;
+    color: var(--purple-dark);
+    margin-bottom: 12px;
+  }
+
+  /* ===== MG1: Find adjective ===== */
+  .sentence-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    padding: 16px 0;
+  }
+
+  .word-chip {
+    background: #F0EDF8;
+    border: 2.5px solid var(--purple-light);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: clamp(15px, 4vw, 18px);
+    font-weight: 700;
+    color: var(--purple-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 60px;
+    text-align: center;
+  }
+  .word-chip:hover { background: var(--purple-light); transform: scale(1.05); }
+  .word-chip.selected-correct {
+    background: #D4F4E2;
+    border-color: var(--green);
+    color: #1A6B42;
+    animation: glow-green 0.5s ease;
+  }
+  .word-chip.selected-wrong {
+    animation: shake 0.4s ease;
+    background: #FFE8E8;
+    border-color: var(--red-soft);
+  }
+  .word-chip.highlighted {
+    background: linear-gradient(135deg, #FFE599, #FFD060);
+    border-color: var(--gold);
+    animation: pulse-gold 1s ease infinite;
+  }
+
+  @keyframes glow-green {
+    0% { box-shadow: 0 0 0 0 rgba(91,191,138,0.6); }
+    50% { box-shadow: 0 0 0 8px rgba(91,191,138,0); }
+    100% { box-shadow: none; }
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  @keyframes pulse-gold {
+    0%,100% { box-shadow: 0 0 0 0 rgba(232,168,56,0.5); }
+    50% { box-shadow: 0 0 0 6px rgba(232,168,56,0); }
+  }
+
+  /* ===== MG2: Ask question ===== */
+  .question-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .option-btn {
+    background: white;
+    border: 2.5px solid var(--purple-light);
+    border-radius: 14px;
+    padding: 14px 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(15px, 3.8vw, 17px);
+    font-weight: 700;
+    color: var(--purple-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .option-btn:hover { background: var(--purple-light); border-color: var(--purple); }
+  .option-btn.correct { background: #D4F4E2; border-color: var(--green); color: #1A6B42; }
+  .option-btn.wrong { background: #FFE8E8; border-color: var(--red-soft); animation: shake 0.4s ease; }
+  .option-btn.disabled { pointer-events: none; opacity: 0.6; }
+
+  .option-icon { font-size: 20px; }
+
+  /* ===== MG3: Sort by gender ===== */
+  .sort-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    padding: 8px 0;
+  }
+
+  .sort-card {
+    background: linear-gradient(135deg, var(--purple-light), #E8E0F8);
+    border: 2.5px solid var(--purple);
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-size: clamp(14px, 3.5vw, 16px);
+    font-weight: 800;
+    color: var(--purple-dark);
+    cursor: grab;
+    transition: all 0.2s;
+    box-shadow: 0 3px 10px var(--shadow);
+  }
+  .sort-card:hover { transform: scale(1.05) rotate(2deg); box-shadow: 0 6px 16px var(--shadow); }
+  .sort-card.dragging { opacity: 0.5; cursor: grabbing; }
+  .sort-card.placed { opacity: 0.4; pointer-events: none; }
+
+  .gender-bins {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .gender-bin {
+    flex: 1;
+    max-width: 160px;
+    min-height: 120px;
+    border-radius: 16px;
+    border: 3px dashed;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 8px;
+    gap: 6px;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .gender-bin[data-gender="m"] { border-color: var(--blue); background: rgba(91,168,232,0.08); }
+  .gender-bin[data-gender="f"] { border-color: var(--pink); background: rgba(232,123,170,0.08); }
+  .gender-bin[data-gender="n"] { border-color: var(--teal); background: rgba(91,191,196,0.08); }
+
+  .gender-bin.drag-over { transform: scale(1.03); }
+  .gender-bin[data-gender="m"].drag-over { background: rgba(91,168,232,0.2); }
+  .gender-bin[data-gender="f"].drag-over { background: rgba(232,123,170,0.2); }
+  .gender-bin[data-gender="n"].drag-over { background: rgba(91,191,196,0.2); }
+
+  .bin-label {
+    font-size: clamp(11px, 2.8vw, 13px);
+    font-weight: 800;
+    text-align: center;
+    line-height: 1.3;
+  }
+  .gender-bin[data-gender="m"] .bin-label { color: #2A78C4; }
+  .gender-bin[data-gender="f"] .bin-label { color: #C44A8A; }
+  .gender-bin[data-gender="n"] .bin-label { color: #2A9BA0; }
+
+  .bin-example {
+    font-size: clamp(10px, 2.5vw, 12px);
+    color: #888;
+    font-style: italic;
+  }
+
+  .bin-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+  }
+
+  .bin-item {
+    font-size: clamp(10px, 2.5vw, 12px);
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 8px;
+    color: white;
+  }
+  .gender-bin[data-gender="m"] .bin-item { background: var(--blue); }
+  .gender-bin[data-gender="f"] .bin-item { background: var(--pink); }
+  .gender-bin[data-gender="n"] .bin-item { background: var(--teal); }
+  .bin-item.wrong-item { background: var(--red-soft) !important; animation: shake 0.4s ease; }
+
+  /* ===== MG4: Endings ===== */
+  .word-construct {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    padding: 16px 0;
+  }
+
+  .word-base {
+    font-size: clamp(22px, 5.5vw, 30px);
+    font-weight: 900;
+    color: var(--purple-dark);
+  }
+
+  .ending-slot {
+    min-width: 60px;
+    height: 44px;
+    border-radius: 10px;
+    border: 3px dashed var(--purple);
+    background: var(--purple-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(20px, 5vw, 28px);
+    font-weight: 900;
+    color: var(--purple);
+    transition: all 0.3s;
+  }
+  .ending-slot.filled { background: var(--gold-light); border-color: var(--gold); color: var(--purple-dark); }
+  .ending-slot.correct { background: #D4F4E2; border-color: var(--green); color: #1A6B42; }
+  .ending-slot.wrong { background: #FFE8E8; border-color: var(--red-soft); animation: shake 0.4s ease; }
+
+  .endings-choice {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .ending-btn {
+    background: white;
+    border: 2.5px solid var(--purple-light);
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(18px, 4.5vw, 24px);
+    font-weight: 900;
+    color: var(--purple-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+    min-width: 70px;
+    text-align: center;
+  }
+  .ending-btn:hover { background: var(--purple-light); transform: scale(1.08); }
+  .ending-btn.used { opacity: 0.35; pointer-events: none; }
+
+  .noun-hint {
+    background: var(--gold-light);
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: clamp(13px, 3.2vw, 15px);
+    font-weight: 700;
+    color: var(--purple-dark);
+    text-align: center;
+    border: 2px solid var(--gold);
+  }
+
+  /* ===== MG5: Build phrase ===== */
+  .build-noun {
+    font-size: clamp(20px, 5vw, 26px);
+    font-weight: 900;
+    color: var(--purple-dark);
+    background: var(--gold-light);
+    border-radius: 14px;
+    padding: 12px 24px;
+    border: 2px solid var(--gold);
+    text-align: center;
+  }
+
+  .adj-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .adj-btn {
+    background: white;
+    border: 2.5px solid var(--purple-light);
+    border-radius: 14px;
+    padding: 12px 18px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(14px, 3.5vw, 16px);
+    font-weight: 700;
+    color: var(--purple-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .adj-btn:hover { background: var(--purple-light); transform: scale(1.05); }
+  .adj-btn.selected { background: var(--purple); color: white; border-color: var(--purple); }
+  .adj-btn.correct { background: #D4F4E2; border-color: var(--green); color: #1A6B42; }
+  .adj-btn.wrong { background: #FFE8E8; border-color: var(--red-soft); animation: shake 0.4s ease; }
+
+  .phrase-result {
+    background: linear-gradient(135deg, #E8E0F8, #D4F4E2);
+    border-radius: 16px;
+    padding: 16px 20px;
+    font-size: clamp(18px, 4.5vw, 22px);
+    font-weight: 900;
+    color: var(--purple-dark);
+    text-align: center;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--purple-light);
+    transition: all 0.4s;
+  }
+  .phrase-result.animate-in {
+    animation: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  @keyframes pop-in {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ===== MG6: Fix the text ===== */
+  .fix-text-container {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    font-size: clamp(15px, 3.8vw, 17px);
+    line-height: 1.8;
+    color: var(--purple-dark);
+    font-weight: 600;
+    text-align: left;
+    width: 100%;
+    border: 2px solid var(--purple-light);
+  }
+
+  .fix-word {
+    display: inline-block;
+    background: #FFE8CC;
+    border: 2px solid var(--orange);
+    border-radius: 8px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-weight: 800;
+    transition: all 0.2s;
+    position: relative;
+  }
+  .fix-word:hover { background: var(--orange); color: white; }
+  .fix-word.fixed { background: #D4F4E2; border-color: var(--green); color: #1A6B42; pointer-events: none; }
+  .fix-word.wrong { animation: shake 0.4s ease; background: #FFE8E8; border-color: var(--red-soft); }
+
+  .fix-options-popup {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    display: flex;
+    gap: 6px;
+    z-index: 200;
+    white-space: nowrap;
+    border: 2px solid var(--purple-light);
+  }
+
+  .fix-option {
+    background: var(--purple-light);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--purple-dark);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .fix-option:hover { background: var(--purple); color: white; }
+
+  /* ===== FEEDBACK ===== */
+  .feedback-box {
+    background: white;
+    border-radius: 20px;
+    padding: 16px 20px;
+    width: 100%;
+    box-shadow: 0 4px 20px var(--shadow);
+    display: none;
+    animation: slide-up 0.3s ease;
+  }
+  .feedback-box.show { display: block; }
+
+  @keyframes slide-up {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .feedback-correct {
+    border-left: 5px solid var(--green);
+  }
+  .feedback-wrong {
+    border-left: 5px solid var(--red-soft);
+  }
+  .feedback-hint {
+    border-left: 5px solid var(--gold);
+  }
+
+  .feedback-title {
+    font-size: clamp(15px, 3.8vw, 17px);
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .feedback-correct .feedback-title { color: var(--green); }
+  .feedback-wrong .feedback-title { color: var(--red-soft); }
+  .feedback-hint .feedback-title { color: var(--gold); }
+
+  .feedback-text {
+    font-size: clamp(13px, 3.2vw, 15px);
+    color: var(--purple-dark);
+    line-height: 1.4;
+  }
+
+  /* ===== HINT LADDER ===== */
+  .hint-ladder {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .hint-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ddd;
+    transition: background 0.3s;
+  }
+  .hint-dot.used { background: var(--gold); }
+
+  .btn-hint {
+    background: none;
+    border: 2px solid var(--gold);
+    border-radius: 50px;
+    padding: 8px 16px;
+    font-family: 'Nunito', sans-serif;
+    font-size: clamp(12px, 3vw, 14px);
+    font-weight: 700;
+    color: var(--gold);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+  }
+  .btn-hint:hover { background: var(--gold-light); }
+  .btn-hint:disabled { opacity: 0.4; }
+
+  /* ===== NEXT / CONTINUE ===== */
+  .nav-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+    padding-bottom: 20px;
+  }
+
+  /* ===== LEVEL COMPLETE ===== */
+  #levelComplete {
+    background: linear-gradient(160deg, #E8E0F8, #F5F0E8, #FFF3D0);
+  }
+
+  .complete-stars {
+    font-size: 48px;
+    letter-spacing: 8px;
+    animation: stars-pop 0.6s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes stars-pop {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .complete-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(22px, 5.5vw, 32px);
+    font-weight: 700;
+    color: var(--purple-dark);
+    text-align: center;
+    margin: 12px 0 8px;
+  }
+
+  .complete-text {
+    font-size: clamp(14px, 3.5vw, 16px);
+    color: var(--purple);
+    text-align: center;
+    margin-bottom: 20px;
+    max-width: 320px;
+  }
+
+  .floor-badge {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    box-shadow: 0 8px 24px var(--shadow);
+    margin-bottom: 12px;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* ===== FINAL REPORT ===== */
+  #reportScreen {
+    background: linear-gradient(160deg, #E8E0F8, #F5F0E8);
+    overflow-y: auto;
+    justify-content: flex-start;
+    padding-top: 20px;
+  }
+
+  .report-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    max-width: min(500px, 92vw);
+    width: 100%;
+    box-shadow: 0 4px 20px var(--shadow);
+    margin-bottom: 12px;
+  }
+
+  .report-title {
+    font-family: 'Comfortaa', cursive;
+    font-size: clamp(18px, 4.5vw, 24px);
+    font-weight: 700;
+    color: var(--purple-dark);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+
+  .report-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: clamp(13px, 3.2vw, 15px);
+  }
+  .report-row:last-child { border-bottom: none; }
+
+  .report-label { color: #666; font-weight: 600; }
+  .report-value { font-weight: 800; color: var(--purple-dark); }
+
+  .report-skill-bar {
+    width: 100%;
+    height: 10px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+
+  .skill-fill {
+    height: 100%;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--purple), var(--gold));
+    transition: width 1s ease;
+  }
+
+  .report-mini-game {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: clamp(12px, 3vw, 14px);
+  }
+  .report-mini-game:last-child { border-bottom: none; }
+
+  .mini-emoji { font-size: 20px; width: 28px; text-align: center; }
+  .mini-info { flex: 1; }
+  .mini-name { font-weight: 700; color: var(--purple-dark); }
+  .mini-stat { color: #888; font-size: 12px; }
+  .mini-score { font-weight: 800; color: var(--purple); }
+
+  /* ===== PARTICLES ===== */
+  .particle {
+    position: fixed;
+    pointer-events: none;
+    font-size: 20px;
+    animation: particle-fly 1s ease-out forwards;
+    z-index: 500;
+  }
+
+  @keyframes particle-fly {
+    0% { transform: translateY(0) scale(1); opacity: 1; }
+    100% { transform: translateY(-80px) scale(0.5); opacity: 0; }
+  }
+
+  /* ===== TRANSITIONS ===== */
+  .transition-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--purple);
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+  }
+  .transition-overlay.show { opacity: 1; pointer-events: all; }
+
+  /* ===== PROGRESS BAR IN GAME ===== */
+  .progress-bar-wrap {
+    width: 100%;
+    background: #E8E0F8;
+    border-radius: 10px;
+    height: 8px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--purple), var(--gold));
+    border-radius: 10px;
+    transition: width 0.4s ease;
+  }
+
+  /* ===== SCROLL FIX ===== */
+  #gameArea::-webkit-scrollbar { display: none; }
+
+  /* responsive adjustments */
+  @media (max-height: 600px) {
+    .fairy-icon { width: 40px; height: 40px; }
+    .task-card { padding: 12px; }
+    #hud { height: 50px; }
+    #gameArea { top: 50px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Background canvas for particles -->
+<canvas id="bgCanvas"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-floors" id="hudFloors"></div>
+  <div class="hud-score">
+    <span class="hud-star">⭐</span>
+    <span id="scoreDisplay">0</span>
+  </div>
+  <button class="btn-sound" id="soundBtn" title="Звук">🔊</button>
+</div>
+
+<!-- Game Area -->
+<div id="gameArea">
+
+  <!-- MG1: Find adjective -->
+  <div class="mini-game-container" id="mg1">
+    <div class="fairy-bubble">
+      <svg class="fairy-icon" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="28" fill="#C5BFEE"/>
+        <circle cx="28" cy="22" r="11" fill="#7B6FC4"/>
+        <circle cx="24" cy="20" r="2" fill="white"/>
+        <circle cx="32" cy="20" r="2" fill="white"/>
+        <path d="M23 26 Q28 30 33 26" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="14" cy="28" rx="8" ry="5" fill="#E8E0F8" opacity="0.8"/>
+        <ellipse cx="42" cy="28" rx="8" ry="5" fill="#E8E0F8" opacity="0.8"/>
+        <circle cx="28" cy="36" r="7" fill="#9B8FD4"/>
+        <text x="28" y="40" text-anchor="middle" font-size="8" fill="white" font-weight="bold">А</text>
+      </svg>
+      <div class="bubble-text" id="mg1Instruction">Найди все прилагательные в предложении!</div>
+    </div>
+    <div class="task-card">
+      <div class="sentence-words" id="sentenceWords"></div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="mg1Progress" style="width:0%"></div></div>
+    </div>
+    <div class="feedback-box" id="mg1Feedback"></div>
+    <div class="hint-ladder" id="mg1HintLadder">
+      <span style="font-size:13px;color:#888;font-weight:600;">Подсказки:</span>
+      <div class="hint-dot" id="mg1h1"></div>
+      <div class="hint-dot" id="mg1h2"></div>
+      <div class="hint-dot" id="mg1h3"></div>
+      <button class="btn-hint" id="mg1HintBtn" onclick="useHint('mg1')">💡 Подсказка</button>
+    </div>
+    <div class="nav-row" id="mg1Nav"></div>
+  </div>
+
+  <!-- MG2: Ask the question -->
+  <div class="mini-game-container" id="mg2">
+    <div class="fairy-bubble">
+      <svg class="fairy-icon" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="28" cy="28" r="28" fill="#FFF3D0"/>
+        <circle cx="28" cy="22" r="11" fill="#E8A838"/>
+        <circle cx="24" cy="20" r="2" fill="white"/>
+        <circle cx="32" cy="20" r="2" fill="white"/>
+        <path d="M23 26 Q28 30 33 26" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="14" cy="28" rx="8" ry="5" fill="#F7D98A" opacity="0.8"/>
+        <ellipse cx="42" cy="28" rx="8" ry="5" fill="#F7D98A" opacity="0.8"/>
+        <circle cx="28" cy="36" r="7" fill="#F0C060"/>
+        <text x="28" y="40" text-anchor="middle" font-size="8" fill="white" font-weight="bold">?</text>
+      </svg>
+      <div class="bubble-text" id="mg2Instruction">Какой вопрос задать к выделенному слову?</div>
+    </div>
+    <div class="task-card">
+      <div class="task-title" id="mg2Sentence"></div>
+      <div class="question-options" id="questionOptions"></div>
+    </div>
+    <div class="feedback-box" id="mg2Feedback"></div>
+    <div class="hint-ladder" id="mg2HintLadder">
+      <span style="font-size:13px;color:#888;font-weight:600;">Подсказки:</span>
+      <div class="hint-dot" id="mg2h1"></div><div class="hint-dot" id="mg2h2"></div><div class="hint-dot" id="mg2h3"></div>
+      <button class="btn-hint" id="mg2HintBtn" onclick="useHint('mg2')">💡 Подсказка</button>
+    </div>
+    <div class="nav-row" id="mg2Nav"></div>
+  </div>
+
+  <!-- MG3: Sort by gender -->
+  <div class="mini-game-container" id="mg3">
+    <div class="fairy-bubble">
+      <svg class="fairy-icon" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="28" fill="#D4EDF4"/>
+        <circle cx="28" cy="22" r="11" fill="#5BA8E8"/>
+        <circle cx="24" cy="20" r="2" fill="white"/>
+        <circle cx="32" cy="20" r="2" fill="white"/>
+        <path d="M23 26 Q28 30 33 26" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="14" cy="28" rx="8" ry="5" fill="#A8D4F4" opacity="0.8"/>
+        <ellipse cx="42" cy="28" rx="8" ry="5" fill="#A8D4F4" opacity="0.8"/>
+        <circle cx="28" cy="36" r="7" fill="#7BBCE8"/>
+        <text x="28" y="40" text-anchor="middle" font-size="7" fill="white" font-weight="bold">РОД</text>
+      </svg>
+      <div class="bubble-text">Разложи прилагательные по корзинкам — по роду!</div>
+    </div>
+    <div class="gender-bins" id="genderBins">
+      <div class="gender-bin" data-gender="m" id="bin-m">
+        <div class="bin-label">🧒 Мужской<br>род</div>
+        <div class="bin-example">какой? он</div>
+        <div class="bin-items" id="binItems-m"></div>
+      </div>
+      <div class="gender-bin" data-gender="f" id="bin-f">
+        <div class="bin-label">👧 Женский<br>род</div>
+        <div class="bin-example">какая? она</div>
+        <div class="bin-items" id="binItems-f"></div>
+      </div>
+      <div class="gender-bin" data-gender="n" id="bin-n">
+        <div class="bin-label">🌟 Средний<br>род</div>
+        <div class="bin-example">какое? оно</div>
+        <div class="bin-items" id="binItems-n"></div>
+      </div>
+    </div>
+    <div class="sort-cards" id="sortCards"></div>
+    <div class="feedback-box" id="mg3Feedback"></div>
+    <div class="hint-ladder" id="mg3HintLadder">
+      <span style="font-size:13px;color:#888;font-weight:600;">Подсказки:</span>
+      <div class="hint-dot" id="mg3h1"></div><div class="hint-dot" id="mg3h2"></div><div class="hint-dot" id="mg3h3"></div>
+      <button class="btn-hint" id="mg3HintBtn" onclick="useHint('mg3')">💡 Подсказка</button>
+    </div>
+    <div class="nav-row" id="mg3Nav"></div>
+  </div>
+
+  <!-- MG4: Endings -->
+  <div class="mini-game-container" id="mg4">
+    <div class="fairy-bubble">
+      <svg class="fairy-icon" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="28" fill="#D4F4E8"/>
+        <circle cx="28" cy="22" r="11" fill="#5BBF8A"/>
+        <circle cx="24" cy="20" r="2" fill="white"/>
+        <circle cx="32" cy="20" r="2" fill="white"/>
+        <path d="M23 26 Q28 30 33 26" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="14" cy="28" rx="8" ry="5" fill="#A8E8C8" opacity="0.8"/>
+        <ellipse cx="42" cy="28" rx="8" ry="5" fill="#A8E8C8" opacity="0.8"/>
+        <circle cx="28" cy="36" r="7" fill="#7BD4A8"/>
+        <text x="28" y="40" text-anchor="middle" font-size="8" fill="white" font-weight="bold">-ОЕ</text>
+      </svg>
+      <div class="bubble-text">Выбери правильное окончание для прилагательного!</div>
+    </div>
+    <div class="task-card">
+      <div class="noun-hint" id="nounHint"></div>
+      <div class="word-construct" id="wordConstruct"></div>
+      <div class="endings-choice" id="endingsChoice"></div>
+    </div>
+    <div class="feedback-box" id="mg4Feedback"></div>
+    <div class="hint-ladder" id="mg4HintLadder">
+      <span style="font-size:13px;color:#888;font-weight:600;">Подсказки:</span>
+      <div class="hint-dot" id="mg4h1"></div><div class="hint-dot" id="mg4h2"></div><div class="hint-dot" id="mg4h3"></div>
+      <button class="btn-hint" id="mg4HintBtn" onclick="useHint('mg4')">💡 Подсказка</button>
+    </div>
+    <div class="nav-row" id="mg4Nav"></div>
+  </div>
+
+  <!-- MG5: Build phrase -->
+  <div class="mini-game-container" id="mg5">
+    <div class="fairy-bubble">
+      <svg class="fairy-icon" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="28" fill="#FFE8CC"/>
+        <circle cx="28" cy="22" r="11" fill="#E8845B"/>
+        <circle cx="24" cy="20" r="2" fill="white"/>
+        <circle cx="32" cy="20" r="2" fill="white"/>
+        <path d="M23 26 Q28 30 33 26" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="14" cy="28" rx="8" ry="5" fill="#F4C4A8" opacity="0.8"/>
+        <ellipse cx="42" cy="28" rx="8" ry="5" fill="#F4C4A8" opacity="0.8"/>
+        <circle cx="28" cy="36" r="7" fill="#F0A880"/>
+        <text x="28" y="40" text-anchor="middle" font-size="7" fill="white" font-weight="bold">+АДЖ</text>
+      </svg>
+      <div class="bubble-text">Подбери прилагательное к существительному!</div>
+    </div>
+    <div class="task-card">
+      <div class="build-noun" id="buildNoun"></div>
+      <br>
+      <div class="adj-options" id="adjOptions"></div>
+      <br>
+      <div class="phrase-result" id="phraseResult">Выбери прилагательное выше ⬆️</div>
+    </div>
+    <div class="feedback-box" id="mg5Feedback"></div>
+    <div class="hint-ladder" id="mg5HintLadder">
+      <span style="font-size:13px;color:#888;font-weight:600;">Подсказки:</span>
+      <div class="hint-dot" id="mg5h1"></div><div class="hint-dot" id="mg5h2"></div><div class="hint-dot" id="mg5h3"></div>
+      <button class="btn-hint" id="mg5HintBtn" onclick="useHint('mg5')">💡 Подсказка</button>
+    </div>
+    <div class="nav-row" id="mg5Nav"></div>
+  </div>
+
+  <!-- MG6: Fix the text -->
+  <div class="mini-game-container" id="mg6">
+    <div class="fairy-bubble">
+      <svg class="fairy-icon" viewBox="0 0 56 56" fill="none">
+        <circle cx="28" cy="28" r="28" fill="#F4D4E8"/>
+        <circle cx="28" cy="22" r="11" fill="#C45A8A"/>
+        <circle cx="24" cy="20" r="2" fill="white"/>
+        <circle cx="32" cy="20" r="2" fill="white"/>
+        <path d="M23 26 Q28 30 33 26" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <ellipse cx="14" cy="28" rx="8" ry="5" fill="#E8A8C8" opacity="0.8"/>
+        <ellipse cx="42" cy="28" rx="8" ry="5" fill="#E8A8C8" opacity="0.8"/>
+        <circle cx="28" cy="36" r="7" fill="#D47EAA"/>
+        <text x="28" y="40" text-anchor="middle" font-size="8" fill="white" font-weight="bold">✓</text>
+      </svg>
+      <div class="bubble-text">Исправь ошибки в прилагательных — нажми на выделенное слово!</div>
+    </div>
+    <div class="task-card">
+      <div class="fix-text-container" id="fixTextContainer"></div>
+    </div>
+    <div class="feedback-box" id="mg6Feedback"></div>
+    <div class="hint-ladder" id="mg6HintLadder">
+      <span style="font-size:13px;color:#888;font-weight:600;">Подсказки:</span>
+      <div class="hint-dot" id="mg6h1"></div><div class="hint-dot" id="mg6h2"></div><div class="hint-dot" id="mg6h3"></div>
+      <button class="btn-hint" id="mg6HintBtn" onclick="useHint('mg6')">💡 Подсказка</button>
+    </div>
+    <div class="nav-row" id="mg6Nav"></div>
+  </div>
+
+</div>
+
+<!-- Screen overlays -->
+<div id="ui">
+
+  <!-- Start Screen -->
+  <div class="screen active" id="startScreen">
+    <svg class="tower-preview" viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="35" y="80" width="50" height="90" rx="4" fill="#B0A8D8"/>
+      <rect x="35" y="80" width="50" height="15" fill="#9B8FD4"/>
+      <rect x="35" y="95" width="50" height="15" fill="#7B6FC4"/>
+      <rect x="35" y="110" width="50" height="15" fill="#6A5FB0"/>
+      <rect x="35" y="125" width="50" height="15" fill="#5A4FA0"/>
+      <rect x="35" y="140" width="50" height="15" fill="#4A3F90"/>
+      <rect x="35" y="155" width="50" height="15" fill="#3A2F80"/>
+      <rect x="30" y="75" width="60" height="10" rx="4" fill="#E8A838"/>
+      <polygon points="60,20 75,75 45,75" fill="#9B8FD4"/>
+      <polygon points="60,10 62,20 58,20" fill="#E8A838"/>
+      <rect x="50" y="130" width="20" height="30" rx="3" fill="#2D2A5E"/>
+      <circle cx="67" cy="140" r="3" fill="#E8A838"/>
+      <!-- fog/grey overlay -->
+      <rect x="35" y="95" width="50" height="75" fill="#888" opacity="0.5" rx="2"/>
+      <!-- fairy -->
+      <circle cx="90" cy="60" r="10" fill="#C5BFEE"/>
+      <circle cx="90" cy="57" r="6" fill="#7B6FC4"/>
+      <ellipse cx="82" cy="60" rx="6" ry="3" fill="#E8E0F8" opacity="0.9"/>
+      <ellipse cx="98" cy="60" rx="6" ry="3" fill="#E8E0F8" opacity="0.9"/>
+    </svg>
+    <div class="game-title">🏰 Волшебная<br>Радужная Башня</div>
+    <div class="game-subtitle">Тема: Прилагательное • 2 класс</div>
+    <div class="fairy-intro">
+      Привет! Я — феечка Слова. 🧚<br>
+      Злой Серый Туман украл краски из башни.<br>
+      Помоги мне найти <strong>волшебные слова-прилагательные</strong> и расколдовать все 6 этажей!
+    </div>
+    <button class="btn btn-gold" onclick="startGame()">🌟 Начать приключение!</button>
+    <div style="margin-top:12px;font-size:13px;color:#999;">6 испытаний • ~45 минут</div>
+  </div>
+
+  <!-- Level Complete Screen -->
+  <div class="screen hidden" id="levelComplete">
+    <div class="floor-badge" id="levelBadge"></div>
+    <div class="complete-stars" id="levelStars">⭐⭐⭐</div>
+    <div class="complete-title" id="levelTitle">Молодец!</div>
+    <div class="complete-text" id="levelText">Этаж башни расколдован!</div>
+    <button class="btn btn-gold" id="levelNextBtn" onclick="nextLevel()">Дальше! →</button>
+  </div>
+
+  <!-- Final Report -->
+  <div class="screen hidden" id="reportScreen">
+    <div class="report-card">
+      <div class="report-title">🏆 Башня расколдована!</div>
+      <p style="text-align:center;font-size:14px;color:#888;margin-bottom:12px;">Отчёт для учителя</p>
+      <div class="report-row">
+        <span class="report-label">Всего звёзд</span>
+        <span class="report-value" id="repTotalStars">—</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Точность</span>
+        <span class="report-value" id="repAccuracy">—</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Время игры</span>
+        <span class="report-value" id="repTime">—</span>
+      </div>
+      <div class="report-row">
+        <span class="report-label">Подсказок использовано</span>
+        <span class="report-value" id="repHints">—</span>
+      </div>
+    </div>
+
+    <div class="report-card">
+      <div class="report-title" style="font-size:16px;">📊 По испытаниям</div>
+      <div id="miniGameReport"></div>
+    </div>
+
+    <div class="report-card">
+      <div class="report-title" style="font-size:16px;">🎯 Навыки</div>
+      <div id="skillsReport"></div>
+    </div>
+
+    <div class="report-card" style="text-align:center;">
+      <div id="colorChoice" style="margin-bottom:12px;"></div>
+      <p style="font-size:14px;color:#666;margin-bottom:12px;">Выбери цвет флага на башне!</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px;" id="flagColors">
+        <div onclick="pickFlag(this,'#E8A838')" style="width:36px;height:36px;border-radius:50%;background:#E8A838;cursor:pointer;border:3px solid transparent;transition:border 0.2s;"></div>
+        <div onclick="pickFlag(this,'#7B6FC4')" style="width:36px;height:36px;border-radius:50%;background:#7B6FC4;cursor:pointer;border:3px solid transparent;transition:border 0.2s;"></div>
+        <div onclick="pickFlag(this,'#5BBF8A')" style="width:36px;height:36px;border-radius:50%;background:#5BBF8A;cursor:pointer;border:3px solid transparent;transition:border 0.2s;"></div>
+        <div onclick="pickFlag(this,'#E87BAA')" style="width:36px;height:36px;border-radius:50%;background:#E87BAA;cursor:pointer;border:3px solid transparent;transition:border 0.2s;"></div>
+        <div onclick="pickFlag(this,'#5BA8E8')" style="width:36px;height:36px;border-radius:50%;background:#5BA8E8;cursor:pointer;border:3px solid transparent;transition:border 0.2s;"></div>
+      </div>
+      <button class="btn" onclick="restartGame()">🔄 Сыграть снова</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Transition overlay -->
+<div class="transition-overlay" id="transOverlay">✨</div>
+
+<script>
+// ==============================
+// GAME DATA
+// ==============================
+
+const MG1_DATA = [
+  { sentence: ['В', 'тёмном', 'лесу', 'жила', 'маленькая', 'фея'], adjectives: ['тёмном', 'маленькая'], hint1: 'Прилагательные описывают предметы', hint2: 'Задай вопрос: КАКОЙ? КАКАЯ? КАКОЕ?', hint3: 'Слова "тёмном" и "маленькая" — прилагательные' },
+  { sentence: ['Высокая', 'башня', 'стояла', 'на', 'зелёном', 'холме'], adjectives: ['Высокая', 'зелёном'], hint1: 'Ищи слова, которые описывают предметы', hint2: 'Спроси: какая башня? какой холм?', hint3: 'Слова "Высокая" и "зелёном" — прилагательные' },
+  { sentence: ['Серый', 'туман', 'укрыл', 'пушистые', 'облака'], adjectives: ['Серый', 'пушистые'], hint1: 'Прилагательные отвечают на вопрос КАКОЙ?', hint2: 'Какой туман? Какие облака?', hint3: 'Слова "Серый" и "пушистые" — прилагательные' },
+  { sentence: ['Добрая', 'фея', 'нашла', 'волшебную', 'книгу'], adjectives: ['Добрая', 'волшебную'], hint1: 'Найди слова-описания', hint2: 'Какая фея? Какую книгу?', hint3: 'Слова "Добрая" и "волшебную" — прилагательные' },
+];
+
+const MG2_DATA = [
+  { sentence: 'Золотой ключ лежал на полке.', highlighted: 'Золотой', correctQ: 'какой?', options: ['какой?', 'кто?', 'что?', 'где?'], explain: '«Золотой» описывает существительное «ключ» (он, мужской род) → какой?' },
+  { sentence: 'Фея надела голубое платье.', highlighted: 'голубое', correctQ: 'какое?', options: ['какое?', 'какая?', 'какой?', 'что?'], explain: '«Голубое» описывает «платье» (оно, средний род) → какое?' },
+  { sentence: 'В башне жила мудрая волшебница.', highlighted: 'мудрая', correctQ: 'какая?', options: ['какая?', 'какой?', 'кто?', 'где?'], explain: '«Мудрая» описывает «волшебница» (она, женский род) → какая?' },
+  { sentence: 'Маленькие звёзды освещали путь.', highlighted: 'Маленькие', correctQ: 'какие?', options: ['какие?', 'какой?', 'что?', 'кто?'], explain: '«Маленькие» описывает «звёзды» (они, множественное число) → какие?' },
+  { sentence: 'Рыжая лиса пробежала мимо.', highlighted: 'Рыжая', correctQ: 'какая?', options: ['какая?', 'какой?', 'какое?', 'кто?'], explain: '«Рыжая» описывает «лиса» (она, женский род) → какая?' },
+];
+
+const MG3_DATA = [
+  { word: 'красный', noun: 'шар', gender: 'm' },
+  { word: 'синяя', noun: 'птица', gender: 'f' },
+  { word: 'круглое', noun: 'яблоко', gender: 'n' },
+  { word: 'высокий', noun: 'дуб', gender: 'm' },
+  { word: 'белая', noun: 'снежинка', gender: 'f' },
+  { word: 'доброе', noun: 'сердце', gender: 'n' },
+  { word: 'старый', noun: 'замок', gender: 'm' },
+  { word: 'золотая', noun: 'звезда', gender: 'f' },
+];
+
+const MG4_DATA = [
+  { base: 'добр', endings: ['-ый', '-ая', '-ое', '-ые'], correct: '-ое', noun: 'сердце (какое?)', hint1: 'Задай вопрос к существительному', hint2: 'Сердце — среднего рода, отвечает на вопрос КАКОЕ?', hint3: 'Правильное окончание: -ОЕ (доброе сердце)' },
+  { base: 'весел', endings: ['-ый', '-ая', '-ое', '-ые'], correct: '-ая', noun: 'песня (какая?)', hint1: 'Задай вопрос к существительному', hint2: 'Песня — женского рода, отвечает на вопрос КАКАЯ?', hint3: 'Правильное окончание: -АЯ (весёлая песня)' },
+  { base: 'высок', endings: ['-ий', '-ая', '-ое', '-ие'], correct: '-ий', noun: 'замок (какой?)', hint1: 'Задай вопрос к существительному', hint2: 'Замок — мужского рода, отвечает на вопрос КАКОЙ?', hint3: 'Правильное окончание: -ИЙ (высокий замок)' },
+  { base: 'зелён', endings: ['-ый', '-ая', '-ое', '-ые'], correct: '-ые', noun: 'листья (какие?)', hint1: 'Обрати внимание на число', hint2: 'Листья — это множественное число, вопрос КАКИЕ?', hint3: 'Правильное окончание: -ЫЕ (зелёные листья)' },
+  { base: 'пушист', endings: ['-ый', '-ая', '-ое', '-ые'], correct: '-ый', noun: 'кот (какой?)', hint1: 'Задай вопрос к существительному', hint2: 'Кот — мужского рода, отвечает на вопрос КАКОЙ?', hint3: 'Правильное окончание: -ЫЙ (пушистый кот)' },
+];
+
+const MG5_DATA = [
+  { noun: 'лес', nounHint: 'мужской род, какой?', options: ['тёмный', 'весёлая', 'синее', 'шумит'], correct: 'тёмный', explain: 'Лес (он, мужской) — подходит «тёмный лес»' },
+  { noun: 'река', nounHint: 'женский род, какая?', options: ['широкая', 'быстрый', 'глубокое', 'течёт'], correct: 'широкая', explain: 'Река (она, женский) — подходит «широкая река»' },
+  { noun: 'небо', nounHint: 'средний род, какое?', options: ['голубое', 'светлый', 'яркая', 'летит'], correct: 'голубое', explain: 'Небо (оно, средний) — подходит «голубое небо»' },
+  { noun: 'звёзды', nounHint: 'множественное число, какие?', options: ['яркие', 'яркий', 'яркое', 'горят'], correct: 'яркие', explain: 'Звёзды (они, мн. число) — подходит «яркие звёзды»' },
+  { noun: 'замок', nounHint: 'мужской род, какой?', options: ['волшебный', 'волшебная', 'волшебное', 'стоит'], correct: 'волшебный', explain: 'Замок (он, мужской) — подходит «волшебный замок»' },
+];
+
+const MG6_DATA = {
+  sentences: [
+    { before: 'В ', wrongWord: 'высокий', correct: 'высокой', options: ['высокой', 'высокое', 'высокого'], after: ' башне жила фея.', noun: 'башня (ж.р.)', explain: 'Башня — женский род, нужно «высокой башне»' },
+    { before: 'Фея надела ', wrongWord: 'голубой', correct: 'голубое', options: ['голубое', 'голубая', 'голубого'], after: ' платье.', noun: 'платье (ср.р.)', explain: 'Платье — средний род, нужно «голубое платье»' },
+    { before: 'На небе светили ', wrongWord: 'яркий', correct: 'яркие', options: ['яркие', 'яркое', 'яркая'], after: ' звёзды.', noun: 'звёзды (мн.ч.)', explain: 'Звёзды — множественное число, нужно «яркие звёзды»' },
+    { before: 'Серый туман покрыл ', wrongWord: 'зелёный', correct: 'зелёные', options: ['зелёные', 'зелёная', 'зелёное'], after: ' поля.', noun: 'поля (мн.ч.)', explain: 'Поля — множественное число, нужно «зелёные поля»' },
+  ]
+};
+
+// ==============================
+// GAME STATE
+// ==============================
+
+const state = {
+  currentLevel: 0,
+  score: 0,
+  startTime: null,
+  soundEnabled: true,
+  hints: { mg1: 0, mg2: 0, mg3: 0, mg4: 0, mg5: 0, mg6: 0 },
+  metrics: {
+    mg1: { attempts: 0, correct: 0, hints: 0, time: 0 },
+    mg2: { attempts: 0, correct: 0, hints: 0, time: 0 },
+    mg3: { attempts: 0, correct: 0, hints: 0, time: 0 },
+    mg4: { attempts: 0, correct: 0, hints: 0, time: 0 },
+    mg5: { attempts: 0, correct: 0, hints: 0, time: 0 },
+    mg6: { attempts: 0, correct: 0, hints: 0, time: 0 },
+  },
+  mg1: { qIndex: 0, found: [], totalAdj: 0, levelStartTime: 0 },
+  mg2: { qIndex: 0, levelStartTime: 0 },
+  mg3: { placed: {}, levelStartTime: 0, totalCards: 0 },
+  mg4: { qIndex: 0, levelStartTime: 0 },
+  mg5: { qIndex: 0, levelStartTime: 0 },
+  mg6: { fixed: 0, total: 0, levelStartTime: 0 },
+  floorsUnlocked: [false,false,false,false,false,false],
+  flagColor: '#E8A838',
+};
+
+const LEVEL_COLORS = ['#9B8FD4','#E8A838','#5BA8E8','#5BBF8A','#E8845B','#E87BAA'];
+const LEVEL_EMOJIS = ['🔮','⭐','💧','🌿','🔥','💖'];
+const LEVEL_NAMES = ['Найди волшебное слово','Спроси башню','Волшебная сортировка','Одень героя','Опиши сундук','Расколдуй башню'];
+const LEVEL_ICONS = ['🔍','❓','🗂️','👗','🎁','✨'];
+
+// ==============================
+// CANVAS BACKGROUND
+// ==============================
+
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let stars = [];
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 40; i++) {
+    stars.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 2.5 + 0.5,
+      speed: Math.random() * 0.3 + 0.1,
+      opacity: Math.random() * 0.5 + 0.2,
+      twinkle: Math.random() * Math.PI * 2
+    });
+  }
+}
+initStars();
+
+function drawBg() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  grad.addColorStop(0, '#EDE8F8');
+  grad.addColorStop(0.5, '#F5F0E8');
+  grad.addColorStop(1, '#FFF8E8');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  stars.forEach(s => {
+    s.twinkle += 0.03;
+    const op = s.opacity * (0.7 + 0.3 * Math.sin(s.twinkle));
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(123,111,196,${op})`;
+    ctx.fill();
+    s.y -= s.speed;
+    if (s.y < -5) { s.y = canvas.height + 5; s.x = Math.random() * canvas.width; }
+  });
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// ==============================
+// UI HELPERS
+// ==============================
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.classList.add('hidden'); });
+  const el = document.getElementById(id);
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('active'), 10);
+}
+
+function hideAllScreens() {
+  document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.classList.add('hidden'); });
+}
+
+function transition(emoji, cb) {
+  const ov = document.getElementById('transOverlay');
+  ov.textContent = emoji;
+  ov.classList.add('show');
+  setTimeout(() => { cb(); ov.classList.remove('show'); }, 600);
+}
+
+function showParticles(x, y, emojis = ['⭐','✨','🌟']) {
+  emojis.forEach((em, i) => {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = em;
+    p.style.left = (x + (Math.random()-0.5)*80) + 'px';
+    p.style.top = (y - Math.random()*20) + 'px';
+    p.style.animationDelay = (i * 0.1) + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 1200);
+  });
+}
+
+function updateHUD() {
+  const hud = document.getElementById('hud');
+  hud.classList.add('visible');
+  document.getElementById('scoreDisplay').textContent = state.score;
+  const container = document.getElementById('hudFloors');
+  container.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'floor-dot';
+    dot.textContent = LEVEL_ICONS[i];
+    if (state.floorsUnlocked[i]) dot.classList.add('done');
+    if (i === state.currentLevel) dot.classList.add('active');
+    container.appendChild(dot);
+  }
+}
+
+function showFeedback(mgId, type, title, text) {
+  const fb = document.getElementById(mgId + 'Feedback');
+  fb.className = `feedback-box show feedback-${type}`;
+  fb.innerHTML = `<div class="feedback-title">${title}</div><div class="feedback-text">${text}</div>`;
+}
+
+function hideFeedback(mgId) {
+  const fb = document.getElementById(mgId + 'Feedback');
+  fb.className = 'feedback-box';
+}
+
+function addNavBtn(mgId, label, cls, cb) {
+  const nav = document.getElementById(mgId + 'Nav');
+  const btn = document.createElement('button');
+  btn.className = `btn ${cls}`;
+  btn.textContent = label;
+  btn.onclick = cb;
+  nav.appendChild(btn);
+  return btn;
+}
+
+function clearNav(mgId) {
+  document.getElementById(mgId + 'Nav').innerHTML = '';
+}
+
+function setProgress(mgId, pct) {
+  const bar = document.getElementById(mgId + 'Progress');
+  if (bar) bar.style.width = pct + '%';
+}
+
+// ==============================
+// HINT SYSTEM
+// ==============================
+
+function useHint(mgId) {
+  const level = parseInt(mgId.replace('mg','')) - 1;
+  const h = state.hints[mgId];
+  if (h >= 3) return;
+  state.hints[mgId]++;
+  state.metrics[mgId].hints++;
+  document.getElementById(`${mgId}h${state.hints[mgId]}`).classList.add('used');
+  if (state.hints[mgId] >= 3) {
+    document.getElementById(`${mgId}HintBtn`).disabled = true;
+    document.getElementById(`${mgId}HintBtn`).textContent = '💡 Больше нет';
+  }
+
+  if (mgId === 'mg1') showMg1Hint();
+  else if (mgId === 'mg2') showMg2Hint();
+  else if (mgId === 'mg3') showMg3Hint();
+  else if (mgId === 'mg4') showMg4Hint();
+  else if (mgId === 'mg5') showMg5Hint();
+  else if (mgId === 'mg6') showMg6Hint();
+}
+
+// ==============================
+// START GAME
+// ==============================
+
+function startGame() {
+  state.startTime = Date.now();
+  state.currentLevel = 0;
+  hideAllScreens();
+  document.getElementById('gameArea').classList.add('visible');
+  updateHUD();
+  loadLevel(0);
+}
+
+function loadLevel(level) {
+  state.currentLevel = level;
+  state.hints['mg' + (level+1)] = 0;
+  updateHUD();
+  // Reset all hint buttons
+  const mgId = 'mg' + (level+1);
+  const hBtn = document.getElementById(mgId + 'HintBtn');
+  if (hBtn) { hBtn.disabled = false; hBtn.textContent = '💡 Подсказка'; }
+  [1,2,3].forEach(i => {
+    const d = document.getElementById(`${mgId}h${i}`);
+    if (d) d.classList.remove('used');
+  });
+
+  document.querySelectorAll('.mini-game-container').forEach(el => el.classList.remove('active'));
+
+  if (level === 0) initMG1();
+  else if (level === 1) initMG2();
+  else if (level === 2) initMG3();
+  else if (level === 3) initMG4();
+  else if (level === 4) initMG5();
+  else if (level === 5) initMG6();
+
+  // scroll to top
+  document.getElementById('gameArea').scrollTop = 0;
+}
+
+// ==============================
+// MG1: FIND ADJECTIVE
+// ==============================
+
+function initMG1() {
+  state.mg1.qIndex = 0;
+  state.mg1.levelStartTime = Date.now();
+  document.getElementById('mg1').classList.add('active');
+  loadMG1Question();
+}
+
+function loadMG1Question() {
+  const q = state.mg1.qIndex;
+  if (q >= MG1_DATA.length) { completeMG1(); return; }
+  const data = MG1_DATA[q];
+  state.mg1.found = [];
+  state.mg1.totalAdj = data.adjectives.length;
+  hideFeedback('mg1');
+  clearNav('mg1');
+  document.getElementById('mg1Instruction').textContent = `Найди ${data.adjectives.length === 1 ? 'прилагательное' : 'все прилагательные'} в предложении! (${q+1}/${MG1_DATA.length})`;
+
+  const container = document.getElementById('sentenceWords');
+  container.innerHTML = '';
+  data.sentence.forEach(word => {
+    const chip = document.createElement('div');
+    chip.className = 'word-chip';
+    chip.textContent = word;
+    chip.dataset.word = word;
+    chip.onclick = () => checkMG1Word(chip, word, data);
+    container.appendChild(chip);
+  });
+  setProgress('mg1', (q / MG1_DATA.length) * 100);
+}
+
+function checkMG1Word(chip, word, data) {
+  if (chip.classList.contains('selected-correct')) return;
+  state.metrics.mg1.attempts++;
+  const normalizedWord = word.replace(/[.,!?]/g, '');
+  const isAdj = data.adjectives.some(a => a.toLowerCase() === normalizedWord.toLowerCase() || a.toLowerCase() === word.toLowerCase());
+
+  if (isAdj) {
+    chip.classList.add('selected-correct');
+    state.mg1.found.push(word);
+    state.score += 5;
+    state.metrics.mg1.correct++;
+    updateHUD();
+    showParticles(chip.getBoundingClientRect().left + 30, chip.getBoundingClientRect().top, ['⭐','✨']);
+    showFeedback('mg1', 'correct', '✅ Верно!', `«${word}» — это прилагательное! Отвечает на вопрос: КАКОЙ? КАКАЯ? КАКОЕ?`);
+
+    if (state.mg1.found.length === state.mg1.totalAdj) {
+      setTimeout(() => {
+        state.mg1.qIndex++;
+        if (state.mg1.qIndex < MG1_DATA.length) {
+          clearNav('mg1');
+          addNavBtn('mg1', 'Следующее предложение →', 'btn-gold', () => loadMG1Question());
+        } else {
+          completeMG1();
+        }
+      }, 800);
+    }
+  } else {
+    chip.classList.add('selected-wrong');
+    setTimeout(() => chip.classList.remove('selected-wrong'), 500);
+    showFeedback('mg1', 'wrong', '❌ Не то слово', `«${word}» — не прилагательное. Задай вопрос КАКОЙ? КАКАЯ? КАКОЕ? — к этому слову вопрос не подходит.`);
+    addMG1HintButton();
+  }
+}
+
+function addMG1HintButton() {
+  // hint button is always visible in hint ladder
+}
+
+function showMg1Hint() {
+  const q = MG1_DATA[state.mg1.qIndex];
+  const h = state.hints.mg1;
+  const hints = [q.hint1, q.hint2, q.hint3];
+  showFeedback('mg1', 'hint', '💡 Подсказка', hints[h-1]);
+}
+
+function completeMG1() {
+  state.metrics.mg1.time = Math.round((Date.now() - state.mg1.levelStartTime) / 1000);
+  showLevelComplete(0);
+}
+
+// ==============================
+// MG2: ASK QUESTION
+// ==============================
+
+function initMG2() {
+  state.mg2.qIndex = 0;
+  state.mg2.levelStartTime = Date.now();
+  document.getElementById('mg2').classList.add('active');
+  loadMG2Question();
+}
+
+function loadMG2Question() {
+  const q = state.mg2.qIndex;
+  if (q >= MG2_DATA.length) { completeMG2(); return; }
+  const data = MG2_DATA[q];
+  hideFeedback('mg2');
+  clearNav('mg2');
+
+  const sentence = data.sentence.replace(data.highlighted,
+    `<span style="background:var(--gold-light);border-radius:6px;padding:2px 6px;border:2px solid var(--gold);font-weight:900;">${data.highlighted}</span>`);
+  document.getElementById('mg2Sentence').innerHTML = `Вопрос к слову:<br>${sentence}`;
+
+  const container = document.getElementById('questionOptions');
+  container.innerHTML = '';
+  const shuffled = [...data.options].sort(() => Math.random() - 0.5);
+  shuffled.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-icon">❓</span>${opt}`;
+    btn.onclick = () => checkMG2(btn, opt, data, container);
+    container.appendChild(btn);
+  });
+
+  setProgress('mg2', (q / MG2_DATA.length) * 100);
+  document.getElementById('mg2Instruction').textContent = `Задание ${q+1} из ${MG2_DATA.length}: какой вопрос задать к выделенному слову?`;
+}
+
+function checkMG2(btn, answer, data, container) {
+  state.metrics.mg2.attempts++;
+  container.querySelectorAll('.option-btn').forEach(b => b.classList.add('disabled'));
+
+  if (answer === data.correctQ) {
+    btn.classList.add('correct');
+    btn.innerHTML = `<span class="option-icon">✅</span>${answer}`;
+    state.score += 8;
+    state.metrics.mg2.correct++;
+    updateHUD();
+    showParticles(btn.getBoundingClientRect().left + 50, btn.getBoundingClientRect().top, ['⭐','✨','🌟']);
+    showFeedback('mg2', 'correct', '✅ Правильно!', data.explain);
+    setTimeout(() => {
+      state.mg2.qIndex++;
+      if (state.mg2.qIndex < MG2_DATA.length) {
+        clearNav('mg2');
+        addNavBtn('mg2', 'Следующий вопрос →', 'btn-gold', () => loadMG2Question());
+      } else {
+        completeMG2();
+      }
+    }, 1000);
+  } else {
+    btn.classList.add('wrong');
+    btn.innerHTML = `<span class="option-icon">❌</span>${answer}`;
+    showFeedback('mg2', 'wrong', '❌ Не совсем', `Это не тот вопрос. ${data.explain}`);
+    setTimeout(() => {
+      container.querySelectorAll('.option-btn').forEach(b => b.classList.remove('disabled'));
+      btn.classList.remove('wrong');
+    }, 1200);
+  }
+}
+
+function showMg2Hint() {
+  const q = MG2_DATA[state.mg2.qIndex];
+  const h = state.hints.mg2;
+  const hints = [
+    'Прилагательное согласуется с существительным по роду и числу.',
+    `Слово «${q.highlighted}» описывает существительное. Каков его род?`,
+    `Правильный ответ: ${q.correctQ} — ${q.explain}`
+  ];
+  showFeedback('mg2', 'hint', '💡 Подсказка', hints[h-1]);
+}
+
+function completeMG2() {
+  state.metrics.mg2.time = Math.round((Date.now() - state.mg2.levelStartTime) / 1000);
+  showLevelComplete(1);
+}
+
+// ==============================
+// MG3: SORT BY GENDER
+// ==============================
+
+function initMG3() {
+  state.mg3.placed = {};
+  state.mg3.levelStartTime = Date.now();
+  document.getElementById('mg3').classList.add('active');
+  ['m','f','n'].forEach(g => { document.getElementById('binItems-'+g).innerHTML = ''; });
+  hideFeedback('mg3');
+  clearNav('mg3');
+
+  const cards = document.getElementById('sortCards');
+  cards.innerHTML = '';
+  state.mg3.totalCards = MG3_DATA.length;
+
+  MG3_DATA.forEach((item, idx) => {
+    const card = document.createElement('div');
+    card.className = 'sort-card';
+    card.textContent = item.word;
+    card.dataset.idx = idx;
+    card.dataset.gender = item.gender;
+    card.dataset.noun = item.noun;
+
+    // Touch/drag
+    card.draggable = true;
+    card.addEventListener('dragstart', e => {
+      e.dataTransfer.setData('idx', idx);
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+    // Touch support
+    let touchStartX, touchStartY;
+    card.addEventListener('touchstart', e => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    card.addEventListener('touchend', e => {
+      const touch = e.changedTouches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const bin = el?.closest('.gender-bin');
+      if (bin) dropCardOnBin(idx, bin.dataset.gender, item, card);
+    });
+
+    // Click to cycle (mobile fallback)
+    card.addEventListener('click', () => {
+      if (card.classList.contains('placed')) return;
+      showMg3CardOptions(card, idx, item);
+    });
+
+    cards.appendChild(card);
+  });
+
+  // Setup drop zones
+  document.querySelectorAll('.gender-bin').forEach(bin => {
+    bin.addEventListener('dragover', e => { e.preventDefault(); bin.classList.add('drag-over'); });
+    bin.addEventListener('dragleave', () => bin.classList.remove('drag-over'));
+    bin.addEventListener('drop', e => {
+      e.preventDefault();
+      bin.classList.remove('drag-over');
+      const idx = parseInt(e.dataTransfer.getData('idx'));
+      dropCardOnBin(idx, bin.dataset.gender, MG3_DATA[idx], document.querySelector(`[data-idx="${idx}"]`));
+    });
+  });
+}
+
+function showMg3CardOptions(card, idx, item) {
+  // Remove existing popups
+  document.querySelectorAll('.fix-options-popup').forEach(p => p.remove());
+  const popup = document.createElement('div');
+  popup.className = 'fix-options-popup';
+  ['m','f','n'].forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = 'fix-option';
+    btn.textContent = g === 'm' ? '🧒 М' : g === 'f' ? '👧 Ж' : '🌟 С';
+    btn.onclick = (e) => { e.stopPropagation(); popup.remove(); dropCardOnBin(idx, g, item, card); };
+    popup.appendChild(btn);
+  });
+  card.style.position = 'relative';
+  card.appendChild(popup);
+  setTimeout(() => document.addEventListener('click', function once() { popup.remove(); document.removeEventListener('click', once); }), 100);
+}
+
+function dropCardOnBin(idx, gender, item, cardEl) {
+  if (state.mg3.placed[idx] !== undefined) return;
+  state.metrics.mg3.attempts++;
+
+  if (gender === item.gender) {
+    state.mg3.placed[idx] = true;
+    cardEl.classList.add('placed');
+    state.score += 6;
+    state.metrics.mg3.correct++;
+    updateHUD();
+    const binItems = document.getElementById('binItems-' + gender);
+    const tag = document.createElement('div');
+    tag.className = 'bin-item';
+    tag.textContent = item.word;
+    binItems.appendChild(tag);
+    showParticles(cardEl.getBoundingClientRect().left + 30, cardEl.getBoundingClientRect().top, ['✅','⭐']);
+    showFeedback('mg3', 'correct', '✅ Верно!', `«${item.word}» — ${gender === 'm' ? 'мужской' : gender === 'f' ? 'женский' : 'средний'} род. Существительное «${item.noun}».`);
+
+    const placedCount = Object.keys(state.mg3.placed).length;
+    setProgress('mg3', (placedCount / state.mg3.totalCards) * 100);
+
+    if (placedCount === state.mg3.totalCards) {
+      setTimeout(() => completeMG3(), 800);
+    }
+  } else {
+    showFeedback('mg3', 'wrong', '❌ Не та корзинка', `«${item.word}» — не ${gender === 'm' ? 'мужской' : gender === 'f' ? 'женский' : 'средний'} род. Подсказка: слово «${item.noun}» какого рода?`);
+    cardEl.classList.add('dragging');
+    setTimeout(() => cardEl.classList.remove('dragging'), 300);
+  }
+}
+
+function showMg3Hint() {
+  const unplaced = MG3_DATA.filter((_, i) => state.mg3.placed[i] === undefined);
+  if (!unplaced.length) return;
+  const item = unplaced[0];
+  const h = state.hints.mg3;
+  const hints = [
+    'Задай вопрос: КАКОЙ? (муж.), КАКАЯ? (жен.), КАКОЕ? (ср.)',
+    `Слово «${item.word}» — подскажет существительное «${item.noun}»`,
+    `«${item.word}» → ${item.gender === 'm' ? 'мужской (КАКОЙ?)' : item.gender === 'f' ? 'женский (КАКАЯ?)' : 'средний (КАКОЕ?)'} род`
+  ];
+  showFeedback('mg3', 'hint', '💡 Подсказка', hints[h-1]);
+}
+
+function completeMG3() {
+  state.metrics.mg3.time = Math.round((Date.now() - state.mg3.levelStartTime) / 1000);
+  showLevelComplete(2);
+}
+
+// ==============================
+// MG4: ENDINGS
+// ==============================
+
+function initMG4() {
+  state.mg4.qIndex = 0;
+  state.mg4.levelStartTime = Date.now();
+  document.getElementById('mg4').classList.add('active');
+  loadMG4Question();
+}
+
+function loadMG4Question() {
+  const q = state.mg4.qIndex;
+  if (q >= MG4_DATA.length) { completeMG4(); return; }
+  const data = MG4_DATA[q];
+  hideFeedback('mg4');
+  clearNav('mg4');
+
+  document.getElementById('nounHint').textContent = `Существительное: ${data.noun}`;
+
+  const construct = document.getElementById('wordConstruct');
+  construct.innerHTML = `<span class="word-base">${data.base}</span><div class="ending-slot" id="endingSlot">___</div>`;
+
+  const choice = document.getElementById('endingsChoice');
+  choice.innerHTML = '';
+  const shuffled = [...data.endings].sort(() => Math.random() - 0.5);
+  shuffled.forEach(end => {
+    const btn = document.createElement('button');
+    btn.className = 'ending-btn';
+    btn.textContent = end;
+    btn.onclick = () => checkMG4(end, data, btn);
+    choice.appendChild(btn);
+  });
+  setProgress('mg4', (q / MG4_DATA.length) * 100);
+}
+
+function checkMG4(ending, data, btn) {
+  state.metrics.mg4.attempts++;
+  const slot = document.getElementById('endingSlot');
+
+  if (ending === data.correct) {
+    slot.textContent = ending;
+    slot.classList.add('correct');
+    btn.classList.add('used');
+    state.score += 8;
+    state.metrics.mg4.correct++;
+    updateHUD();
+    showParticles(slot.getBoundingClientRect().left + 30, slot.getBoundingClientRect().top, ['⭐','✨','🎉']);
+    showFeedback('mg4', 'correct', '✅ Правильно!', `«${data.base}${ending}» — верно! ${data.noun}`);
+    setTimeout(() => {
+      state.mg4.qIndex++;
+      loadMG4Question();
+    }, 1200);
+  } else {
+    slot.textContent = ending;
+    slot.classList.add('filled');
+    slot.classList.add('wrong');
+    btn.classList.add('used');
+    showFeedback('mg4', 'wrong', '❌ Не то окончание', `Окончание «${ending}» не подходит. Задай вопрос к существительному: ${data.noun}`);
+    setTimeout(() => {
+      slot.textContent = '___';
+      slot.className = 'ending-slot';
+      btn.classList.remove('used');
+    }, 1000);
+  }
+}
+
+function showMg4Hint() {
+  const q = MG4_DATA[state.mg4.qIndex];
+  const h = state.hints.mg4;
+  const hints = [q.hint1, q.hint2, q.hint3];
+  showFeedback('mg4', 'hint', '💡 Подсказка', hints[h-1]);
+}
+
+function completeMG4() {
+  state.metrics.mg4.time = Math.round((Date.now() - state.mg4.levelStartTime) / 1000);
+  showLevelComplete(3);
+}
+
+// ==============================
+// MG5: BUILD PHRASE
+// ==============================
+
+function initMG5() {
+  state.mg5.qIndex = 0;
+  state.mg5.levelStartTime = Date.now();
+  document.getElementById('mg5').classList.add('active');
+  loadMG5Question();
+}
+
+function loadMG5Question() {
+  const q = state.mg5.qIndex;
+  if (q >= MG5_DATA.length) { completeMG5(); return; }
+  const data = MG5_DATA[q];
+  hideFeedback('mg5');
+  clearNav('mg5');
+
+  document.getElementById('buildNoun').textContent = data.noun + ' — ' + data.nounHint;
+  document.getElementById('phraseResult').textContent = 'Выбери прилагательное выше ⬆️';
+  document.getElementById('phraseResult').classList.remove('animate-in');
+
+  const opts = document.getElementById('adjOptions');
+  opts.innerHTML = '';
+  const shuffled = [...data.options].sort(() => Math.random() - 0.5);
+  shuffled.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'adj-btn';
+    btn.textContent = opt;
+    btn.onclick = () => checkMG5(opt, data, btn);
+    opts.appendChild(btn);
+  });
+  setProgress('mg5', (q / MG5_DATA.length) * 100);
+}
+
+function checkMG5(adj, data, btn) {
+  state.metrics.mg5.attempts++;
+  document.querySelectorAll('.adj-btn').forEach(b => b.style.pointerEvents = 'none');
+
+  if (adj === data.correct) {
+    btn.classList.add('correct');
+    const result = document.getElementById('phraseResult');
+    result.textContent = `${data.correct} ${data.noun}`;
+    result.classList.add('animate-in');
+    state.score += 10;
+    state.metrics.mg5.correct++;
+    updateHUD();
+    showParticles(result.getBoundingClientRect().left + 80, result.getBoundingClientRect().top, ['⭐','✨','🌟','🎉']);
+    showFeedback('mg5', 'correct', '✅ Отлично!', data.explain);
+    setTimeout(() => {
+      state.mg5.qIndex++;
+      loadMG5Question();
+      document.querySelectorAll('.adj-btn').forEach(b => b.style.pointerEvents = '');
+    }, 1400);
+  } else {
+    btn.classList.add('wrong');
+    showFeedback('mg5', 'wrong', '❌ Не подходит', `«${adj}» не согласуется с «${data.noun}». Проверь род и число.`);
+    setTimeout(() => {
+      btn.classList.remove('wrong');
+      document.querySelectorAll('.adj-btn').forEach(b => b.style.pointerEvents = '');
+    }, 800);
+  }
+}
+
+function showMg5Hint() {
+  const q = MG5_DATA[state.mg5.qIndex];
+  const h = state.hints.mg5;
+  const hints = [
+    'Прилагательное должно отвечать на тот же вопрос, что и существительное.',
+    `«${q.noun}» — ${q.nounHint}. Ищи прилагательное с тем же окончанием.`,
+    `Правильный ответ: «${q.correct} ${q.noun}». ${q.explain}`
+  ];
+  showFeedback('mg5', 'hint', '💡 Подсказка', hints[h-1]);
+}
+
+function completeMG5() {
+  state.metrics.mg5.time = Math.round((Date.now() - state.mg5.levelStartTime) / 1000);
+  showLevelComplete(4);
+}
+
+// ==============================
+// MG6: FIX THE TEXT
+// ==============================
+
+function initMG6() {
+  state.mg6.fixed = 0;
+  state.mg6.total = MG6_DATA.sentences.length;
+  state.mg6.levelStartTime = Date.now();
+  document.getElementById('mg6').classList.add('active');
+  hideFeedback('mg6');
+  clearNav('mg6');
+
+  const container = document.getElementById('fixTextContainer');
+  container.innerHTML = '';
+
+  MG6_DATA.sentences.forEach((s, idx) => {
+    const span = document.createElement('span');
+    span.innerHTML = s.before;
+
+    const errorSpan = document.createElement('span');
+    errorSpan.className = 'fix-word';
+    errorSpan.textContent = s.wrongWord;
+    errorSpan.dataset.idx = idx;
+    errorSpan.dataset.correct = s.correct;
+    errorSpan.onclick = () => showFixOptions(errorSpan, idx, s);
+
+    span.appendChild(errorSpan);
+    const after = document.createElement('span');
+    after.textContent = s.after;
+    span.appendChild(after);
+    container.appendChild(span);
+    container.appendChild(document.createTextNode(' '));
+  });
+
+  setProgress('mg6', 0);
+}
+
+function showFixOptions(el, idx, data) {
+  if (el.classList.contains('fixed')) return;
+  document.querySelectorAll('.fix-options-popup').forEach(p => p.remove());
+
+  const popup = document.createElement('div');
+  popup.className = 'fix-options-popup';
+  data.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'fix-option';
+    btn.textContent = opt;
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      popup.remove();
+      checkMG6Fix(el, opt, data);
+    };
+    popup.appendChild(btn);
+  });
+  el.appendChild(popup);
+  setTimeout(() => document.addEventListener('click', function once() { popup.remove(); document.removeEventListener('click', once); }), 100);
+}
+
+function checkMG6Fix(el, choice, data) {
+  state.metrics.mg6.attempts++;
+  if (choice === data.correct) {
+    el.textContent = choice;
+    el.classList.add('fixed');
+    state.mg6.fixed++;
+    state.score += 12;
+    state.metrics.mg6.correct++;
+    updateHUD();
+    showParticles(el.getBoundingClientRect().left + 20, el.getBoundingClientRect().top, ['✅','⭐','✨']);
+    showFeedback('mg6', 'correct', '✅ Исправлено!', data.explain);
+    setProgress('mg6', (state.mg6.fixed / state.mg6.total) * 100);
+    if (state.mg6.fixed === state.mg6.total) {
+      setTimeout(() => completeMG6(), 800);
+    }
+  } else {
+    el.classList.add('wrong');
+    setTimeout(() => el.classList.remove('wrong'), 500);
+    showFeedback('mg6', 'wrong', '❌ Неверно', `«${choice}» не подходит. Подсказка: ${data.noun}. ${data.explain}`);
+  }
+}
+
+function showMg6Hint() {
+  const unfixed = MG6_DATA.sentences.filter(s => {
+    const els = document.querySelectorAll('.fix-word');
+    for (let el of els) {
+      if (el.dataset.correct === s.correct && !el.classList.contains('fixed')) return true;
+    }
+    return false;
+  });
+  if (!unfixed.length) return;
+  const s = unfixed[0];
+  const h = state.hints.mg6;
+  const hints = [
+    'Найди выделенное слово с ошибкой и нажми на него.',
+    `Подсказка: ${s.noun} — проверь согласование.`,
+    `Правильный ответ: «${s.correct}». ${s.explain}`
+  ];
+  showFeedback('mg6', 'hint', '💡 Подсказка', hints[h-1]);
+}
+
+function completeMG6() {
+  state.metrics.mg6.time = Math.round((Date.now() - state.mg6.levelStartTime) / 1000);
+  showLevelComplete(5);
+}
+
+// ==============================
+// LEVEL COMPLETE
+// ==============================
+
+function showLevelComplete(level) {
+  state.floorsUnlocked[level] = true;
+  updateHUD();
+
+  const colors = LEVEL_COLORS;
+  const badge = document.getElementById('levelBadge');
+  badge.style.background = `linear-gradient(135deg, ${colors[level]}, ${colors[(level+1)%6]})`;
+  badge.textContent = LEVEL_EMOJIS[level];
+
+  const accuracy = calcLevelAccuracy(level);
+  const stars = accuracy >= 90 ? '⭐⭐⭐' : accuracy >= 70 ? '⭐⭐' : '⭐';
+  document.getElementById('levelStars').textContent = stars;
+  document.getElementById('levelTitle').textContent = level === 5 ? '🏆 Башня расколдована!' : `Этаж ${level+1} открыт!`;
+  document.getElementById('levelText').textContent = level === 5
+    ? 'Ты справился со всеми испытаниями! Серый Туман побеждён!'
+    : `«${LEVEL_NAMES[level]}» — пройдено! ${accuracy}% правильных ответов.`;
+
+  const nextBtn = document.getElementById('levelNextBtn');
+  if (level === 5) {
+    nextBtn.textContent = '🏆 Посмотреть результаты';
+    nextBtn.onclick = () => showReport();
+  } else {
+    nextBtn.textContent = `Испытание ${level+2}: ${LEVEL_ICONS[level+1]} →`;
+    nextBtn.onclick = () => nextLevel();
+  }
+
+  hideAllScreens();
+  document.getElementById('levelComplete').classList.remove('hidden');
+  setTimeout(() => document.getElementById('levelComplete').classList.add('active'), 10);
+  document.getElementById('gameArea').classList.remove('visible');
+}
+
+function calcLevelAccuracy(level) {
+  const key = 'mg' + (level+1);
+  const m = state.metrics[key];
+  if (!m.attempts) return 100;
+  return Math.round((m.correct / m.attempts) * 100);
+}
+
+function nextLevel() {
+  const next = state.currentLevel + 1;
+  hideAllScreens();
+  document.getElementById('gameArea').classList.add('visible');
+  transition(LEVEL_ICONS[next], () => loadLevel(next));
+}
+
+// ==============================
+// REPORT
+// ==============================
+
+function showReport() {
+  hideAllScreens();
+  document.getElementById('gameArea').classList.remove('visible');
+  document.getElementById('reportScreen').classList.remove('hidden');
+  setTimeout(() => document.getElementById('reportScreen').classList.add('active'), 10);
+  document.getElementById('hud').classList.remove('visible');
+
+  const totalTime = Math.round((Date.now() - state.startTime) / 1000);
+  const mins = Math.floor(totalTime / 60);
+  const secs = totalTime % 60;
+
+  let totalAttempts = 0, totalCorrect = 0, totalHints = 0;
+  Object.values(state.metrics).forEach(m => {
+    totalAttempts += m.attempts;
+    totalCorrect += m.correct;
+    totalHints += m.hints;
+  });
+  const accuracy = totalAttempts ? Math.round((totalCorrect / totalAttempts) * 100) : 100;
+
+  document.getElementById('repTotalStars').textContent = state.score + ' очков';
+  document.getElementById('repAccuracy').textContent = accuracy + '%';
+  document.getElementById('repTime').textContent = `${mins} мин ${secs} сек`;
+  document.getElementById('repHints').textContent = totalHints;
+
+  // Mini game breakdown
+  const mgReport = document.getElementById('miniGameReport');
+  mgReport.innerHTML = '';
+  const mgNames = ['Найди прилагательное','Задай вопрос','Сортировка по роду','Окончания','Составь словосочетание','Исправь ошибки'];
+  Object.keys(state.metrics).forEach((key, i) => {
+    const m = state.metrics[key];
+    const acc = m.attempts ? Math.round((m.correct / m.attempts) * 100) : 100;
+    const row = document.createElement('div');
+    row.className = 'report-mini-game';
+    row.innerHTML = `
+      <div class="mini-emoji">${LEVEL_EMOJIS[i]}</div>
+      <div class="mini-info">
+        <div class="mini-name">${mgNames[i]}</div>
+        <div class="mini-stat">Попыток: ${m.attempts} • Подсказок: ${m.hints} • Время: ${m.time}с</div>
+      </div>
+      <div class="mini-score">${acc}%</div>
+    `;
+    mgReport.appendChild(row);
+  });
+
+  // Skills
+  const skillsDiv = document.getElementById('skillsReport');
+  const skills = [
+    { name: 'Распознавание прилагательного', keys: ['mg1','mg2'], icon: '🔍' },
+    { name: 'Вопросы к прилагательному', keys: ['mg2'], icon: '❓' },
+    { name: 'Согласование по роду/числу', keys: ['mg3','mg4','mg5','mg6'], icon: '🎯' },
+  ];
+  skillsDiv.innerHTML = '';
+  skills.forEach(skill => {
+    let att = 0, cor = 0;
+    skill.keys.forEach(k => { att += state.metrics[k].attempts; cor += state.metrics[k].correct; });
+    const pct = att ? Math.round((cor/att)*100) : 100;
+    const div = document.createElement('div');
+    div.style.marginBottom = '12px';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;color:var(--purple-dark);margin-bottom:4px;">
+        <span>${skill.icon} ${skill.name}</span><span>${pct}%</span>
+      </div>
+      <div class="report-skill-bar"><div class="skill-fill" style="width:0%" data-target="${pct}"></div></div>
+    `;
+    skillsDiv.appendChild(div);
+  });
+  setTimeout(() => {
+    document.querySelectorAll('.skill-fill').forEach(el => {
+      el.style.width = el.dataset.target + '%';
+    });
+  }, 300);
+}
+
+function pickFlag(el, color) {
+  state.flagColor = color;
+  document.querySelectorAll('#flagColors div').forEach(d => d.style.border = '3px solid transparent');
+  el.style.border = `3px solid ${color}`;
+  document.getElementById('colorChoice').innerHTML = `<span style="font-size:32px;">🏰</span> <span style="font-size:18px;font-weight:800;color:${color};">Твой флаг выбран!</span>`;
+}
+
+function restartGame() {
+  // Reset state
+  state.currentLevel = 0;
+  state.score = 0;
+  state.startTime = null;
+  state.floorsUnlocked = [false,false,false,false,false,false];
+  Object.keys(state.hints).forEach(k => state.hints[k] = 0);
+  Object.keys(state.metrics).forEach(k => state.metrics[k] = { attempts: 0, correct: 0, hints: 0, time: 0 });
+
+  document.getElementById('hud').classList.remove('visible');
+  document.getElementById('gameArea').classList.remove('visible');
+  hideAllScreens();
+  document.getElementById('startScreen').classList.remove('hidden');
+  setTimeout(() => document.getElementById('startScreen').classList.add('active'), 10);
+}
+
+// ==============================
+// SOUND TOGGLE
+// ==============================
+
+document.getElementById('soundBtn').addEventListener('click', () => {
+  state.soundEnabled = !state.soundEnabled;
+  document.getElementById('soundBtn').textContent = state.soundEnabled ? '🔊' : '🔇';
+});
+</script>
+</body>
+</html>
