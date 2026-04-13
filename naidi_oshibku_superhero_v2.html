@@ -1,0 +1,316 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+.phone{width:100%;max-width:340px;margin:0 auto;background:#FFF8F0;border-radius:40px;border:4px solid #1a1a1a;overflow:hidden;display:flex;flex-direction:column;min-height:660px;font-family:'Nunito','Arial Rounded MT Bold',sans-serif;}
+.pbar{background:#E8420A;padding:8px 18px 7px;display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#fff;font-weight:900;letter-spacing:.5px;border-bottom:3px solid #1a1a1a;}
+.screen{flex:1;position:relative;overflow:hidden;}
+.frame{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 14px 62px;opacity:0;pointer-events:none;transition:opacity .35s;}
+.frame.active{opacity:1;pointer-events:all;}
+.prog-track{position:absolute;top:0;left:0;right:0;height:5px;background:#f0d8c0;}
+.prog-fill{height:5px;background:#E8420A;transition:width .3s;border-right:2px solid #1a1a1a;}
+.sub{position:absolute;bottom:10px;left:10px;right:10px;background:#1a1a1a;color:#FFD600;font-size:13px;font-weight:900;text-align:center;padding:8px 10px;border-radius:12px;border:2px solid #1a1a1a;line-height:1.4;font-family:'Nunito',sans-serif;}
+.ctrl-row{background:#E8420A;padding:10px 14px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:3px solid #1a1a1a;}
+.btn-p{background:#fff;color:#1a1a1a;border:2.5px solid #1a1a1a;border-radius:20px;padding:8px 14px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;}
+.btn-n{background:#FFD600;color:#1a1a1a;border:2.5px solid #1a1a1a;border-radius:20px;padding:8px 18px;font-size:13px;font-weight:900;cursor:pointer;font-family:'Nunito',sans-serif;}
+.btn-p:disabled,.btn-n:disabled{opacity:.3;cursor:default;}
+.step-ind{font-size:11px;color:#fff;font-weight:900;text-align:center;line-height:1.5;}
+.halftone{position:absolute;inset:0;pointer-events:none;opacity:.10;background-image:radial-gradient(circle,#1a1a1a 1px,transparent 1px);background-size:10px 10px;}
+.bang{font-family:'Nunito',sans-serif;font-weight:900;background:#FFD600;border:3px solid #1a1a1a;display:inline-block;padding:4px 14px;border-radius:6px;transform:rotate(-2deg);margin-bottom:8px;font-size:12px;color:#1a1a1a;letter-spacing:.5px;}
+.hero-title{font-size:26px;font-weight:900;color:#1a1a1a;text-align:center;line-height:1.15;margin-bottom:10px;text-shadow:3px 3px 0 #FFD600;font-family:'Nunito',sans-serif;}
+.notebook{background:#FFF8DC;border:3px solid #1a1a1a;border-radius:14px;padding:14px 16px 12px;width:100%;position:relative;background-image:repeating-linear-gradient(transparent,transparent 27px,#c8dff0 27px,#c8dff0 28px);background-position:0 14px;}
+.nb-hole{width:12px;height:12px;background:#FFF8F0;border:2px solid #1a1a1a;border-radius:50%;position:absolute;left:14px;top:50%;transform:translateY(-50%);}
+.nb-text{font-size:22px;font-weight:900;color:#1a1a1a;text-align:center;font-family:'Nunito',sans-serif;line-height:1.7;position:relative;z-index:1;padding-left:8px;}
+.ok-word{background:#2DB37A;color:#fff;border-radius:8px;padding:1px 6px;border:2px solid #1a1a1a;}
+.cross-word{text-decoration:line-through;color:#E8420A;font-size:18px;}
+.zap{background:#FFD600;border:3px solid #1a1a1a;clip-path:polygon(8% 0%,92% 0%,100% 50%,92% 100%,8% 100%,0% 50%);padding:9px 22px;font-size:15px;font-weight:900;color:#1a1a1a;text-align:center;font-family:'Nunito',sans-serif;margin-bottom:8px;width:88%;}
+.timer-svg{display:block;margin:6px auto;}
+.tc-bg{stroke:#f0d8c0;stroke-width:8;fill:none;}
+.tc-fg{stroke:#E8420A;stroke-width:8;fill:none;stroke-linecap:round;stroke-dasharray:220;stroke-dashoffset:0;transition:stroke-dashoffset .9s linear;}
+.t-num-txt{font-size:28px;font-weight:900;fill:#1a1a1a;font-family:'Nunito',sans-serif;}
+.ans-row{display:flex;align-items:flex-start;gap:10px;background:#fff;border:2.5px solid #1a1a1a;border-radius:14px;padding:9px 11px;margin-bottom:7px;width:100%;}
+.ans-badge{background:#FF7B35;color:#fff;font-size:13px;font-weight:900;min-width:26px;height:26px;border-radius:8px;border:2px solid #1a1a1a;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'Nunito',sans-serif;}
+.ans-t{font-size:13px;font-weight:900;color:#1a1a1a;line-height:1.5;font-family:'Nunito',sans-serif;}
+.ans-rule{font-size:11px;font-weight:800;color:#E8420A;display:block;margin-top:2px;}
+.cta-box{background:#FFD600;border:3px solid #1a1a1a;border-radius:16px;padding:11px 16px;width:100%;text-align:center;font-size:19px;font-weight:900;color:#1a1a1a;line-height:1.3;font-family:'Nunito',sans-serif;margin-bottom:10px;transform:rotate(-1deg);}
+.react-row{display:flex;gap:14px;font-size:13px;font-weight:900;color:#888;}
+.pow-badge{position:absolute;top:14px;right:14px;background:#FF7B35;border:3px solid #1a1a1a;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;text-align:center;line-height:1.2;font-family:'Nunito',sans-serif;transform:rotate(12deg);}
+.star-row{display:flex;justify-content:center;gap:5px;margin-bottom:8px;}
+.star-svg{width:22px;height:22px;}
+.pause-hex{width:68px;height:68px;background:#FF7B35;border:3px solid #1a1a1a;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
+.speech-right{background:#fff;border:3px solid #1a1a1a;border-radius:18px 18px 18px 4px;padding:10px 14px;font-size:14px;font-weight:900;color:#1a1a1a;line-height:1.4;font-family:'Nunito',sans-serif;max-width:180px;}
+.hero-row{display:flex;align-items:flex-end;gap:10px;width:100%;margin-bottom:10px;}
+</style>
+
+<h2 class="sr-only">Сторибоард «Найди ошибку!» — супергерой для 2 класса</h2>
+
+<div class="phone">
+  <div class="pbar">
+    <span>&#9889; ВКонтакте</span>
+    <span id="timeLabel">00:00</span>
+    <span>9:16 &#9654;</span>
+  </div>
+
+  <div class="screen">
+    <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+
+    <!-- КАДР 1: КРЮЧОК -->
+    <div class="frame active" id="f1" style="background:#FFE066;">
+      <div class="halftone"></div>
+      <div class="pow-badge">2<br>КЛАСС</div>
+      <!-- Супергерой большой -->
+      <svg width="90" height="110" viewBox="0 0 90 110" style="margin-bottom:4px;">
+        <!-- плащ -->
+        <path d="M22 55 Q10 80 15 105 Q30 95 45 100 Q60 95 75 105 Q80 80 68 55Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="2.5"/>
+        <!-- тело -->
+        <rect x="28" y="48" width="34" height="36" rx="8" fill="#FFD600" stroke="#1a1a1a" stroke-width="2.5"/>
+        <!-- эмблема -->
+        <polygon points="45,54 48,61 56,61 50,66 52,74 45,69 38,74 40,66 34,61 42,61" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.5"/>
+        <!-- голова -->
+        <circle cx="45" cy="38" r="18" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2.5"/>
+        <!-- маска -->
+        <path d="M27 36 Q33 28 45 30 Q57 28 63 36 Q57 40 45 38 Q33 40 27 36Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+        <!-- глаза (в маске) -->
+        <ellipse cx="36" cy="35" rx="4" ry="3" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+        <ellipse cx="54" cy="35" rx="4" ry="3" fill="#fff" stroke="#1a1a1a" stroke-width="1.5"/>
+        <circle cx="37" cy="35" r="1.5" fill="#1a1a1a"/>
+        <circle cx="55" cy="35" r="1.5" fill="#1a1a1a"/>
+        <!-- улыбка -->
+        <path d="M39 44 Q45 49 51 44" stroke="#1a1a1a" stroke-width="2" fill="none" stroke-linecap="round"/>
+        <!-- руки -->
+        <rect x="10" y="50" width="18" height="10" rx="5" fill="#FFD600" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(-20 19 55)"/>
+        <rect x="62" y="50" width="18" height="10" rx="5" fill="#FFD600" stroke="#1a1a1a" stroke-width="2.5" transform="rotate(20 71 55)"/>
+        <!-- кулаки -->
+        <circle cx="14" cy="46" r="7" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+        <circle cx="76" cy="46" r="7" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+        <!-- ноги -->
+        <rect x="30" y="82" width="12" height="22" rx="5" fill="#E8420A" stroke="#1a1a1a" stroke-width="2.5"/>
+        <rect x="48" y="82" width="12" height="22" rx="5" fill="#E8420A" stroke="#1a1a1a" stroke-width="2.5"/>
+        <!-- сапоги -->
+        <rect x="28" y="98" width="16" height="10" rx="4" fill="#1a1a1a"/>
+        <rect x="46" y="98" width="16" height="10" rx="4" fill="#1a1a1a"/>
+      </svg>
+      <div class="bang">&#9889; КАПИТАН ГРАМОТЕЙ!</div>
+      <div class="hero-title">Найдёшь<br>ошибку за<br>10 секунд?</div>
+      <div class="bang" style="background:#FF7B35;color:#fff;transform:rotate(1.5deg);">Задание для 2 класса!</div>
+      <div class="sub">Найдёшь ошибку за 10 секунд? &#9203;</div>
+    </div>
+
+    <!-- КАДР 2: ЗАДАНИЕ — без выделения ошибок -->
+    <div class="frame" id="f2" style="background:#FFF0D6;">
+      <div class="halftone"></div>
+      <div class="bang" style="transform:rotate(-1deg);">&#128064; ЧИТАЙ ВНИМАТЕЛЬНО!</div>
+      <!-- герой маленький + пузырь -->
+      <div class="hero-row">
+        <svg width="58" height="76" viewBox="0 0 58 76" style="flex-shrink:0;">
+          <path d="M12 38 Q4 55 7 72 Q18 65 29 68 Q40 65 51 72 Q54 55 46 38Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="16" y="32" width="26" height="26" rx="7" fill="#FFD600" stroke="#1a1a1a" stroke-width="2"/>
+          <polygon points="29,37 31,43 37,43 32,47 34,53 29,49 24,53 26,47 21,43 27,43" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.2"/>
+          <circle cx="29" cy="24" r="14" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+          <path d="M15 22 Q21 15 29 17 Q37 15 43 22 Q37 26 29 24 Q21 26 15 22Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.5"/>
+          <ellipse cx="22" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+          <ellipse cx="36" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+          <circle cx="23" cy="21" r="1.2" fill="#1a1a1a"/>
+          <circle cx="37" cy="21" r="1.2" fill="#1a1a1a"/>
+          <path d="M25 30 Q29 34 33 30" stroke="#1a1a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <rect x="56" y="36" width="12" height="8" rx="4" fill="#FFD600" stroke="#1a1a1a" stroke-width="2" transform="rotate(15 62 40)"/>
+          <rect x="-10" y="36" width="12" height="8" rx="4" fill="#FFD600" stroke="#1a1a1a" stroke-width="2" transform="rotate(-15 -4 40)"/>
+          <rect x="18" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="31" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="16" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+          <rect x="30" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+        </svg>
+        <div class="speech-right">Найди все<br>ошибки<br>в предложении!</div>
+      </div>
+      <div class="notebook">
+        <div class="nb-hole"></div>
+        <div class="nb-text">У нас жывёт<br>кот барсик.</div>
+      </div>
+      <div style="margin-top:8px;font-size:12px;font-weight:900;color:#E8420A;text-align:center;font-family:'Nunito',sans-serif;">Сколько ошибок нашёл? &#128064;</div>
+      <div class="sub">Внимательно читай предложение!</div>
+    </div>
+
+    <!-- КАДР 3: ТАЙМЕР -->
+    <div class="frame" id="f3" style="background:#FFF8E0;">
+      <div class="halftone"></div>
+      <!-- герой с часами -->
+      <svg width="60" height="78" viewBox="0 0 58 76" style="margin-bottom:4px;">
+        <path d="M12 38 Q4 55 7 72 Q18 65 29 68 Q40 65 51 72 Q54 55 46 38Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="16" y="32" width="26" height="26" rx="7" fill="#FFD600" stroke="#1a1a1a" stroke-width="2"/>
+        <polygon points="29,37 31,43 37,43 32,47 34,53 29,49 24,53 26,47 21,43 27,43" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.2"/>
+        <circle cx="29" cy="24" r="14" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+        <path d="M15 22 Q21 15 29 17 Q37 15 43 22 Q37 26 29 24 Q21 26 15 22Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.5"/>
+        <ellipse cx="22" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+        <ellipse cx="36" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+        <circle cx="23" cy="21" r="1.2" fill="#1a1a1a"/>
+        <circle cx="37" cy="21" r="1.2" fill="#1a1a1a"/>
+        <path d="M25 30 Q29 33 33 30" stroke="#1a1a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <circle cx="48" cy="44" r="9" fill="#fff" stroke="#1a1a1a" stroke-width="2"/>
+        <line x1="48" y1="44" x2="48" y2="38" stroke="#E8420A" stroke-width="1.8" stroke-linecap="round"/>
+        <line x1="48" y1="44" x2="52" y2="46" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+        <rect x="18" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="31" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="16" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+        <rect x="30" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+      </svg>
+      <div class="notebook" style="margin-bottom:8px;">
+        <div class="nb-hole"></div>
+        <div class="nb-text">У нас жывёт кот барсик.</div>
+      </div>
+      <div class="zap">&#9889; ВРЕМЯ ПОШЛО!</div>
+      <svg class="timer-svg" width="86" height="86" viewBox="0 0 90 90">
+        <circle class="tc-bg" cx="45" cy="45" r="35"/>
+        <circle class="tc-fg" id="timerCircle" cx="45" cy="45" r="35" transform="rotate(-90 45 45)"/>
+        <text class="t-num-txt" x="45" y="53" text-anchor="middle" id="timerText">10</text>
+      </svg>
+      <div class="sub">10... 9... 8... Время пошло!</div>
+    </div>
+
+    <!-- КАДР 4: ПАУЗА -->
+    <div class="frame" id="f4" style="background:#FFE8D0;">
+      <div class="halftone"></div>
+      <!-- герой думает -->
+      <div style="position:relative;width:100%;display:flex;justify-content:center;margin-bottom:10px;">
+        <svg width="70" height="86" viewBox="0 0 58 76">
+          <path d="M12 38 Q4 55 7 72 Q18 65 29 68 Q40 65 51 72 Q54 55 46 38Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="16" y="32" width="26" height="26" rx="7" fill="#FFD600" stroke="#1a1a1a" stroke-width="2"/>
+          <polygon points="29,37 31,43 37,43 32,47 34,53 29,49 24,53 26,47 21,43 27,43" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.2"/>
+          <circle cx="29" cy="24" r="14" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+          <path d="M15 22 Q21 15 29 17 Q37 15 43 22 Q37 26 29 24 Q21 26 15 22Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.5"/>
+          <ellipse cx="22" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+          <ellipse cx="36" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+          <circle cx="23" cy="21" r="1.2" fill="#1a1a1a"/>
+          <circle cx="37" cy="21" r="1.2" fill="#1a1a1a"/>
+          <path d="M26 32 Q29 35 32 32" stroke="#1a1a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <line x1="38" y1="13" x2="40" y2="7" stroke="#1a1a1a" stroke-width="1.5" stroke-dasharray="2,2"/>
+          <circle cx="41" cy="5" r="3" fill="#FFD600" stroke="#1a1a1a" stroke-width="1.5"/>
+          <rect x="18" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="31" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="16" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+          <rect x="30" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+        </svg>
+        <div style="position:absolute;top:0;right:30px;background:#fff;border:2.5px solid #1a1a1a;border-radius:14px 14px 14px 4px;padding:8px 12px;font-size:13px;font-weight:900;color:#1a1a1a;font-family:'Nunito',sans-serif;line-height:1.4;">Думаем...<br>&#129300;</div>
+      </div>
+      <div class="bang" style="background:#FF7B35;color:#fff;transform:rotate(1deg);">&#9646;&#9646; СТОП!</div>
+      <div style="font-size:20px;font-weight:900;color:#1a1a1a;text-align:center;line-height:1.3;font-family:'Nunito',sans-serif;margin-bottom:6px;">Пауза!<br>Проверь себя.</div>
+      <div style="font-size:14px;font-weight:800;color:#E8420A;text-align:center;font-family:'Nunito',sans-serif;">Готов узнать ответ?</div>
+      <div class="sub">Пауза! Проверь себя.</div>
+    </div>
+
+    <!-- КАДР 5: ОТВЕТ -->
+    <div class="frame" id="f5" style="background:#F0FFF4;">
+      <div class="halftone" style="opacity:.06;"></div>
+      <!-- герой победный -->
+      <div style="display:flex;align-items:flex-end;gap:8px;width:100%;margin-bottom:8px;">
+        <svg width="56" height="74" viewBox="0 0 58 76" style="flex-shrink:0;">
+          <path d="M12 38 Q4 55 7 72 Q18 65 29 68 Q40 65 51 72 Q54 55 46 38Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="16" y="32" width="26" height="26" rx="7" fill="#FFD600" stroke="#1a1a1a" stroke-width="2"/>
+          <polygon points="29,37 31,43 37,43 32,47 34,53 29,49 24,53 26,47 21,43 27,43" fill="#2DB37A" stroke="#1a1a1a" stroke-width="1.2"/>
+          <circle cx="29" cy="24" r="14" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+          <path d="M15 22 Q21 15 29 17 Q37 15 43 22 Q37 26 29 24 Q21 26 15 22Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.5"/>
+          <ellipse cx="22" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+          <ellipse cx="36" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+          <circle cx="23" cy="21" r="1.2" fill="#1a1a1a"/>
+          <circle cx="37" cy="21" r="1.2" fill="#1a1a1a"/>
+          <path d="M24 30 Q29 35 34 30" stroke="#1a1a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+          <rect x="-4" y="34" width="14" height="9" rx="4" fill="#FFD600" stroke="#1a1a1a" stroke-width="2" transform="rotate(-30 3 38)"/>
+          <circle cx="-2" cy="28" r="6" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="18" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="31" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+          <rect x="16" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+          <rect x="30" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+        </svg>
+        <div style="background:#2DB37A;border:2.5px solid #1a1a1a;border-radius:14px 14px 14px 4px;padding:8px 12px;font-size:13px;font-weight:900;color:#fff;font-family:'Nunito',sans-serif;line-height:1.4;">Ошибки<br>найдены! &#127881;</div>
+      </div>
+      <div class="notebook" style="margin-bottom:9px;">
+        <div class="nb-hole"></div>
+        <div class="nb-text" style="line-height:2.1;">
+          У нас <span class="cross-word">жЫвёт</span> <span class="ok-word">жИвёт</span><br>
+          кот <span class="cross-word">барсик</span> <span class="ok-word">Барсик</span>.
+        </div>
+      </div>
+      <div class="ans-row">
+        <div class="ans-badge">1</div>
+        <div class="ans-t">жЫвёт &#8594; жИвёт<span class="ans-rule">&#9889; ЖИ-ШИ пиши с буквой И</span></div>
+      </div>
+      <div class="ans-row">
+        <div class="ans-badge">2</div>
+        <div class="ans-t">барсик &#8594; Барсик<span class="ans-rule">&#9733; Клички — с большой буквы!</span></div>
+      </div>
+      <div class="sub">Молодец, герой! &#127881;</div>
+    </div>
+
+    <!-- КАДР 6: ФИНАЛ -->
+    <div class="frame" id="f6" style="background:#FFE066;">
+      <div class="halftone"></div>
+      <!-- герой большой финальный -->
+      <svg width="80" height="96" viewBox="0 0 58 76" style="margin-bottom:4px;">
+        <path d="M12 38 Q4 55 7 72 Q18 65 29 68 Q40 65 51 72 Q54 55 46 38Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="16" y="32" width="26" height="26" rx="7" fill="#FFD600" stroke="#1a1a1a" stroke-width="2"/>
+        <polygon points="29,37 31,43 37,43 32,47 34,53 29,49 24,53 26,47 21,43 27,43" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.2"/>
+        <circle cx="29" cy="24" r="14" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+        <path d="M15 22 Q21 15 29 17 Q37 15 43 22 Q37 26 29 24 Q21 26 15 22Z" fill="#E8420A" stroke="#1a1a1a" stroke-width="1.5"/>
+        <ellipse cx="22" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+        <ellipse cx="36" cy="21" rx="3" ry="2.5" fill="#fff" stroke="#1a1a1a" stroke-width="1.2"/>
+        <circle cx="23" cy="21" r="1.2" fill="#1a1a1a"/>
+        <circle cx="37" cy="21" r="1.2" fill="#1a1a1a"/>
+        <path d="M24 30 Q29 35 34 30" stroke="#1a1a1a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+        <rect x="-6" y="33" width="15" height="9" rx="4" fill="#FFD600" stroke="#1a1a1a" stroke-width="2" transform="rotate(-25 1 37)"/>
+        <rect x="49" y="33" width="15" height="9" rx="4" fill="#FFD600" stroke="#1a1a1a" stroke-width="2" transform="rotate(25 57 37)"/>
+        <circle cx="-3" cy="27" r="6" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+        <circle cx="61" cy="27" r="6" fill="#FDBF72" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="18" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="31" y="56" width="9" height="17" rx="4" fill="#E8420A" stroke="#1a1a1a" stroke-width="2"/>
+        <rect x="16" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+        <rect x="30" y="68" width="12" height="8" rx="3" fill="#1a1a1a"/>
+        <!-- звёздочки вокруг -->
+        <polygon points="4,10 5.5,14 9,14 6.5,16.5 7.5,20 4,18 0.5,20 1.5,16.5 -1,14 2.5,14" fill="#FFD600" stroke="#1a1a1a" stroke-width="1"/>
+        <polygon points="54,6 55.5,10 59,10 56.5,12.5 57.5,16 54,14 50.5,16 51.5,12.5 49,10 52.5,10" fill="#FF7B35" stroke="#1a1a1a" stroke-width="1"/>
+      </svg>
+      <div class="bang" style="font-size:13px;">&#9889; КАПИТАН ГРАМОТЕЙ ГОВОРИТ:</div>
+      <div class="cta-box">&#128071; Напиши ответ<br>в комментариях!</div>
+      <div style="font-size:14px;font-weight:900;color:#1a1a1a;text-align:center;font-family:'Nunito',sans-serif;margin-bottom:10px;">Получилось найти? Пиши! &#9889;</div>
+      <div class="react-row">
+        <span>&#10084; Нравится</span>
+        <span>&#8617; Поделиться</span>
+        <span>&#128278; Сохранить</span>
+      </div>
+      <div class="sub">Пиши ответ в комментариях! &#128071;</div>
+    </div>
+  </div>
+
+  <div class="ctrl-row">
+    <button class="btn-p" id="btnPrev" onclick="go(-1)" disabled>&#8592; Назад</button>
+    <span class="step-ind" id="stepInd">1/6<br>Крючок</span>
+    <button class="btn-n" id="btnNext" onclick="go(1)">Далее &#8594;</button>
+  </div>
+</div>
+
+<script>
+const times=['00:00','00:05','00:15','00:30','00:40','00:55'];
+const names=['Крючок','Задание','Таймер','Пауза','Ответ','Финал'];
+let cur=1,ti=null,tv=10;
+function go(d){
+  clearInterval(ti);
+  document.getElementById('f'+cur).classList.remove('active');
+  cur=Math.max(1,Math.min(6,cur+d));
+  document.getElementById('f'+cur).classList.add('active');
+  document.getElementById('stepInd').innerHTML=cur+'/6<br>'+names[cur-1];
+  document.getElementById('timeLabel').textContent=times[cur-1];
+  document.getElementById('progFill').style.width=((cur-1)/5*100)+'%';
+  document.getElementById('btnPrev').disabled=cur===1;
+  document.getElementById('btnNext').disabled=cur===6;
+  document.getElementById('btnNext').textContent=cur===6?'Готово!':'Далее →';
+  if(cur===3)startTimer();
+}
+function startTimer(){
+  tv=10;upd(10);
+  ti=setInterval(()=>{tv--;upd(Math.max(0,tv));if(tv<=0)clearInterval(ti);},900);
+}
+function upd(v){
+  const t=document.getElementById('timerText');
+  const c=document.getElementById('timerCircle');
+  if(t)t.textContent=v;
+  if(c){c.style.strokeDashoffset=220-(v/10)*220;c.style.stroke=v>3?'#E8420A':'#FF7B35';}
+}
+</script>
