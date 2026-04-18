@@ -1,0 +1,2110 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Детектив Словознайкин</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Comfortaa:wght@600;700&display=swap');
+
+:root {
+  --bg: #f5f0e8;
+  --desk: #2c3e6b;
+  --desk-light: #3d5299;
+  --amber: #e8a020;
+  --amber-light: #f5c050;
+  --noun-color: #3a7fc1;
+  --noun-bg: #d6eaf8;
+  --verb-color: #2e8b5a;
+  --verb-bg: #d5f0e3;
+  --adj-color: #c0622a;
+  --adj-bg: #fae0cc;
+  --card-bg: #fffdf5;
+  --text-dark: #1a1f3a;
+  --text-mid: #3a4068;
+  --shadow: rgba(20,30,70,0.18);
+  --radius: 16px;
+  --success: #2e8b5a;
+  --error: #c0622a;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--bg);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ===== BACKGROUND ===== */
+.bg-pattern {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(74,95,168,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(232,160,32,0.10) 0%, transparent 60%),
+    #f5f0e8;
+}
+.bg-dots {
+  position: fixed; inset: 0; z-index: 0;
+  background-image: radial-gradient(circle, rgba(74,95,168,0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+/* ===== MAIN CONTAINER ===== */
+#app {
+  position: relative; z-index: 10;
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.screen {
+  display: none;
+  width: 100%; height: 100%;
+  align-items: center; justify-content: center;
+  flex-direction: column;
+  padding: 16px;
+}
+.screen.active { display: flex; }
+
+/* ===== START SCREEN ===== */
+.start-card {
+  background: var(--card-bg);
+  border-radius: 24px;
+  box-shadow: 0 12px 48px var(--shadow), 0 2px 0 rgba(255,255,255,0.8) inset;
+  padding: clamp(24px, 4vw, 44px) clamp(24px, 5vw, 52px);
+  max-width: 560px; width: 94%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.start-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 6px;
+  background: linear-gradient(90deg, var(--noun-color), var(--verb-color), var(--adj-color));
+}
+.mascot-big {
+  font-size: clamp(4rem, 10vw, 6rem);
+  display: block;
+  animation: mascotFloat 3s ease-in-out infinite;
+  margin-bottom: 8px;
+}
+@keyframes mascotFloat {
+  0%,100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+.game-title {
+  font-family: 'Comfortaa', cursive;
+  font-size: clamp(1.6rem, 5vw, 2.6rem);
+  color: var(--desk);
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.game-subtitle {
+  font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+  color: var(--text-mid);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.mission-box {
+  background: linear-gradient(135deg, #eef2ff, #f0f7ff);
+  border: 2px solid rgba(74,95,168,0.2);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin-bottom: 22px;
+  font-size: clamp(0.85rem, 2.2vw, 0.98rem);
+  color: var(--text-dark);
+  line-height: 1.6;
+}
+.mission-box strong { color: var(--desk); }
+
+.parts-legend {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.legend-item {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border-radius: 30px;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+  font-weight: 700;
+}
+.legend-noun { background: var(--noun-bg); color: var(--noun-color); }
+.legend-verb { background: var(--verb-bg); color: var(--verb-color); }
+.legend-adj  { background: var(--adj-bg);  color: var(--adj-color);  }
+
+.btn-start {
+  background: linear-gradient(135deg, var(--desk), var(--desk-light));
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 36px;
+  font-family: 'Nunito', sans-serif;
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(44,62,107,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-start:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(44,62,107,0.35); }
+.btn-start:active { transform: translateY(0); }
+
+/* ===== HUD ===== */
+.hud {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(255,253,245,0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 2px solid rgba(44,62,107,0.12);
+  padding: 10px 16px;
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hud.visible { display: flex; }
+
+.hud-mascot { font-size: 1.6rem; }
+.hud-title {
+  font-family: 'Comfortaa', cursive;
+  font-size: clamp(0.8rem, 2.5vw, 1rem);
+  color: var(--desk);
+  font-weight: 700;
+}
+.hud-progress {
+  display: flex; gap: 6px; align-items: center; flex: 1; justify-content: center; flex-wrap: wrap;
+}
+.progress-dot {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(44,62,107,0.25);
+  background: rgba(44,62,107,0.06);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-mid);
+  transition: all 0.3s;
+  position: relative;
+}
+.progress-dot.done {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+.progress-dot.active {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #fff;
+  transform: scale(1.15);
+}
+
+.hud-score {
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+  font-weight: 800;
+  color: var(--desk);
+  white-space: nowrap;
+}
+
+/* ===== GAME SCREEN ===== */
+.game-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%; max-width: 720px;
+  padding: clamp(8px, 2vw, 16px);
+  margin-top: 64px;
+  gap: 14px;
+}
+
+.game-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: 0 6px 28px var(--shadow);
+  padding: clamp(16px, 3vw, 28px);
+  width: 100%;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.game-card-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.game-card-icon { font-size: 1.6rem; }
+.game-card-title {
+  font-family: 'Comfortaa', cursive;
+  font-size: clamp(0.95rem, 3vw, 1.2rem);
+  color: var(--desk);
+  font-weight: 700;
+  text-align: left;
+}
+.game-card-badge {
+  margin-left: auto;
+  background: var(--desk);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.task-text {
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  color: var(--text-dark);
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.task-hint {
+  font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+  color: var(--text-mid);
+  margin-bottom: 16px;
+}
+
+/* ===== WORD CARDS ===== */
+.words-grid {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  justify-content: center; margin-bottom: 12px;
+}
+.word-card {
+  background: var(--bg);
+  border: 2.5px solid rgba(44,62,107,0.18);
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: clamp(1rem, 3vw, 1.15rem);
+  font-weight: 800;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.18s;
+  user-select: none;
+  min-width: 80px;
+}
+.word-card:hover { transform: translateY(-2px); border-color: var(--desk-light); background: #fff; }
+.word-card.selected-noun { background: var(--noun-bg); border-color: var(--noun-color); color: var(--noun-color); }
+.word-card.selected-verb { background: var(--verb-bg); border-color: var(--verb-color); color: var(--verb-color); }
+.word-card.selected-adj  { background: var(--adj-bg);  border-color: var(--adj-color);  color: var(--adj-color);  }
+.word-card.correct { background: #d4f5e2; border-color: var(--success); color: var(--success); }
+.word-card.wrong   { background: #fde8d8; border-color: var(--error); color: var(--error); animation: shake 0.4s; }
+.word-card.disabled { cursor: default; opacity: 0.7; }
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* ===== CATEGORY BUTTONS ===== */
+.categories {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.cat-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 2.5px solid transparent;
+  font-family: 'Nunito', sans-serif;
+  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s;
+  min-width: 110px; justify-content: center;
+}
+.cat-btn:hover { transform: translateY(-2px); }
+.cat-btn:active { transform: translateY(0); }
+.cat-noun { background: var(--noun-bg); color: var(--noun-color); border-color: var(--noun-color); }
+.cat-verb { background: var(--verb-bg); color: var(--verb-color); border-color: var(--verb-color); }
+.cat-adj  { background: var(--adj-bg);  color: var(--adj-color);  border-color: var(--adj-color); }
+.cat-btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+/* ===== FEEDBACK ===== */
+.feedback-box {
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: clamp(0.85rem, 2.3vw, 0.98rem);
+  font-weight: 700;
+  line-height: 1.5;
+  margin-top: 8px;
+  display: none;
+  animation: fadeIn 0.25s;
+}
+.feedback-box.visible { display: block; }
+.feedback-ok { background: #d4f5e2; color: #1a6640; border: 2px solid #9edfc0; }
+.feedback-err { background: #fde8d8; color: #8b3a1a; border: 2px solid #f5b090; }
+.feedback-hint { background: #fff8e1; color: #7a5c00; border: 2px solid #f5d060; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+/* ===== NEXT BUTTON ===== */
+.btn-next {
+  background: linear-gradient(135deg, var(--amber), #f5a020);
+  color: #1a1f3a;
+  border: none; border-radius: 12px;
+  padding: 12px 28px;
+  font-family: 'Nunito', sans-serif;
+  font-size: clamp(0.95rem, 2.5vw, 1.05rem);
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(232,160,32,0.35);
+  transition: all 0.18s;
+  display: none;
+  margin-top: 10px;
+}
+.btn-next.visible { display: inline-flex; align-items: center; gap: 6px; }
+.btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(232,160,32,0.4); }
+
+/* ===== HINT BUTTON ===== */
+.btn-hint {
+  background: transparent;
+  color: var(--text-mid);
+  border: 2px solid rgba(44,62,107,0.25);
+  border-radius: 10px;
+  padding: 7px 16px;
+  font-family: 'Nunito', sans-serif;
+  font-size: clamp(0.8rem, 2vw, 0.88rem);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s;
+  margin-top: 6px;
+}
+.btn-hint:hover { background: rgba(44,62,107,0.06); }
+.btn-hint:disabled { opacity: 0.4; cursor: default; }
+
+/* ===== DRAG DROP ===== */
+.sentence-words {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; margin-bottom: 14px;
+}
+.draggable-word {
+  background: var(--bg);
+  border: 2.5px solid rgba(44,62,107,0.2);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+  font-weight: 800;
+  cursor: grab;
+  user-select: none;
+  transition: all 0.18s;
+  color: var(--text-dark);
+}
+.draggable-word:hover { background: #fff; border-color: var(--desk-light); }
+.draggable-word.dragging { opacity: 0.4; cursor: grabbing; }
+.draggable-word.placed { opacity: 0.4; cursor: default; border-style: dashed; }
+
+.drop-zones {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+}
+.drop-zone {
+  min-width: clamp(100px, 28vw, 160px);
+  min-height: 80px;
+  border-radius: 12px;
+  border: 2.5px dashed;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px;
+  gap: 6px;
+  transition: all 0.18s;
+}
+.drop-zone-noun { border-color: var(--noun-color); background: rgba(214,234,248,0.4); }
+.drop-zone-verb { border-color: var(--verb-color); background: rgba(213,240,227,0.4); }
+.drop-zone-adj  { border-color: var(--adj-color);  background: rgba(250,224,204,0.4); }
+.drop-zone.dragover { transform: scale(1.04); }
+.drop-zone-label {
+  font-size: clamp(0.72rem, 2vw, 0.82rem);
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.drop-zone-noun .drop-zone-label { color: var(--noun-color); }
+.drop-zone-verb .drop-zone-label { color: var(--verb-color); }
+.drop-zone-adj  .drop-zone-label { color: var(--adj-color); }
+
+.dropped-word {
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: clamp(0.82rem, 2.2vw, 0.95rem);
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.dropped-word:hover { opacity: 0.7; }
+.drop-zone-noun .dropped-word { background: var(--noun-bg); color: var(--noun-color); }
+.drop-zone-verb .dropped-word { background: var(--verb-bg); color: var(--verb-color); }
+.drop-zone-adj  .dropped-word { background: var(--adj-bg);  color: var(--adj-color); }
+
+/* ===== PUZZLE BUILD ===== */
+.puzzle-slots {
+  display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.puzzle-slot {
+  min-width: 100px; min-height: 48px;
+  border-radius: 10px;
+  border: 2.5px dashed rgba(44,62,107,0.3);
+  background: rgba(44,62,107,0.05);
+  display: flex; align-items: center; justify-content: center;
+  font-size: clamp(0.85rem, 2.3vw, 1rem);
+  font-weight: 800;
+  color: rgba(44,62,107,0.4);
+  font-style: italic;
+  transition: all 0.2s;
+  padding: 8px 14px;
+}
+.puzzle-slot.filled {
+  border-style: solid;
+  font-style: normal;
+}
+.puzzle-slot.filled.noun { border-color: var(--noun-color); background: var(--noun-bg); color: var(--noun-color); }
+.puzzle-slot.filled.verb { border-color: var(--verb-color); background: var(--verb-bg); color: var(--verb-color); }
+.puzzle-slot.filled.adj  { border-color: var(--adj-color);  background: var(--adj-bg);  color: var(--adj-color); }
+
+.word-options {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+}
+.word-option {
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 2.5px solid rgba(44,62,107,0.18);
+  background: var(--bg);
+  font-size: clamp(0.88rem, 2.3vw, 1rem);
+  font-weight: 800;
+  color: var(--text-dark);
+  cursor: pointer;
+  transition: all 0.18s;
+  user-select: none;
+}
+.word-option:hover { background: #fff; border-color: var(--desk-light); transform: translateY(-2px); }
+.word-option:disabled { opacity: 0.35; cursor: default; transform: none; }
+
+/* ===== ERROR FINDER ===== */
+.sentence-display {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; margin-bottom: 14px;
+}
+.sent-word {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.sent-word-text {
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  font-weight: 800;
+  color: var(--text-dark);
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 2.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s;
+  background: var(--bg);
+}
+.sent-word-text:hover { border-color: var(--desk-light); background: #fff; }
+.sent-word-label {
+  font-size: clamp(0.68rem, 1.8vw, 0.78rem);
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.sent-word-label.noun { background: var(--noun-bg); color: var(--noun-color); }
+.sent-word-label.verb { background: var(--verb-bg); color: var(--verb-color); }
+.sent-word-label.adj  { background: var(--adj-bg);  color: var(--adj-color); }
+
+.sent-word-text.highlighted-error { border-color: var(--error); background: #fde8d8; }
+.sent-word-text.correct-pick { border-color: var(--success); background: #d4f5e2; }
+
+/* ===== FILL BLANK ===== */
+.fill-sentence {
+  font-size: clamp(1rem, 3vw, 1.2rem);
+  font-weight: 700;
+  color: var(--text-dark);
+  line-height: 2;
+  margin-bottom: 14px;
+}
+.blank-slot {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 80px; height: 34px;
+  border-bottom: 3px solid var(--desk);
+  margin: 0 4px;
+  font-weight: 900;
+  vertical-align: middle;
+  padding: 0 8px;
+  border-radius: 4px 4px 0 0;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.blank-slot.filled { background: var(--noun-bg); border-color: var(--noun-color); color: var(--noun-color); }
+.blank-slot.filled.verb { background: var(--verb-bg); border-color: var(--verb-color); color: var(--verb-color); }
+.blank-slot.filled.adj  { background: var(--adj-bg);  border-color: var(--adj-color);  color: var(--adj-color); }
+
+/* ===== LEVEL COMPLETE ===== */
+.level-complete {
+  background: var(--card-bg);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px var(--shadow);
+  padding: clamp(20px, 4vw, 36px);
+  text-align: center;
+  max-width: 480px; width: 94%;
+  position: relative; overflow: hidden;
+}
+.level-complete::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, var(--success), var(--amber));
+}
+.lc-emoji { font-size: clamp(2.5rem, 7vw, 4rem); margin-bottom: 8px; }
+.lc-title {
+  font-family: 'Comfortaa', cursive;
+  font-size: clamp(1.2rem, 4vw, 1.7rem);
+  color: var(--desk);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.lc-text { font-size: clamp(0.88rem, 2.3vw, 1rem); color: var(--text-mid); margin-bottom: 16px; line-height: 1.6; }
+.lc-stars { font-size: clamp(1.4rem, 4vw, 2rem); margin-bottom: 14px; letter-spacing: 4px; }
+
+/* ===== FINAL REPORT ===== */
+.report-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px var(--shadow);
+  padding: clamp(20px, 3vw, 36px);
+  max-width: 640px; width: 94%;
+  max-height: 88vh;
+  overflow-y: auto;
+  position: relative;
+}
+.report-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  background: linear-gradient(90deg, var(--noun-color), var(--verb-color), var(--adj-color));
+  border-radius: 20px 20px 0 0;
+}
+.report-title {
+  font-family: 'Comfortaa', cursive;
+  font-size: clamp(1.3rem, 4vw, 1.9rem);
+  color: var(--desk);
+  text-align: center; margin-bottom: 6px;
+}
+.report-badge {
+  text-align: center;
+  font-size: clamp(2.5rem, 7vw, 4rem);
+  margin-bottom: 6px;
+}
+.report-rank {
+  text-align: center;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  font-weight: 800;
+  color: var(--amber);
+  margin-bottom: 16px;
+}
+.report-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-bottom: 16px;
+}
+@media (max-width: 440px) { .report-grid { grid-template-columns: 1fr; } }
+
+.report-stat {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 12px 14px;
+  text-align: center;
+}
+.report-stat-val {
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+  font-weight: 900;
+  color: var(--desk);
+}
+.report-stat-lbl {
+  font-size: clamp(0.75rem, 2vw, 0.85rem);
+  color: var(--text-mid);
+  font-weight: 700;
+}
+.report-skills {
+  margin-bottom: 14px;
+}
+.skill-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.skill-label {
+  min-width: 130px;
+  font-size: clamp(0.82rem, 2.2vw, 0.92rem);
+  font-weight: 800;
+}
+.skill-bar-bg {
+  flex: 1; height: 12px; border-radius: 10px;
+  background: rgba(44,62,107,0.1);
+  overflow: hidden;
+}
+.skill-bar-fill {
+  height: 100%; border-radius: 10px;
+  transition: width 0.8s ease;
+}
+.skill-bar-fill.noun { background: var(--noun-color); }
+.skill-bar-fill.verb { background: var(--verb-color); }
+.skill-bar-fill.adj  { background: var(--adj-color); }
+.skill-pct {
+  min-width: 36px; text-align: right;
+  font-size: clamp(0.8rem, 2vw, 0.88rem);
+  font-weight: 800;
+  color: var(--text-dark);
+}
+.report-recommend {
+  background: linear-gradient(135deg, #eef2ff, #f0f7ff);
+  border: 2px solid rgba(74,95,168,0.2);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: clamp(0.82rem, 2.2vw, 0.92rem);
+  color: var(--text-dark);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.report-recommend strong { color: var(--desk); }
+
+.mini-results {
+  margin-bottom: 14px;
+}
+.mini-result-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(44,62,107,0.08);
+  font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+}
+.mini-result-name { flex: 1; font-weight: 700; color: var(--text-dark); }
+.mini-result-score {
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+.score-great { background: #d4f5e2; color: var(--success); }
+.score-ok    { background: #fff8e1; color: #7a5c00; }
+.score-weak  { background: #fde8d8; color: var(--error); }
+
+.btn-restart {
+  display: block; width: 100%;
+  background: linear-gradient(135deg, var(--desk), var(--desk-light));
+  color: #fff;
+  border: none; border-radius: 12px;
+  padding: 14px;
+  font-family: 'Nunito', sans-serif;
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.btn-restart:hover { transform: translateY(-2px); }
+
+/* ===== ATTEMPTS ===== */
+.attempts-display {
+  display: flex; gap: 5px; justify-content: center; margin-bottom: 8px;
+}
+.attempt-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: rgba(44,62,107,0.15);
+  transition: all 0.2s;
+}
+.attempt-dot.used { background: var(--error); }
+.attempt-dot.ok   { background: var(--success); }
+
+/* ===== CONFETTI ===== */
+.confetti-container {
+  position: fixed; inset: 0; pointer-events: none; z-index: 200;
+  overflow: hidden;
+}
+.confetti-piece {
+  position: absolute;
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  animation: confettiFall linear forwards;
+}
+@keyframes confettiFall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* ===== TRANSITION ===== */
+.fade-in { animation: fadeIn 0.35s ease; }
+
+/* ===== MOBILE ===== */
+@media (max-width: 500px) {
+  .drop-zones { flex-direction: column; align-items: center; }
+  .drop-zone { width: 90%; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+<div class="bg-dots"></div>
+
+<!-- HUD -->
+<div class="hud" id="hud">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span class="hud-mascot">🦉</span>
+    <span class="hud-title">Словознайкин</span>
+  </div>
+  <div class="hud-progress" id="hudProgress"></div>
+  <div class="hud-score" id="hudScore">⭐ 0</div>
+</div>
+
+<!-- CONFETTI -->
+<div class="confetti-container" id="confetti"></div>
+
+<div id="app">
+
+  <!-- ===== START SCREEN ===== -->
+  <div class="screen active" id="screenStart">
+    <div class="start-card">
+      <span class="mascot-big">🦉</span>
+      <h1 class="game-title">Детектив Словознайкин</h1>
+      <p class="game-subtitle">Русский язык · 2 класс · Части речи</p>
+      <div class="mission-box">
+        🔍 <strong>Миссия:</strong> Злодей Путаник перемешал все слова в Городе Слов!
+        Пройди <strong>6 испытаний</strong> и восстанови порядок — докажи, что ты настоящий детектив!
+      </div>
+      <div class="parts-legend">
+        <div class="legend-item legend-noun">🔷 Существительное</div>
+        <div class="legend-item legend-verb">⚡ Глагол</div>
+        <div class="legend-item legend-adj">🌟 Прилагательное</div>
+      </div>
+      <button class="btn-start" onclick="startGame()">🕵️ Начать расследование!</button>
+    </div>
+  </div>
+
+  <!-- ===== GAME SCREEN ===== -->
+  <div class="screen" id="screenGame">
+    <div class="game-area" id="gameArea"></div>
+  </div>
+
+  <!-- ===== LEVEL COMPLETE ===== -->
+  <div class="screen" id="screenLevelDone">
+    <div class="level-complete fade-in">
+      <div class="lc-emoji" id="lcEmoji">✅</div>
+      <div class="lc-stars" id="lcStars">⭐⭐⭐</div>
+      <div class="lc-title" id="lcTitle">Дело раскрыто!</div>
+      <div class="lc-text" id="lcText"></div>
+      <button class="btn-start" onclick="nextMiniGame()" id="btnNextMini">Следующее дело 🔍</button>
+    </div>
+  </div>
+
+  <!-- ===== FINAL REPORT ===== -->
+  <div class="screen" id="screenReport">
+    <div class="report-card fade-in" id="reportCard"></div>
+  </div>
+
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const PARTS = {
+  noun: { label: 'Существительное', icon: '🔷', question: 'кто? что?', cls: 'noun' },
+  verb: { label: 'Глагол',          icon: '⚡', question: 'что делает?', cls: 'verb' },
+  adj:  { label: 'Прилагательное',  icon: '🌟', question: 'какой? какая? какое?', cls: 'adj' }
+};
+
+// Word bank (all verified correct):
+const WORDS = {
+  noun: ['кот','дом','книга','река','солнце','школа','мяч','лес','город','птица',
+         'окно','стол','море','дверь','цветок','друг','зима','небо','ребёнок','рыба'],
+  verb: ['бежит','читает','играет','поёт','рисует','прыгает','летит','думает','пишет','смеётся',
+         'плывёт','строит','ест','спит','стоит','гуляет','кричит','ищет','несёт','видит'],
+  adj:  ['большой','красивый','быстрый','добрый','синий','весёлый','тёплый','умный','маленький','зелёный',
+         'старый','новый','тихий','яркий','холодный','смелый','высокий','мягкий','звонкий','густой']
+};
+
+// Verified sentences for drag/drop (game 3)
+const SENTENCES_DND = [
+  {
+    words: [
+      {word:'Кот',       part:'noun'},
+      {word:'быстро',    part:null},   // adverb - won't be sorted
+      {word:'бежит',     part:'verb'},
+    ],
+    toSort: ['Кот','бежит'],
+    sortParts: {Кот:'noun', бежит:'verb'}
+  },
+  {
+    words: [
+      {word:'Красивый',  part:'adj'},
+      {word:'цветок',    part:'noun'},
+      {word:'растёт',    part:'verb'},
+    ],
+    toSort: ['Красивый','цветок','растёт'],
+    sortParts: {Красивый:'adj', цветок:'noun', растёт:'verb'}
+  },
+  {
+    words: [
+      {word:'Весёлый',   part:'adj'},
+      {word:'друг',      part:'noun'},
+      {word:'поёт',      part:'verb'},
+    ],
+    toSort: ['Весёлый','друг','поёт'],
+    sortParts: {Весёлый:'adj', друг:'noun', поёт:'verb'}
+  }
+];
+
+// Game 4 — build phrase
+const PUZZLES = [
+  {
+    template: [{type:'adj', placeholder:'какой?'}, {type:'noun', placeholder:'кто/что?'}],
+    options: [
+      {word:'синий',  type:'adj'},
+      {word:'мяч',    type:'noun'},
+      {word:'бежит',  type:'verb'},
+      {word:'яркий',  type:'adj'},
+      {word:'книга',  type:'noun'},
+    ],
+    correct_combos: [
+      ['синий','мяч'], ['яркий','мяч'], ['синий','книга'], ['яркий','книга']
+    ]
+  },
+  {
+    template: [{type:'noun', placeholder:'кто?'}, {type:'verb', placeholder:'что делает?'}],
+    options: [
+      {word:'птица',    type:'noun'},
+      {word:'летит',    type:'verb'},
+      {word:'красивый', type:'adj'},
+      {word:'кот',      type:'noun'},
+      {word:'бежит',    type:'verb'},
+    ],
+    correct_combos: [
+      ['птица','летит'],['птица','бежит'],['кот','летит'],['кот','бежит']
+    ]
+  },
+  {
+    template: [{type:'adj', placeholder:'какой?'}, {type:'noun', placeholder:'что?'}, {type:'verb', placeholder:'что делает?'}],
+    options: [
+      {word:'тёплый',   type:'adj'},
+      {word:'ветер',    type:'noun'},
+      {word:'дует',     type:'verb'},
+      {word:'синий',    type:'adj'},
+      {word:'море',     type:'noun'},
+    ],
+    correct_combos: null // any adj+noun+verb combo accepted
+  }
+];
+
+// Game 5 — find the liar (wrong label)
+const LIAR_SENTENCES = [
+  {
+    display: [
+      {word:'Большой',  label:'Прилагательное', part:'adj',  correct:true},
+      {word:'кот',      label:'Глагол',          part:'noun', correct:false},  // liar
+      {word:'спит',     label:'Глагол',           part:'verb', correct:true},
+    ],
+    liarIdx: 1,
+    explanation: '«Кот» отвечает на вопрос КТО? — это имя существительное, а не глагол!'
+  },
+  {
+    display: [
+      {word:'Синяя',    label:'Глагол',           part:'adj',  correct:false}, // liar
+      {word:'птица',    label:'Существительное',  part:'noun', correct:true},
+      {word:'поёт',     label:'Глагол',            part:'verb', correct:true},
+    ],
+    liarIdx: 0,
+    explanation: '«Синяя» отвечает на вопрос КАКАЯ? — это имя прилагательное, а не глагол!'
+  },
+  {
+    display: [
+      {word:'Весёлый',  label:'Прилагательное',   part:'adj',  correct:true},
+      {word:'друг',     label:'Существительное',  part:'noun', correct:true},
+      {word:'рисует',   label:'Существительное',  part:'verb', correct:false}, // liar
+    ],
+    liarIdx: 2,
+    explanation: '«Рисует» отвечает на вопрос ЧТО ДЕЛАЕТ? — это глагол, а не существительное!'
+  }
+];
+
+// Game 6 — fill in the blank
+const FILL_TASKS = [
+  {
+    template: ['_ADJ_', ' ', '_NOUN_', ' громко ', '_VERB_', '.'],
+    blanks: [
+      {type:'adj',  answer:'маленький', options:['маленький','бежит','школа']},
+      {type:'noun', answer:'щенок',     options:['щенок','красивый','читает']},
+      {type:'verb', answer:'лает',      options:['лает','добрый','небо']}
+    ],
+    readable: 'Маленький щенок громко лает.'
+  },
+  {
+    template: ['_NOUN_', ' ', '_VERB_', ' в ', '_ADJ_', ' небе.'],
+    blanks: [
+      {type:'noun', answer:'Птица',    options:['Птица','летит','синем']},
+      {type:'verb', answer:'летит',    options:['летит','красивый','озеро']},
+      {type:'adj',  answer:'синем',    options:['синем','играет','лес']}
+    ],
+    readable: 'Птица летит в синем небе.'
+  }
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  currentGame: 0,
+  totalGames: 6,
+  score: 0,
+  maxScore: 0,
+  gameResults: [],   // {name, correct, total, hints}
+  skillStats: {noun:{correct:0,total:0}, verb:{correct:0,total:0}, adj:{correct:0,total:0}},
+  currentAttempts: 0,
+  maxAttempts: 2,
+  hintUsed: false,
+  // per game state
+  g1: { wordIdx: 0, words: [], results: [] },
+  g2: { qIdx: 0, questions: [], results: [] },
+  g3: { sentIdx: 0, placed: {}, results: [], checkDone: false },
+  g4: { puzzleIdx: 0, slots: [], results: [] },
+  g5: { sentIdx: 0, results: [] },
+  g6: { taskIdx: 0, filled: [], results: [] },
+};
+
+// ============================================================
+// UTILS
+// ============================================================
+function shuffle(arr) {
+  let a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    let j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+function pickN(arr, n) { return shuffle(arr).slice(0, n); }
+function rand(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function updateHUD() {
+  const hud = document.getElementById('hud');
+  hud.classList.add('visible');
+
+  const progress = document.getElementById('hudProgress');
+  progress.innerHTML = '';
+  for (let i = 0; i < state.totalGames; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'progress-dot';
+    if (i < state.currentGame) { dot.className += ' done'; dot.textContent = '✓'; }
+    else if (i === state.currentGame) { dot.className += ' active'; dot.textContent = i+1; }
+    else { dot.textContent = i+1; }
+    progress.appendChild(dot);
+  }
+
+  document.getElementById('hudScore').textContent = '⭐ ' + state.score;
+}
+
+function setFeedback(type, text) {
+  let box = document.getElementById('feedbackBox');
+  if (!box) return;
+  box.className = 'feedback-box visible';
+  if (type === 'ok')   box.className += ' feedback-ok';
+  if (type === 'err')  box.className += ' feedback-err';
+  if (type === 'hint') box.className += ' feedback-hint';
+  box.innerHTML = text;
+}
+
+function showNext(label) {
+  const btn = document.getElementById('btnNext');
+  if (btn) { btn.className = 'btn-next visible'; btn.textContent = label || 'Далее →'; }
+}
+
+function renderAttempts(used, max) {
+  let html = '<div class="attempts-display">';
+  for (let i=0; i<max; i++) {
+    html += `<div class="attempt-dot ${i<used?'used':''}"></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function confetti() {
+  const container = document.getElementById('confetti');
+  container.innerHTML = '';
+  const colors = ['#3a7fc1','#2e8b5a','#c0622a','#e8a020','#7b4fa6'];
+  for (let i=0; i<50; i++) {
+    const p = document.createElement('div');
+    p.className = 'confetti-piece';
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      top:-10px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${0.8+Math.random()*1.2}s;
+      animation-delay:${Math.random()*0.5}s;
+      width:${6+Math.random()*8}px;
+      height:${6+Math.random()*8}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+    `;
+    container.appendChild(p);
+    setTimeout(()=>p.remove(), 2000);
+  }
+}
+
+// ============================================================
+// START
+// ============================================================
+function startGame() {
+  // prepare game 1 words
+  state.g1.words = [
+    ...pickN(WORDS.noun, 5).map(w=>({word:w, part:'noun'})),
+    ...pickN(WORDS.verb, 5).map(w=>({word:w, part:'verb'})),
+    ...pickN(WORDS.adj,  5).map(w=>({word:w, part:'adj'})),
+  ];
+  state.g1.words = shuffle(state.g1.words);
+  state.g1.wordIdx = 0;
+  state.g1.results = [];
+
+  // prepare game 2 questions
+  state.g2.questions = buildG2Questions();
+  state.g2.qIdx = 0;
+  state.g2.results = [];
+
+  // g3
+  state.g3.sentIdx = 0;
+  state.g3.results = [];
+
+  // g4
+  state.g4.puzzleIdx = 0;
+  state.g4.slots = [];
+  state.g4.results = [];
+
+  // g5
+  state.g5.sentIdx = 0;
+  state.g5.results = [];
+
+  // g6
+  state.g6.taskIdx = 0;
+  state.g6.filled = [];
+  state.g6.results = [];
+
+  state.currentGame = 0;
+  state.score = 0;
+  state.skillStats = {noun:{correct:0,total:0}, verb:{correct:0,total:0}, adj:{correct:0,total:0}};
+  state.gameResults = [];
+
+  showScreen('screenGame');
+  updateHUD();
+  renderGame(0);
+}
+
+function buildG2Questions() {
+  // question: see a question word → pick the right word among 3
+  const qs = [];
+  // noun questions
+  for (let i=0; i<3; i++) {
+    const correct = rand(WORDS.noun);
+    const wrong1  = rand(WORDS.verb);
+    const wrong2  = rand(WORDS.adj);
+    qs.push({
+      question: 'Какое слово отвечает на вопрос «КТО? ЧТО?»',
+      part: 'noun',
+      options: shuffle([{word:correct,correct:true},{word:wrong1,correct:false},{word:wrong2,correct:false}])
+    });
+  }
+  // verb questions
+  for (let i=0; i<3; i++) {
+    const correct = rand(WORDS.verb);
+    const wrong1  = rand(WORDS.noun);
+    const wrong2  = rand(WORDS.adj);
+    qs.push({
+      question: 'Какое слово отвечает на вопрос «ЧТО ДЕЛАЕТ?»',
+      part: 'verb',
+      options: shuffle([{word:correct,correct:true},{word:wrong1,correct:false},{word:wrong2,correct:false}])
+    });
+  }
+  // adj questions
+  for (let i=0; i<3; i++) {
+    const correct = rand(WORDS.adj);
+    const wrong1  = rand(WORDS.noun);
+    const wrong2  = rand(WORDS.verb);
+    qs.push({
+      question: 'Какое слово отвечает на вопрос «КАКОЙ? КАКАЯ?»',
+      part: 'adj',
+      options: shuffle([{word:correct,correct:true},{word:wrong1,correct:false},{word:wrong2,correct:false}])
+    });
+  }
+  return shuffle(qs);
+}
+
+// ============================================================
+// RENDER GAME
+// ============================================================
+function renderGame(idx) {
+  state.currentGame = idx;
+  state.currentAttempts = 0;
+  state.hintUsed = false;
+  updateHUD();
+  showScreen('screenGame');
+
+  const area = document.getElementById('gameArea');
+  area.innerHTML = '';
+
+  if (idx === 0) renderG1(area);
+  else if (idx === 1) renderG2(area);
+  else if (idx === 2) renderG3(area);
+  else if (idx === 3) renderG4(area);
+  else if (idx === 4) renderG5(area);
+  else if (idx === 5) renderG6(area);
+}
+
+// ============================================================
+// GAME 1 — Картотека улик (classify words)
+// ============================================================
+function renderG1(area) {
+  const wIdx = state.g1.wordIdx;
+  const totalWords = state.g1.words.length;
+  const wordObj = state.g1.words[wIdx];
+
+  area.innerHTML = `
+    <div class="game-card fade-in">
+      <div class="game-card-header">
+        <span class="game-card-icon">🗂️</span>
+        <span class="game-card-title">Дело 1: Картотека улик</span>
+        <span class="game-card-badge">${wIdx+1}/${totalWords}</span>
+      </div>
+      <div class="task-hint">Прочитай слово и нажми на нужную папку:</div>
+      <div class="task-text" style="font-size:clamp(1.5rem,5vw,2.2rem);margin:12px 0 20px">${wordObj.word}</div>
+      ${renderAttempts(state.currentAttempts, state.maxAttempts)}
+      <div class="categories" id="catBtns">
+        <button class="cat-btn cat-noun" onclick="checkG1('noun')">🔷 Существительное<br><small>кто? что?</small></button>
+        <button class="cat-btn cat-verb" onclick="checkG1('verb')">⚡ Глагол<br><small>что делает?</small></button>
+        <button class="cat-btn cat-adj"  onclick="checkG1('adj')">🌟 Прилагательное<br><small>какой?</small></button>
+      </div>
+      <div class="feedback-box" id="feedbackBox"></div>
+      <button class="btn-next" id="btnNext" onclick="nextG1()">Следующая улика →</button>
+      <br>
+      <button class="btn-hint" id="btnHint" onclick="showHintG1()">💡 Подсказка</button>
+    </div>
+  `;
+}
+
+function checkG1(chosen) {
+  if (state.currentAttempts >= state.maxAttempts) return;
+  const wordObj = state.g1.words[state.g1.wordIdx];
+  const correct = wordObj.part;
+  const p = PARTS[correct];
+  state.currentAttempts++;
+
+  // update skill stats
+  state.skillStats[correct].total++;
+
+  if (chosen === correct) {
+    state.skillStats[correct].correct++;
+    state.score += state.hintUsed ? 1 : 2;
+    state.g1.results.push({correct:true, hintsUsed: state.hintUsed?1:0});
+    setFeedback('ok', `✅ Верно! «${wordObj.word}» — это ${p.label}. Оно отвечает на вопрос ${p.question}!`);
+    document.querySelectorAll('.cat-btn').forEach(b=>b.disabled=true);
+    showNext('Следующая улика →');
+    document.getElementById('btnHint').disabled = true;
+  } else {
+    if (state.currentAttempts >= state.maxAttempts) {
+      state.g1.results.push({correct:false, hintsUsed: state.hintUsed?1:0});
+      setFeedback('err', `❌ Слово «${wordObj.word}» — это ${p.label} ${p.icon}. Оно отвечает на вопрос ${p.question}.`);
+      document.querySelectorAll('.cat-btn').forEach(b=>b.disabled=true);
+      showNext('Следующая улика →');
+    } else {
+      setFeedback('err', `Не совсем так! Попробуй ещё раз. Осталась ${state.maxAttempts - state.currentAttempts} попытка.`);
+      // update attempts display
+      const attDiv = document.querySelector('.attempts-display');
+      if (attDiv) {
+        attDiv.innerHTML = '';
+        for (let i=0; i<state.maxAttempts; i++) {
+          attDiv.innerHTML += `<div class="attempt-dot ${i<state.currentAttempts?'used':''}"></div>`;
+        }
+      }
+    }
+  }
+}
+
+function showHintG1() {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+  const wordObj = state.g1.words[state.g1.wordIdx];
+  const p = PARTS[wordObj.part];
+  setFeedback('hint', `💡 Задай вопрос: «${p.question}» — подходит? Тогда это ${p.label}!`);
+  document.getElementById('btnHint').disabled = true;
+}
+
+function nextG1() {
+  state.g1.wordIdx++;
+  if (state.g1.wordIdx >= state.g1.words.length) {
+    finishMiniGame(0, 'Картотека улик', state.g1.results);
+    return;
+  }
+  state.currentAttempts = 0;
+  state.hintUsed = false;
+  renderG1(document.getElementById('gameArea'));
+}
+
+// ============================================================
+// GAME 2 — Допрос вопроса
+// ============================================================
+function renderG2(area) {
+  const q = state.g2.questions[state.g2.qIdx];
+  const total = state.g2.questions.length;
+
+  area.innerHTML = `
+    <div class="game-card fade-in">
+      <div class="game-card-header">
+        <span class="game-card-icon">❓</span>
+        <span class="game-card-title">Дело 2: Допрос вопроса</span>
+        <span class="game-card-badge">${state.g2.qIdx+1}/${total}</span>
+      </div>
+      <div class="task-hint">Прочитай вопрос и выбери правильное слово:</div>
+      <div class="task-text">${q.question}</div>
+      ${renderAttempts(state.currentAttempts, state.maxAttempts)}
+      <div class="words-grid" id="wordGrid">
+        ${q.options.map((opt,i)=>`
+          <div class="word-card" id="wc${i}" onclick="checkG2(${i},${opt.correct},'${opt.word}','${q.part}')">
+            ${opt.word}
+          </div>
+        `).join('')}
+      </div>
+      <div class="feedback-box" id="feedbackBox"></div>
+      <button class="btn-next" id="btnNext" onclick="nextG2()">Следующий вопрос →</button>
+      <br>
+      <button class="btn-hint" id="btnHint" onclick="showHintG2('${q.part}')">💡 Подсказка</button>
+    </div>
+  `;
+}
+
+function checkG2(idx, isCorrect, word, part) {
+  if (state.currentAttempts >= state.maxAttempts) return;
+  const q = state.g2.questions[state.g2.qIdx];
+  state.currentAttempts++;
+  state.skillStats[part].total++;
+
+  const card = document.getElementById('wc'+idx);
+
+  if (isCorrect) {
+    state.skillStats[part].correct++;
+    state.score += state.hintUsed ? 1 : 2;
+    state.g2.results.push({correct:true, hintsUsed: state.hintUsed?1:0});
+    card.className = 'word-card correct disabled';
+    setFeedback('ok', `✅ Отлично! «${word}» отвечает на вопрос «${PARTS[part].question}» — это ${PARTS[part].label}!`);
+    document.querySelectorAll('.word-card').forEach(c=>c.onclick=null);
+    showNext('Следующий вопрос →');
+    document.getElementById('btnHint').disabled = true;
+  } else {
+    card.className = 'word-card wrong';
+    setTimeout(()=>{ if(card) card.className='word-card'; }, 500);
+
+    if (state.currentAttempts >= state.maxAttempts) {
+      state.g2.results.push({correct:false, hintsUsed: state.hintUsed?1:0});
+      const correctOpt = q.options.find(o=>o.correct);
+      setFeedback('err', `❌ Правильный ответ: «${correctOpt.word}» — ${PARTS[part].label} (${PARTS[part].question})`);
+      document.querySelectorAll('.word-card').forEach(c=>c.onclick=null);
+      showNext('Следующий вопрос →');
+    } else {
+      setFeedback('err', `Не то слово! Попробуй ещё раз.`);
+    }
+    const attDiv = document.querySelector('.attempts-display');
+    if (attDiv) {
+      attDiv.innerHTML = '';
+      for (let i=0; i<state.maxAttempts; i++) {
+        attDiv.innerHTML += `<div class="attempt-dot ${i<state.currentAttempts?'used':''}"></div>`;
+      }
+    }
+  }
+}
+
+function showHintG2(part) {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+  const p = PARTS[part];
+  setFeedback('hint', `💡 Ищи слово, которое отвечает на вопрос «${p.question}». ${p.label} — это ${part==='noun'?'предмет или существо':part==='verb'?'действие':'признак предмета'}.`);
+  document.getElementById('btnHint').disabled = true;
+}
+
+function nextG2() {
+  state.g2.qIdx++;
+  if (state.g2.qIdx >= state.g2.questions.length) {
+    finishMiniGame(1, 'Допрос вопроса', state.g2.results);
+    return;
+  }
+  state.currentAttempts = 0;
+  state.hintUsed = false;
+  renderG2(document.getElementById('gameArea'));
+}
+
+// ============================================================
+// GAME 3 — Место преступления (drag & drop sort)
+// ============================================================
+function renderG3(area) {
+  const sent = SENTENCES_DND[state.g3.sentIdx];
+  const toSort = sent.toSort;
+  state.g3.placed = {};
+  state.g3.checkDone = false;
+
+  area.innerHTML = `
+    <div class="game-card fade-in">
+      <div class="game-card-header">
+        <span class="game-card-icon">🔎</span>
+        <span class="game-card-title">Дело 3: Место преступления</span>
+        <span class="game-card-badge">${state.g3.sentIdx+1}/${SENTENCES_DND.length}</span>
+      </div>
+      <div class="task-hint">Перетащи слова в нужную папку (или нажми слово, потом папку):</div>
+      <div class="sentence-words" id="sentWords">
+        ${toSort.map(w=>`
+          <div class="draggable-word" id="dw_${w}" draggable="true"
+            ondragstart="dragStart(event,'${w}')"
+            onclick="selectWordG3('${w}')">
+            ${w}
+          </div>
+        `).join('')}
+      </div>
+      <div class="drop-zones">
+        <div class="drop-zone drop-zone-noun" id="zone_noun"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="dropG3(event,'noun')"
+          onclick="dropToZoneG3('noun')">
+          <div class="drop-zone-label">🔷 Существительное</div>
+        </div>
+        <div class="drop-zone drop-zone-verb" id="zone_verb"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="dropG3(event,'verb')"
+          onclick="dropToZoneG3('verb')">
+          <div class="drop-zone-label">⚡ Глагол</div>
+        </div>
+        <div class="drop-zone drop-zone-adj" id="zone_adj"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="dropG3(event,'adj')"
+          onclick="dropToZoneG3('adj')">
+          <div class="drop-zone-label">🌟 Прилагательное</div>
+        </div>
+      </div>
+      <div class="feedback-box" id="feedbackBox" style="margin-top:12px"></div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center">
+        <button class="btn-hint" id="btnCheck" onclick="checkG3()" style="background:var(--desk);color:#fff;border-color:var(--desk)">✅ Проверить</button>
+        <button class="btn-hint" id="btnHint" onclick="showHintG3()">💡 Подсказка</button>
+      </div>
+      <button class="btn-next" id="btnNext" onclick="nextG3()">Следующее место →</button>
+    </div>
+  `;
+}
+
+let selectedWordG3 = null;
+function selectWordG3(word) {
+  if (state.g3.placed[word] !== undefined) return;
+  if (state.g3.checkDone) return;
+  selectedWordG3 = word;
+  document.querySelectorAll('.draggable-word').forEach(el=>{
+    el.style.outline = el.id==='dw_'+word ? '3px solid var(--amber)' : '';
+  });
+}
+
+function dropToZoneG3(zone) {
+  if (!selectedWordG3 || state.g3.checkDone) return;
+  placeWordG3(selectedWordG3, zone);
+  selectedWordG3 = null;
+  document.querySelectorAll('.draggable-word').forEach(el=>el.style.outline='');
+}
+
+let dragWord = null;
+function dragStart(e, word) { dragWord = word; e.dataTransfer.effectAllowed='move'; }
+
+function dropG3(e, zone) {
+  e.preventDefault();
+  document.getElementById('zone_'+zone).classList.remove('dragover');
+  if (!dragWord || state.g3.checkDone) return;
+  placeWordG3(dragWord, zone);
+  dragWord = null;
+}
+
+function placeWordG3(word, zone) {
+  // remove from previous zone if re-placing
+  const prev = state.g3.placed[word];
+  if (prev) {
+    const prevZone = document.getElementById('zone_'+prev);
+    const existing = prevZone.querySelector(`[data-word="${word}"]`);
+    if (existing) existing.remove();
+  }
+
+  state.g3.placed[word] = zone;
+
+  // mark word as placed
+  const dwEl = document.getElementById('dw_'+word);
+  if (dwEl) dwEl.classList.add('placed');
+
+  // add to zone
+  const zoneEl = document.getElementById('zone_'+zone);
+  // remove if already there
+  const old = zoneEl.querySelector(`[data-word="${word}"]`);
+  if (old) old.remove();
+
+  const chip = document.createElement('div');
+  chip.className = 'dropped-word';
+  chip.dataset.word = word;
+  chip.textContent = word;
+  chip.onclick = () => returnWordG3(word);
+  zoneEl.appendChild(chip);
+}
+
+function returnWordG3(word) {
+  if (state.g3.checkDone) return;
+  const zone = state.g3.placed[word];
+  if (!zone) return;
+  const zoneEl = document.getElementById('zone_'+zone);
+  const chip = zoneEl.querySelector(`[data-word="${word}"]`);
+  if (chip) chip.remove();
+  delete state.g3.placed[word];
+  const dwEl = document.getElementById('dw_'+word);
+  if (dwEl) dwEl.classList.remove('placed');
+}
+
+function checkG3() {
+  if (state.g3.checkDone) return;
+  const sent = SENTENCES_DND[state.g3.sentIdx];
+  const toSort = sent.toSort;
+
+  // check all words placed
+  const unplaced = toSort.filter(w => !state.g3.placed[w]);
+  if (unplaced.length > 0) {
+    setFeedback('hint', `💡 Разложи все слова по папкам: осталось «${unplaced.join('», «')}»`);
+    return;
+  }
+
+  let allCorrect = true;
+  let errors = [];
+  toSort.forEach(w => {
+    const expected = sent.sortParts[w];
+    const actual = state.g3.placed[w];
+    if (expected !== actual) {
+      allCorrect = false;
+      errors.push({word:w, expected, actual});
+    }
+  });
+
+  state.currentAttempts++;
+
+  if (allCorrect) {
+    state.g3.checkDone = true;
+    state.g3.results.push({correct:true, hintsUsed: state.hintUsed?1:0});
+    toSort.forEach(w => {
+      state.skillStats[sent.sortParts[w]].total++;
+      state.skillStats[sent.sortParts[w]].correct++;
+    });
+    state.score += state.hintUsed ? 2 : 4;
+    setFeedback('ok', '✅ Отлично! Все слова разложены верно!');
+    document.getElementById('btnCheck').disabled = true;
+    showNext('Следующее место →');
+  } else {
+    if (state.currentAttempts >= state.maxAttempts) {
+      state.g3.checkDone = true;
+      state.g3.results.push({correct:false, hintsUsed: state.hintUsed?1:0});
+      toSort.forEach(w => {
+        state.skillStats[sent.sortParts[w]].total++;
+      });
+      let msg = '❌ Не совсем верно. ';
+      errors.forEach(e => {
+        msg += `«${e.word}» — это ${PARTS[e.expected].label} (${PARTS[e.expected].question}). `;
+      });
+      setFeedback('err', msg);
+      document.getElementById('btnCheck').disabled = true;
+      showNext('Следующее место →');
+    } else {
+      let msg = '🔄 Не все верно. Проверь: ';
+      errors.forEach(e => {
+        msg += `«${e.word}» не подходит в папку ${PARTS[e.actual].label}. `;
+      });
+      msg += 'Попробуй ещё раз!';
+      setFeedback('err', msg);
+    }
+  }
+}
+
+function showHintG3() {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+  const sent = SENTENCES_DND[state.g3.sentIdx];
+  const toSort = sent.toSort;
+  const first = toSort[0];
+  const part = sent.sortParts[first];
+  setFeedback('hint', `💡 Подсказка: «${first}» — это ${PARTS[part].label} (${PARTS[part].question}). Попробуй догадаться об остальных!`);
+  document.getElementById('btnHint').disabled = true;
+}
+
+function nextG3() {
+  state.g3.sentIdx++;
+  if (state.g3.sentIdx >= SENTENCES_DND.length) {
+    finishMiniGame(2, 'Место преступления', state.g3.results);
+    return;
+  }
+  state.currentAttempts = 0;
+  state.hintUsed = false;
+  selectedWordG3 = null;
+  renderG3(document.getElementById('gameArea'));
+}
+
+// ============================================================
+// GAME 4 — Шифровка (build phrase)
+// ============================================================
+function renderG4(area) {
+  const puzzle = PUZZLES[state.g4.puzzleIdx];
+  state.g4.slots = new Array(puzzle.template.length).fill(null);
+
+  const slotsHtml = puzzle.template.map((slot, i) => `
+    <div class="puzzle-slot" id="slot${i}" data-idx="${i}" data-type="${slot.type}"
+      onclick="clearSlotG4(${i})">
+      <span class="slot-placeholder">${slot.placeholder}</span>
+    </div>
+  `).join('');
+
+  const optionsHtml = puzzle.options.map((opt,i) => `
+    <button class="word-option" id="opt${i}" onclick="pickOptionG4(${i})">${opt.word}</button>
+  `).join('');
+
+  area.innerHTML = `
+    <div class="game-card fade-in">
+      <div class="game-card-header">
+        <span class="game-card-icon">🔐</span>
+        <span class="game-card-title">Дело 4: Шифровка</span>
+        <span class="game-card-badge">${state.g4.puzzleIdx+1}/${PUZZLES.length}</span>
+      </div>
+      <div class="task-hint">Собери словосочетание — нажимай слова по порядку:</div>
+      <div class="puzzle-slots">${slotsHtml}</div>
+      <div class="word-options">${optionsHtml}</div>
+      <div class="feedback-box" id="feedbackBox" style="margin-top:12px"></div>
+      <div style="margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-hint" onclick="checkG4()" style="background:var(--desk);color:#fff;border-color:var(--desk)">✅ Проверить</button>
+        <button class="btn-hint" id="btnHint" onclick="showHintG4()">💡 Подсказка</button>
+        <button class="btn-hint" onclick="resetG4()">🔄 Сброс</button>
+      </div>
+      <button class="btn-next" id="btnNext" onclick="nextG4()">Следующая шифровка →</button>
+    </div>
+  `;
+}
+
+let waitingForSlot = false;
+let selectedOptIdx = null;
+
+function pickOptionG4(optIdx) {
+  const puzzle = PUZZLES[state.g4.puzzleIdx];
+  const opt = puzzle.options[optIdx];
+  const btn = document.getElementById('opt'+optIdx);
+  if (btn.disabled) return;
+
+  // find first empty slot that matches type
+  const emptyMatchIdx = state.g4.slots.findIndex((s,i) => s===null && puzzle.template[i].type === opt.type);
+
+  if (emptyMatchIdx === -1) {
+    // no matching empty slot — try any empty slot
+    const anyEmpty = state.g4.slots.findIndex(s => s===null);
+    if (anyEmpty === -1) {
+      setFeedback('hint','💡 Все ячейки заняты. Нажми на ячейку, чтобы освободить её, или нажми «Сброс».');
+      return;
+    }
+    fillSlot(anyEmpty, optIdx);
+  } else {
+    fillSlot(emptyMatchIdx, optIdx);
+  }
+}
+
+function fillSlot(slotIdx, optIdx) {
+  const puzzle = PUZZLES[state.g4.puzzleIdx];
+  const opt = puzzle.options[optIdx];
+  state.g4.slots[slotIdx] = {optIdx, word: opt.word, type: opt.type};
+
+  const slotEl = document.getElementById('slot'+slotIdx);
+  slotEl.innerHTML = opt.word;
+  slotEl.className = `puzzle-slot filled ${opt.type}`;
+
+  document.getElementById('opt'+optIdx).disabled = true;
+  document.getElementById('feedbackBox').className = 'feedback-box';
+}
+
+function clearSlotG4(slotIdx) {
+  const slot = state.g4.slots[slotIdx];
+  if (!slot) return;
+  const optEl = document.getElementById('opt'+slot.optIdx);
+  if (optEl) optEl.disabled = false;
+
+  state.g4.slots[slotIdx] = null;
+  const puzzle = PUZZLES[state.g4.puzzleIdx];
+  const slotEl = document.getElementById('slot'+slotIdx);
+  slotEl.innerHTML = `<span class="slot-placeholder">${puzzle.template[slotIdx].placeholder}</span>`;
+  slotEl.className = 'puzzle-slot';
+}
+
+function resetG4() {
+  const puzzle = PUZZLES[state.g4.puzzleIdx];
+  state.g4.slots = new Array(puzzle.template.length).fill(null);
+  puzzle.template.forEach((_,i)=>{
+    const slotEl=document.getElementById('slot'+i);
+    if(slotEl){ slotEl.innerHTML=`<span class="slot-placeholder">${puzzle.template[i].placeholder}</span>`; slotEl.className='puzzle-slot'; }
+  });
+  puzzle.options.forEach((_,i)=>{
+    const btn=document.getElementById('opt'+i);
+    if(btn) btn.disabled=false;
+  });
+  document.getElementById('feedbackBox').className='feedback-box';
+}
+
+function checkG4() {
+  const puzzle = PUZZLES[state.g4.puzzleIdx];
+  // check all slots filled
+  const unfilled = state.g4.slots.findIndex(s=>s===null);
+  if (unfilled !== -1) {
+    setFeedback('hint','💡 Заполни все ячейки!');
+    return;
+  }
+
+  state.currentAttempts++;
+
+  // check types match template
+  let typeOk = state.g4.slots.every((s,i) => s.type === puzzle.template[i].type);
+
+  if (typeOk) {
+    // also check specific combos if defined
+    let comboOk = true;
+    if (puzzle.correct_combos) {
+      const words = state.g4.slots.map(s=>s.word);
+      comboOk = puzzle.correct_combos.some(combo => combo.every((w,i)=>w===words[i]));
+    }
+
+    if (typeOk && (puzzle.correct_combos === null || comboOk)) {
+      state.g4.results.push({correct:true, hintsUsed: state.hintUsed?1:0});
+      state.score += state.hintUsed ? 1 : 3;
+      // count skills
+      puzzle.template.forEach((slot,i) => { state.skillStats[slot.type].total++; state.skillStats[slot.type].correct++; });
+      setFeedback('ok', `✅ Отличное словосочетание: «${state.g4.slots.map(s=>s.word).join(' ')}»!`);
+      document.querySelectorAll('.word-option').forEach(b=>b.disabled=true);
+      document.querySelectorAll('.puzzle-slot').forEach(el=>el.onclick=null);
+      showNext('Следующая шифровка →');
+      return;
+    }
+  }
+
+  // wrong
+  if (state.currentAttempts >= state.maxAttempts) {
+    state.g4.results.push({correct:false, hintsUsed: state.hintUsed?1:0});
+    puzzle.template.forEach(slot => { state.skillStats[slot.type].total++; });
+    let msg = '❌ Не совсем верно. В словосочетании должны быть: ';
+    msg += puzzle.template.map(t=>PARTS[t.type].label).join(' + ');
+    setFeedback('err', msg);
+    document.querySelectorAll('.word-option').forEach(b=>b.disabled=true);
+    document.querySelectorAll('.puzzle-slot').forEach(el=>el.onclick=null);
+    showNext('Следующая шифровка →');
+  } else {
+    setFeedback('err','🔄 Что-то не так с порядком или выбором слов. Попробуй ещё раз! (Можно нажать на ячейку, чтобы освободить её)');
+  }
+}
+
+function showHintG4() {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+  const puzzle = PUZZLES[state.g4.puzzleIdx];
+  const hint = puzzle.template.map(t=>`${PARTS[t.type].label} (${PARTS[t.type].question})`).join(' + ');
+  setFeedback('hint',`💡 Нужно собрать: ${hint}`);
+  document.getElementById('btnHint').disabled = true;
+}
+
+function nextG4() {
+  state.g4.puzzleIdx++;
+  if (state.g4.puzzleIdx >= PUZZLES.length) {
+    finishMiniGame(3, 'Шифровка', state.g4.results);
+    return;
+  }
+  state.currentAttempts = 0;
+  state.hintUsed = false;
+  renderG4(document.getElementById('gameArea'));
+}
+
+// ============================================================
+// GAME 5 — Лжесвидетель (find the error)
+// ============================================================
+function renderG5(area) {
+  const sent = LIAR_SENTENCES[state.g5.sentIdx];
+  state.currentAttempts = 0;
+
+  const wordsHtml = sent.display.map((item,i)=>`
+    <div class="sent-word">
+      <div class="sent-word-text" id="sw${i}" onclick="checkG5(${i},${item.correct},'${item.word}')">
+        ${item.word}
+      </div>
+      <div class="sent-word-label ${item.part}">${item.label}</div>
+    </div>
+  `).join('');
+
+  area.innerHTML = `
+    <div class="game-card fade-in">
+      <div class="game-card-header">
+        <span class="game-card-icon">🎭</span>
+        <span class="game-card-title">Дело 5: Лжесвидетель</span>
+        <span class="game-card-badge">${state.g5.sentIdx+1}/${LIAR_SENTENCES.length}</span>
+      </div>
+      <div class="task-hint">Найди слово, у которого НЕВЕРНО написана часть речи. Нажми на него!</div>
+      ${renderAttempts(state.currentAttempts, state.maxAttempts)}
+      <div class="sentence-display" id="sentDisplay">${wordsHtml}</div>
+      <div class="feedback-box" id="feedbackBox"></div>
+      <button class="btn-next" id="btnNext" onclick="nextG5()">Следующий свидетель →</button>
+      <br>
+      <button class="btn-hint" id="btnHint" onclick="showHintG5()">💡 Подсказка</button>
+    </div>
+  `;
+}
+
+function checkG5(idx, isCorrect, word) {
+  if (state.currentAttempts >= state.maxAttempts) return;
+  const sent = LIAR_SENTENCES[state.g5.sentIdx];
+  state.currentAttempts++;
+
+  // We want them to click the INCORRECT one (the liar)
+  const clickedLiar = !isCorrect;
+
+  if (clickedLiar) {
+    // correct click — they found the liar
+    state.g5.results.push({correct:true, hintsUsed:state.hintUsed?1:0});
+    state.score += state.hintUsed ? 1 : 2;
+    // skill stats: all parts in sentence
+    sent.display.forEach(item => { state.skillStats[item.part].total++; state.skillStats[item.part].correct++; });
+    document.getElementById('sw'+idx).className = 'sent-word-text highlighted-error';
+    setFeedback('ok', `✅ Нашёл лжесвидетеля! ${sent.explanation}`);
+    document.querySelectorAll('.sent-word-text').forEach(el=>el.onclick=null);
+    showNext('Следующий свидетель →');
+    document.getElementById('btnHint').disabled = true;
+  } else {
+    document.getElementById('sw'+idx).className = 'sent-word-text correct-pick';
+    setTimeout(()=>{ const el=document.getElementById('sw'+idx); if(el)el.className='sent-word-text'; }, 500);
+
+    if (state.currentAttempts >= state.maxAttempts) {
+      state.g5.results.push({correct:false, hintsUsed:state.hintUsed?1:0});
+      sent.display.forEach(item => { state.skillStats[item.part].total++; });
+      const liarEl = document.getElementById('sw'+sent.liarIdx);
+      if(liarEl) liarEl.className = 'sent-word-text highlighted-error';
+      setFeedback('err', `❌ Лжесвидетель был другим словом. ${sent.explanation}`);
+      document.querySelectorAll('.sent-word-text').forEach(el=>el.onclick=null);
+      showNext('Следующий свидетель →');
+    } else {
+      setFeedback('err','Это слово подписано верно. Ищи дальше!');
+      const attDiv = document.querySelector('.attempts-display');
+      if(attDiv) {
+        attDiv.innerHTML='';
+        for(let i=0;i<state.maxAttempts;i++) attDiv.innerHTML+=`<div class="attempt-dot ${i<state.currentAttempts?'used':''}"></div>`;
+      }
+    }
+  }
+}
+
+function showHintG5() {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+  const sent = LIAR_SENTENCES[state.g5.sentIdx];
+  const liar = sent.display[sent.liarIdx];
+  setFeedback('hint',`💡 Задай вопрос к слову «${liar.word}»: на какой вопрос оно отвечает?`);
+  document.getElementById('btnHint').disabled = true;
+}
+
+function nextG5() {
+  state.g5.sentIdx++;
+  if (state.g5.sentIdx >= LIAR_SENTENCES.length) {
+    finishMiniGame(4, 'Лжесвидетель', state.g5.results);
+    return;
+  }
+  state.currentAttempts = 0;
+  state.hintUsed = false;
+  renderG5(document.getElementById('gameArea'));
+}
+
+// ============================================================
+// GAME 6 — Финальный отчёт (fill in the blank)
+// ============================================================
+function renderG6(area) {
+  const task = FILL_TASKS[state.g6.taskIdx];
+  state.g6.filled = new Array(task.blanks.length).fill(null);
+
+  // Build sentence HTML
+  let sentHtml = '';
+  let blankIdx = 0;
+  task.template.forEach(part => {
+    if (part.startsWith('_') && part.endsWith('_')) {
+      const type = part.replace(/_/g,'').toLowerCase();
+      const bi = blankIdx++;
+      sentHtml += `<span class="blank-slot" id="blank${bi}" data-type="${type}" onclick="clearBlank(${bi})">?</span>`;
+    } else {
+      sentHtml += `<span>${part}</span>`;
+    }
+  });
+
+  // Build options
+  const allOpts = [];
+  task.blanks.forEach((b,bi) => {
+    b.options.forEach(w => allOpts.push({word:w, blankIdx:bi, isCorrect: w===b.answer, type:b.type}));
+  });
+  const shuffledOpts = shuffle(allOpts);
+
+  const optsHtml = shuffledOpts.map((opt,i)=>`
+    <button class="word-option" id="fillOpt${i}" onclick="pickFillOpt(${i})">${opt.word}</button>
+  `).join('');
+
+  area.innerHTML = `
+    <div class="game-card fade-in">
+      <div class="game-card-header">
+        <span class="game-card-icon">📋</span>
+        <span class="game-card-title">Дело 6: Финальный отчёт</span>
+        <span class="game-card-badge">${state.g6.taskIdx+1}/${FILL_TASKS.length}</span>
+      </div>
+      <div class="task-hint">Заполни пропуски, выбирая подходящие слова:</div>
+      <div class="fill-sentence" id="fillSent">${sentHtml}</div>
+      <div class="word-options" id="fillOptions">${optsHtml}</div>
+      <div class="feedback-box" id="feedbackBox" style="margin-top:12px"></div>
+      <div style="margin-top:10px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn-hint" onclick="checkG6()" style="background:var(--desk);color:#fff;border-color:var(--desk)">✅ Проверить</button>
+        <button class="btn-hint" id="btnHint" onclick="showHintG6()">💡 Подсказка</button>
+      </div>
+      <button class="btn-next" id="btnNext" onclick="nextG6()">Завершить дело →</button>
+    </div>
+  `;
+
+  // store opts for reference
+  area._opts = shuffledOpts;
+}
+
+function pickFillOpt(optIdx) {
+  const area = document.getElementById('gameArea');
+  const opts = area._opts;
+  const opt = opts[optIdx];
+  const btn = document.getElementById('fillOpt'+optIdx);
+  if (btn.disabled) return;
+
+  const task = FILL_TASKS[state.g6.taskIdx];
+  const targetBlank = state.g6.filled.findIndex(f=>f===null);
+  if (targetBlank === -1) {
+    setFeedback('hint','💡 Все пропуски заполнены. Нажми на слово в предложении, чтобы убрать его.');
+    return;
+  }
+
+  state.g6.filled[targetBlank] = {optIdx, word: opt.word, isCorrect: opt.isCorrect, type: task.blanks[targetBlank].type};
+  btn.disabled = true;
+
+  const blankEl = document.getElementById('blank'+targetBlank);
+  if (blankEl) {
+    blankEl.textContent = opt.word;
+    blankEl.className = `blank-slot filled ${task.blanks[targetBlank].type}`;
+  }
+  document.getElementById('feedbackBox').className = 'feedback-box';
+}
+
+function clearBlank(blankIdx) {
+  const filled = state.g6.filled[blankIdx];
+  if (!filled) return;
+  const btn = document.getElementById('fillOpt'+filled.optIdx);
+  if (btn) btn.disabled = false;
+
+  state.g6.filled[blankIdx] = null;
+  const blankEl = document.getElementById('blank'+blankIdx);
+  if (blankEl) { blankEl.textContent = '?'; blankEl.className = 'blank-slot'; }
+}
+
+function checkG6() {
+  const task = FILL_TASKS[state.g6.taskIdx];
+  const unfilled = state.g6.filled.findIndex(f=>f===null);
+  if (unfilled !== -1) { setFeedback('hint','💡 Заполни все пропуски!'); return; }
+
+  state.currentAttempts++;
+  const allCorrect = state.g6.filled.every(f=>f.isCorrect);
+
+  if (allCorrect) {
+    state.g6.results.push({correct:true, hintsUsed:state.hintUsed?1:0});
+    state.score += state.hintUsed ? 2 : 4;
+    task.blanks.forEach(b=>{ state.skillStats[b.type].total++; state.skillStats[b.type].correct++; });
+    setFeedback('ok',`✅ Великолепно! Предложение составлено верно: «${task.readable}»`);
+    document.querySelectorAll('.word-option').forEach(b=>b.disabled=true);
+    document.querySelectorAll('.blank-slot').forEach(el=>el.onclick=null);
+    showNext('Завершить дело →');
+  } else {
+    if (state.currentAttempts >= state.maxAttempts) {
+      state.g6.results.push({correct:false, hintsUsed:state.hintUsed?1:0});
+      task.blanks.forEach(b=>state.skillStats[b.type].total++);
+      setFeedback('err',`❌ Правильный вариант: «${task.readable}»`);
+      document.querySelectorAll('.word-option').forEach(b=>b.disabled=true);
+      document.querySelectorAll('.blank-slot').forEach(el=>el.onclick=null);
+      showNext('Завершить дело →');
+    } else {
+      const wrongCount = state.g6.filled.filter(f=>!f.isCorrect).length;
+      setFeedback('err',`🔄 Найди ошибку! ${wrongCount} слово(а) выбраны неверно. Нажми на слово в предложении, чтобы убрать его.`);
+    }
+  }
+}
+
+function showHintG6() {
+  if (state.hintUsed) return;
+  state.hintUsed = true;
+  const task = FILL_TASKS[state.g6.taskIdx];
+  const firstBlank = task.blanks[0];
+  setFeedback('hint',`💡 Первый пропуск — это ${PARTS[firstBlank.type].label} (${PARTS[firstBlank.type].question}). Выбери подходящее слово!`);
+  document.getElementById('btnHint').disabled = true;
+}
+
+function nextG6() {
+  state.g6.taskIdx++;
+  if (state.g6.taskIdx >= FILL_TASKS.length) {
+    finishMiniGame(5, 'Финальный отчёт', state.g6.results);
+    return;
+  }
+  state.currentAttempts = 0;
+  state.hintUsed = false;
+  renderG6(document.getElementById('gameArea'));
+}
+
+// ============================================================
+// FINISH MINI GAME
+// ============================================================
+function finishMiniGame(gameIdx, name, results) {
+  const correct = results.filter(r=>r.correct).length;
+  const total = results.length;
+  const hints = results.reduce((s,r)=>s+r.hintsUsed,0);
+  state.gameResults.push({name, correct, total, hints});
+
+  // show level complete
+  const pct = total > 0 ? correct/total : 0;
+  let emoji, title, text, stars;
+  if (pct === 1) {
+    emoji='🏅'; title='Дело раскрыто!'; stars='⭐⭐⭐';
+    text = 'Отличная работа, детектив! Ни одной ошибки!';
+  } else if (pct >= 0.6) {
+    emoji='✅'; title='Дело почти раскрыто!'; stars='⭐⭐';
+    text = `Хорошая работа! Правильных ответов: ${correct} из ${total}.`;
+  } else {
+    emoji='🔍'; title='Нужна тренировка'; stars='⭐';
+    text = `Правильных ответов: ${correct} из ${total}. Не сдавайся, детектив!`;
+  }
+
+  document.getElementById('lcEmoji').textContent = emoji;
+  document.getElementById('lcTitle').textContent = title;
+  document.getElementById('lcStars').textContent = stars;
+  document.getElementById('lcText').textContent = text;
+
+  if (pct >= 0.6) confetti();
+
+  const btnNext = document.getElementById('btnNextMini');
+  if (gameIdx >= state.totalGames - 1) {
+    btnNext.textContent = '📋 Финальный отчёт';
+    btnNext.onclick = showReport;
+  } else {
+    btnNext.textContent = `Следующее дело ${gameIdx+2}/6 🔍`;
+    btnNext.onclick = () => nextMiniGame();
+  }
+
+  // mark current done
+  state.currentGame = gameIdx + 1;
+  updateHUD();
+  showScreen('screenLevelDone');
+}
+
+function nextMiniGame() {
+  const idx = state.currentGame;
+  state.currentAttempts = 0;
+  state.hintUsed = false;
+  renderGame(idx);
+}
+
+// ============================================================
+// FINAL REPORT
+// ============================================================
+function showReport() {
+  showScreen('screenReport');
+  document.getElementById('hud').classList.remove('visible');
+
+  const total = state.gameResults.reduce((s,r)=>s+r.total,0);
+  const correct = state.gameResults.reduce((s,r)=>s+r.correct,0);
+  const hints = state.gameResults.reduce((s,r)=>s+r.hints,0);
+  const pct = total>0 ? Math.round(correct/total*100) : 0;
+
+  let rank, badge;
+  if (pct >= 90)      { rank='🥇 Детектив 1-го класса!'; badge='🦉'; }
+  else if (pct >= 70) { rank='🥈 Детектив 2-го класса'; badge='🔍'; }
+  else if (pct >= 50) { rank='🥉 Детектив-стажёр'; badge='📋'; }
+  else                { rank='📚 Нужна тренировка'; badge='🎯'; }
+
+  // Skill bars
+  const skillsHtml = ['noun','verb','adj'].map(type=>{
+    const st = state.skillStats[type];
+    const p = st.total>0 ? Math.round(st.correct/st.total*100) : 0;
+    return `
+      <div class="skill-row">
+        <div class="skill-label">${PARTS[type].icon} ${PARTS[type].label}</div>
+        <div class="skill-bar-bg"><div class="skill-bar-fill ${type}" style="width:${p}%"></div></div>
+        <div class="skill-pct">${p}%</div>
+      </div>
+    `;
+  }).join('');
+
+  // Mini game results
+  const miniHtml = state.gameResults.map(r=>{
+    const p = r.total>0 ? Math.round(r.correct/r.total*100) : 0;
+    let cls = p>=80?'score-great':p>=50?'score-ok':'score-weak';
+    let icon = p>=80?'✅':p>=50?'⚠️':'❌';
+    return `
+      <div class="mini-result-row">
+        <div class="mini-result-name">${r.name}</div>
+        <div class="mini-result-score ${cls}">${icon} ${r.correct}/${r.total}</div>
+      </div>
+    `;
+  }).join('');
+
+  // Recommendation
+  let weakParts = [];
+  ['noun','verb','adj'].forEach(type=>{
+    const st = state.skillStats[type];
+    const p = st.total>0 ? st.correct/st.total : 1;
+    if (p < 0.7) weakParts.push(PARTS[type].label);
+  });
+  let recommend = weakParts.length === 0
+    ? 'Отличные результаты по всем частям речи! Можно переходить к следующей теме.'
+    : `Рекомендуется дополнительно повторить: <strong>${weakParts.join(', ')}</strong>. Предложите ученику повторить правило и примеры.`;
+
+  document.getElementById('reportCard').innerHTML = `
+    <div class="report-badge">${badge}</div>
+    <div class="report-title">Финальный отчёт детектива</div>
+    <div class="report-rank">${rank}</div>
+    <div class="report-grid">
+      <div class="report-stat">
+        <div class="report-stat-val">${pct}%</div>
+        <div class="report-stat-lbl">Общая точность</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val">${correct}/${total}</div>
+        <div class="report-stat-lbl">Верных ответов</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val">${state.score}</div>
+        <div class="report-stat-lbl">Очков набрано</div>
+      </div>
+      <div class="report-stat">
+        <div class="report-stat-val">${hints}</div>
+        <div class="report-stat-lbl">Использовано подсказок</div>
+      </div>
+    </div>
+
+    <div style="font-weight:800;color:var(--desk);margin-bottom:8px;font-size:0.95rem">📊 По частям речи:</div>
+    <div class="report-skills">${skillsHtml}</div>
+
+    <div style="font-weight:800;color:var(--desk);margin-bottom:8px;font-size:0.95rem">📁 По делам:</div>
+    <div class="mini-results">${miniHtml}</div>
+
+    <div class="report-recommend">
+      <strong>📌 Рекомендация учителю:</strong> ${recommend}
+    </div>
+
+    <button class="btn-restart" onclick="location.reload()">🔄 Начать заново</button>
+  `;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('hud').classList.remove('visible');
+});
+</script>
+</body>
+</html>
