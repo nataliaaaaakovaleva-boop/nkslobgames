@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Посчитай быстро!</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Russo+One&display=swap');
+
+  :root {
+    --sky: #4EC5F1;
+    --sky-dark: #2AA3D3;
+    --road: #5A6476;
+    --road-line: #F5E642;
+    --orange: #F97B3D;
+    --orange-light: #FFAC70;
+    --green: #5CC85A;
+    --green-dark: #3DA83B;
+    --text-dark: #1A2640;
+    --white: #FFFFFF;
+    --panel: rgba(255,255,255,0.92);
+    --shadow: 0 8px 32px rgba(30,50,80,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--sky);
+    min-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+  }
+
+  /* ===== SCENE ===== */
+  #scene {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Sky gradient */
+  #sky-bg {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, #87CEEB 0%, #C8E8F5 55%, #D8EFA0 55%, #8BC34A 100%);
+    z-index: 0;
+  }
+
+  /* Clouds */
+  .cloud {
+    position: absolute;
+    border-radius: 50px;
+    background: rgba(255,255,255,0.88);
+    z-index: 1;
+    animation: cloudMove linear infinite;
+  }
+  @keyframes cloudMove {
+    from { transform: translateX(110vw); }
+    to { transform: translateX(-50vw); }
+  }
+
+  /* Road */
+  #road {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 22%;
+    background: #5A6476;
+    z-index: 2;
+  }
+  #road-stripe {
+    position: absolute;
+    top: 50%; left: 0; right: 0;
+    height: 8px;
+    background: repeating-linear-gradient(90deg, #F5E642 0, #F5E642 60px, transparent 60px, transparent 120px);
+    transform: translateY(-50%);
+    animation: stripeMove 0.4s linear infinite;
+  }
+  @keyframes stripeMove {
+    from { background-position-x: 0; }
+    to { background-position-x: -120px; }
+  }
+
+  /* Car */
+  #car-wrap {
+    position: absolute;
+    bottom: 9%;
+    left: 10%;
+    z-index: 5;
+    animation: carBounce 0.35s ease-in-out infinite alternate;
+  }
+  @keyframes carBounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-5px); }
+  }
+  #car-svg { width: 120px; }
+
+  /* ===== SCREENS ===== */
+  .screen {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+  }
+  .screen.active { display: flex; }
+
+  /* ===== INTRO SCREEN ===== */
+  #intro-screen .bubble {
+    background: var(--panel);
+    border-radius: 32px;
+    padding: 36px 40px;
+    max-width: 520px;
+    width: 90vw;
+    box-shadow: var(--shadow);
+    border: 3px solid var(--orange-light);
+    position: relative;
+  }
+  #intro-screen h1 {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    color: var(--orange);
+    text-shadow: 3px 3px 0 #F5E642, 5px 5px 0 #E07020;
+    margin-bottom: 14px;
+    line-height: 1.1;
+  }
+  #intro-screen p {
+    font-size: clamp(1.05rem, 3vw, 1.3rem);
+    color: var(--text-dark);
+    line-height: 1.65;
+    margin-bottom: 24px;
+  }
+  #intro-screen .emoji-line {
+    font-size: 2.2rem;
+    margin-bottom: 18px;
+  }
+
+  /* Selector */
+  .selector-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .sel-btn {
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: 3px solid var(--sky-dark);
+    background: #E8F6FC;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .sel-btn.active, .sel-btn:hover {
+    background: var(--sky-dark);
+    color: white;
+    transform: scale(1.07);
+  }
+
+  .big-btn {
+    background: linear-gradient(135deg, var(--orange) 0%, #F5C840 100%);
+    color: white;
+    border: none;
+    border-radius: 24px;
+    padding: 16px 48px;
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.4rem;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #C05A10, 0 10px 24px rgba(249,123,61,0.35);
+    transition: all 0.14s;
+    letter-spacing: 1px;
+  }
+  .big-btn:hover { transform: translateY(-3px) scale(1.04); }
+  .big-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #C05A10; }
+
+  /* ===== GAME SCREEN ===== */
+  #game-screen {
+    pointer-events: none;
+  }
+
+  /* HUD */
+  #hud {
+    position: absolute;
+    top: 18px; left: 0; right: 0;
+    z-index: 30;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    pointer-events: all;
+  }
+  .hud-pill {
+    background: var(--panel);
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 2px solid rgba(255,255,255,0.7);
+  }
+  #score-val { font-size: 1.3rem; color: var(--orange); }
+  #combo-val { font-size: 1.1rem; color: var(--green-dark); }
+
+  /* Timer bar */
+  #timer-bar-wrap {
+    position: absolute;
+    top: 80px; left: 50%; transform: translateX(-50%);
+    width: 260px;
+    z-index: 30;
+  }
+  #timer-bar-bg {
+    width: 100%;
+    height: 16px;
+    background: rgba(255,255,255,0.55);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    border: 2px solid rgba(255,255,255,0.8);
+  }
+  #timer-bar {
+    height: 100%;
+    border-radius: 8px;
+    background: linear-gradient(90deg, var(--green) 0%, #A8E063 100%);
+    transition: width 0.1s linear, background 0.3s;
+  }
+
+  /* Example card */
+  #expr-card {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    z-index: 25;
+    pointer-events: none;
+  }
+  #expr-box {
+    background: var(--panel);
+    border-radius: 28px;
+    padding: 28px 52px;
+    box-shadow: var(--shadow), 0 0 0 4px var(--orange-light);
+    min-width: 220px;
+    text-align: center;
+    transition: transform 0.25s, opacity 0.25s;
+  }
+  #expr-text {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(2.6rem, 10vw, 5rem);
+    color: var(--text-dark);
+    line-height: 1;
+    letter-spacing: 2px;
+    white-space: nowrap;
+  }
+  #expr-box.fly-out {
+    animation: flyOut 0.45s ease-in forwards;
+  }
+  @keyframes flyOut {
+    to { transform: translateX(100vw) rotate(20deg); opacity: 0; }
+  }
+  #expr-box.fly-in {
+    animation: flyIn 0.35s cubic-bezier(.22,1.5,.5,1) forwards;
+  }
+  @keyframes flyIn {
+    from { transform: translateX(-100vw) rotate(-10deg); opacity: 0; }
+    to { transform: translateX(0) rotate(0deg); opacity: 1; }
+  }
+
+  /* Answer reveal */
+  #answer-reveal {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -55%);
+    z-index: 26;
+    pointer-events: none;
+    display: none;
+  }
+  #answer-box {
+    background: linear-gradient(135deg, var(--green) 0%, #A8E063 100%);
+    border-radius: 28px;
+    padding: 28px 52px;
+    box-shadow: 0 8px 32px rgba(92,200,90,0.45), 0 0 0 4px #3DA83B;
+    min-width: 220px;
+    text-align: center;
+    animation: popIn 0.3s cubic-bezier(.22,1.5,.5,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  #answer-text {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(2.6rem, 10vw, 5rem);
+    color: white;
+    text-shadow: 2px 3px 0 var(--green-dark);
+    line-height: 1;
+  }
+
+  /* Progress dots */
+  #progress-row {
+    position: absolute;
+    bottom: 28%;
+    left: 50%; transform: translateX(-50%);
+    z-index: 30;
+    display: flex;
+    gap: 12px;
+  }
+  .prog-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.45);
+    border: 2px solid rgba(255,255,255,0.7);
+    transition: background 0.3s;
+  }
+  .prog-dot.done { background: var(--green); border-color: var(--green-dark); }
+  .prog-dot.active { background: var(--orange); border-color: #C05A10; transform: scale(1.3); }
+
+  /* Clap prompt */
+  #clap-prompt {
+    position: absolute;
+    bottom: 24%;
+    left: 50%; transform: translateX(-50%);
+    z-index: 30;
+    background: var(--orange);
+    color: white;
+    border-radius: 20px;
+    padding: 10px 28px;
+    font-size: 1.2rem;
+    font-weight: 900;
+    display: none;
+    box-shadow: 0 4px 0 #C05A10;
+    animation: pulse 0.5s ease-in-out infinite alternate;
+  }
+  @keyframes pulse { from { transform: translateX(-50%) scale(1); } to { transform: translateX(-50%) scale(1.07); } }
+
+  /* Pause btn */
+  #pause-btn {
+    background: var(--panel);
+    border: 2px solid var(--sky-dark);
+    border-radius: 16px;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    pointer-events: all;
+    transition: all 0.15s;
+  }
+  #pause-btn:hover { background: var(--sky-dark); color: white; }
+
+  /* ===== END SCREEN ===== */
+  #end-screen .panel {
+    background: var(--panel);
+    border-radius: 32px;
+    padding: 36px 44px;
+    max-width: 500px;
+    width: 92vw;
+    box-shadow: var(--shadow);
+    border: 3px solid var(--green);
+  }
+  #end-screen h2 {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    color: var(--green-dark);
+    margin-bottom: 12px;
+  }
+  #end-screen .score-big {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(3rem, 10vw, 5rem);
+    color: var(--orange);
+    text-shadow: 3px 3px 0 #F5E642;
+    margin: 8px 0;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 18px 0;
+  }
+  .stat-box {
+    background: #F0F7FF;
+    border-radius: 16px;
+    padding: 12px;
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+  }
+  .stat-box span {
+    display: block;
+    font-size: 1.6rem;
+    color: var(--sky-dark);
+    font-family: 'Russo One', sans-serif;
+  }
+
+  /* Confetti */
+  #confetti-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    pointer-events: none;
+  }
+
+  /* Label above selector */
+  .sel-label {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--sky-dark);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Pause overlay */
+  #pause-screen {
+    display: none;
+    position: absolute; inset: 0;
+    z-index: 40;
+    background: rgba(26,38,64,0.72);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+  }
+  #pause-screen.active { display: flex; }
+  #pause-screen .panel {
+    background: var(--panel);
+    border-radius: 32px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  #pause-screen h2 {
+    font-family: 'Russo One', sans-serif;
+    font-size: 2rem;
+    color: var(--text-dark);
+    margin-bottom: 20px;
+  }
+  .btn-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .sec-btn {
+    background: var(--sky-dark);
+    color: white;
+    border: none;
+    border-radius: 18px;
+    padding: 12px 28px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.14s;
+  }
+  .sec-btn:hover { background: var(--sky); transform: scale(1.05); }
+
+  /* Teacher report */
+  #report-btn {
+    margin-top: 12px;
+    background: #EEF4FF;
+    color: var(--text-dark);
+    border: 2px solid var(--sky-dark);
+    border-radius: 16px;
+    padding: 10px 22px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.14s;
+    width: 100%;
+    margin-top: 10px;
+  }
+  #report-btn:hover { background: var(--sky-dark); color: white; }
+
+  #report-modal {
+    display: none;
+    position: absolute; inset: 0;
+    z-index: 50;
+    background: rgba(26,38,64,0.75);
+    align-items: center;
+    justify-content: center;
+  }
+  #report-modal.active { display: flex; }
+  #report-modal .panel {
+    background: var(--panel);
+    border-radius: 28px;
+    padding: 32px;
+    max-width: 480px;
+    width: 92vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow);
+  }
+  #report-modal h3 {
+    font-family: 'Russo One', sans-serif;
+    font-size: 1.5rem;
+    color: var(--sky-dark);
+    margin-bottom: 16px;
+  }
+  .report-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e8eef5;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+  }
+  .report-row strong { font-weight: 900; color: var(--orange); }
+  .tag {
+    display: inline-block;
+    border-radius: 10px; padding: 3px 10px;
+    font-size: 0.82rem; font-weight: 700;
+    margin: 2px;
+  }
+  .tag-op { background: #D5EEFF; color: var(--sky-dark); }
+  .tag-type { background: #FFF0D5; color: #B06020; }
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<div id="scene">
+  <div id="sky-bg"></div>
+  <!-- Clouds injected by JS -->
+  <div id="road"><div id="road-stripe"></div></div>
+  <div id="car-wrap">
+    <!-- Simple SVG car -->
+    <svg id="car-svg" viewBox="0 0 120 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="28" width="112" height="24" rx="8" fill="#F97B3D"/>
+      <rect x="24" y="14" width="64" height="24" rx="8" fill="#FFAC70"/>
+      <rect x="30" y="17" width="20" height="16" rx="4" fill="#B8ECFF" opacity="0.9"/>
+      <rect x="56" y="17" width="20" height="16" rx="4" fill="#B8ECFF" opacity="0.9"/>
+      <circle cx="28" cy="52" r="9" fill="#1A2640"/>
+      <circle cx="28" cy="52" r="5" fill="#B0BAC8"/>
+      <circle cx="90" cy="52" r="9" fill="#1A2640"/>
+      <circle cx="90" cy="52" r="5" fill="#B0BAC8"/>
+      <rect x="100" y="30" width="14" height="8" rx="3" fill="#F5E642"/>
+      <rect x="2" y="36" width="8" height="6" rx="2" fill="#FF6B6B" opacity="0.8"/>
+    </svg>
+  </div>
+
+  <!-- INTRO SCREEN -->
+  <div id="intro-screen" class="screen active">
+    <div class="bubble">
+      <div class="emoji-line">🏎️⚡🧮</div>
+      <h1>Посчитай<br>быстро!</h1>
+      <p>Привет, гонщик! На экране будут появляться примеры. Твоя задача — <strong>назвать ответ</strong>, пока пример не улетел! Если успел — хлопни в ладоши. Поехали!</p>
+      <button class="big-btn" id="start-btn">🚀 Поехали!</button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="game-screen" class="screen">
+    <div id="hud">
+      <div class="hud-pill">🔥 пример: <span id="combo-val">0</span></div>
+      <button id="pause-btn">⏸</button>
+    </div>
+    <div id="timer-bar-wrap">
+      <div id="timer-bar-bg"><div id="timer-bar"></div></div>
+    </div>
+    <div id="expr-card">
+      <div id="expr-box"><div id="expr-text"></div></div>
+    </div>
+    <div id="answer-reveal">
+      <div id="answer-box"><div id="answer-text">5</div></div>
+    </div>
+    <div id="progress-row"></div>
+    <div id="clap-prompt">👏 Хлопни в ладоши!</div>
+  </div>
+
+  <!-- PAUSE SCREEN -->
+  <div id="pause-screen">
+    <div class="panel">
+      <h2>⏸ Пауза</h2>
+      <div class="btn-row">
+        <button class="sec-btn" id="resume-btn">▶ Продолжить</button>
+        <button class="sec-btn" id="restart-from-pause">🔄 Сначала</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="end-screen" class="screen">
+    <div class="panel">
+      <h2 id="end-title">🏆 Чемпион!</h2>
+      <div class="btn-row">
+        <button class="big-btn" id="retry-btn">🔄 Ещё раз!</button>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+
+<script>
+// ========================= CLOUDS =========================
+(function() {
+  const scene = document.getElementById('scene');
+  const clouds = [
+    { w: 120, h: 36, top: '8%', dur: 28, delay: 0 },
+    { w: 80, h: 26, top: '14%', dur: 22, delay: -8 },
+    { w: 160, h: 44, top: '5%', dur: 35, delay: -15 },
+    { w: 100, h: 30, top: '20%', dur: 26, delay: -5 },
+  ];
+  clouds.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'cloud';
+    el.style.cssText = `width:${c.w}px;height:${c.h}px;top:${c.top};
+      animation-duration:${c.dur}s;animation-delay:${c.delay}s;`;
+    scene.appendChild(el);
+  });
+})();
+
+// ========================= EXAMPLE GENERATORS =========================
+function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function genExamples(count) {
+  const generators = [
+    // Однозначные + однозначные
+    () => { const a = randInt(1,9), b = randInt(1,9); return { expr:`${a} + ${b}`, ans: a+b }; },
+    // Вычитание однозначных
+    () => { const b = randInt(1,9), a = randInt(b,18); return { expr:`${a} − ${b}`, ans: a-b }; },
+    // Однозначное + двузначное
+    () => { const a = randInt(1,9), b = randInt(10,20); return { expr:`${a} + ${b}`, ans: a+b }; },
+    // Двузначное − однозначное
+    () => { const b = randInt(1,9), a = randInt(10,20); return { expr:`${a} − ${b}`, ans: a-b }; },
+    // Двузначное + двузначное
+    () => { const a = randInt(10,40), b = randInt(10,40); return { expr:`${a} + ${b}`, ans: a+b }; },
+    // Двузначное − двузначное
+    () => { const b = randInt(10,30), a = randInt(b+5,70); return { expr:`${a} − ${b}`, ans: a-b }; },
+    // Умножение на 2
+    () => { const a = randInt(1,9); return { expr:`${a} × 2`, ans: a*2 }; },
+    // Деление на 2
+    () => { const a = randInt(1,9); return { expr:`${a*2} ÷ 2`, ans: a }; },
+    // Умножение на 3
+    () => { const a = randInt(1,9); return { expr:`${a} × 3`, ans: a*3 }; },
+    // Деление на 3
+    () => { const a = randInt(1,9); return { expr:`${a*3} ÷ 3`, ans: a }; },
+  ];
+  const pool = [];
+  while (pool.length < count) {
+    const g = generators[randInt(0, generators.length-1)];
+    pool.push(g());
+  }
+  return pool;
+}
+
+// ========================= GAME STATE =========================
+let state = {
+  count: 12,
+  examples: [],
+  idx: 0,
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  done: 0,
+  timerSec: 6,
+  phase: 'idle', // idle | showing | answer
+  timerInterval: null,
+  showInterval: null,
+  startTime: 0,
+  endTime: 0,
+  log: [], // {expr, ans, elapsed, shown}
+};
+
+// ========================= UI REFS =========================
+const screens = {
+  intro: document.getElementById('intro-screen'),
+  game: document.getElementById('game-screen'),
+  end: document.getElementById('end-screen'),
+};
+const exprBox = document.getElementById('expr-box');
+const exprText = document.getElementById('expr-text');
+const answerReveal = document.getElementById('answer-reveal');
+const answerText = document.getElementById('answer-text');
+const timerBar = document.getElementById('timer-bar');
+const comboVal = document.getElementById('combo-val');
+const progressRow = document.getElementById('progress-row');
+const clapPrompt = document.getElementById('clap-prompt');
+const pauseScreen = document.getElementById('pause-screen');
+
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  if (screens[name]) screens[name].classList.add('active');
+}
+
+// ========================= INTRO CONTROLS =========================
+document.getElementById('start-btn').addEventListener('click', startGame);
+
+// ========================= PAUSE =========================
+document.getElementById('pause-btn').addEventListener('click', () => {
+  if (state.phase === 'showing' || state.phase === 'answer') {
+    pauseGame();
+  }
+});
+document.getElementById('resume-btn').addEventListener('click', resumeGame);
+document.getElementById('restart-from-pause').addEventListener('click', () => {
+  pauseScreen.classList.remove('active');
+  clearAllTimers();
+  showScreen('intro');
+});
+
+function pauseGame() {
+  pauseScreen.classList.add('active');
+  clearAllTimers();
+}
+function resumeGame() {
+  pauseScreen.classList.remove('active');
+  if (state.phase === 'showing') startExampleTimer();
+  else if (state.phase === 'answer') setTimeout(nextExample, 600);
+}
+
+// ========================= PROGRESS DOTS =========================
+function buildProgress() {
+  progressRow.innerHTML = '';
+  for (let i = 0; i < state.examples.length; i++) {
+    const d = document.createElement('div');
+    d.className = 'prog-dot';
+    if (i < state.idx) d.classList.add('done');
+    if (i === state.idx) d.classList.add('active');
+    progressRow.appendChild(d);
+  }
+}
+function updateProgress() {
+  const dots = progressRow.querySelectorAll('.prog-dot');
+  dots.forEach((d, i) => {
+    d.classList.remove('done', 'active');
+    if (i < state.idx) d.classList.add('done');
+    if (i === state.idx) d.classList.add('active');
+  });
+}
+
+// ========================= TIMERS =========================
+function clearAllTimers() {
+  clearInterval(state.timerInterval);
+  clearTimeout(state.showInterval);
+  state.timerInterval = null;
+  state.showInterval = null;
+}
+
+// ========================= GAME FLOW =========================
+function startGame() {
+  state.examples = genExamples(10);
+  state.idx = 0;
+  state.score = 0;
+  state.combo = 0;
+  state.maxCombo = 0;
+  state.done = 0;
+  state.log = [];
+  state.startTime = Date.now();
+  comboVal.textContent = '0';
+  buildProgress();
+  showScreen('game');
+  setTimeout(showNextExample, 600);
+}
+
+function showNextExample() {
+  if (state.idx >= state.examples.length) {
+    endGame(); return;
+  }
+  const ex = state.examples[state.idx];
+  exprText.textContent = ex.expr;
+  exprBox.classList.remove('fly-out');
+  answerReveal.style.display = 'none';
+  clapPrompt.style.display = 'none';
+  exprBox.classList.add('fly-in');
+  // remove fly-in after anim
+  setTimeout(() => exprBox.classList.remove('fly-in'), 400);
+
+  updateProgress();
+  state.phase = 'showing';
+  state._exprStart = Date.now();
+  startExampleTimer();
+}
+
+function startExampleTimer() {
+  const totalMs = state.timerSec * 1000;
+  const start = Date.now();
+  let remaining = totalMs;
+
+  timerBar.style.width = '100%';
+  timerBar.style.background = 'linear-gradient(90deg, #5CC85A 0%, #A8E063 100%)';
+
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(() => {
+    const elapsed = Date.now() - start;
+    remaining = totalMs - elapsed;
+    const pct = Math.max(0, remaining / totalMs * 100);
+    timerBar.style.width = pct + '%';
+    if (pct < 40) timerBar.style.background = 'linear-gradient(90deg, #F97B3D 0%, #F5C840 100%)';
+    if (pct < 15) timerBar.style.background = 'linear-gradient(90deg, #E04040 0%, #F97B3D 100%)';
+    if (remaining <= 0) {
+      clearInterval(state.timerInterval);
+      timeUp();
+    }
+  }, 60);
+}
+
+function timeUp() {
+  state.phase = 'answer';
+  const ex = state.examples[state.idx];
+  state.done++;
+  state.combo++;
+  if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+  comboVal.textContent = state.combo;
+
+  exprBox.classList.add('fly-out');
+  clapPrompt.style.display = 'block';
+
+  setTimeout(() => {
+    answerText.textContent = ex.ans;
+    answerReveal.style.display = 'block';
+  }, 250);
+
+  state.idx++;
+  state.showInterval = setTimeout(() => {
+    answerReveal.style.display = 'none';
+    clapPrompt.style.display = 'none';
+    exprBox.classList.remove('fly-out');
+    showNextExample();
+  }, 3000);
+}
+
+function endGame() {
+  state.phase = 'idle';
+  state.endTime = Date.now();
+  showScreen('end');
+  launchConfetti();
+}
+
+document.getElementById('retry-btn').addEventListener('click', () => {
+  showScreen('intro');
+});
+
+// ========================= CONFETTI =========================
+const confCanvas = document.getElementById('confetti-canvas');
+const confCtx = confCanvas.getContext('2d');
+let confParticles = [];
+let confRunning = false;
+
+function launchConfetti() {
+  confCanvas.width = window.innerWidth;
+  confCanvas.height = window.innerHeight;
+  confParticles = [];
+  const colors = ['#F97B3D','#F5E642','#5CC85A','#4EC5F1','#FF8FAB','#A78BFA'];
+  for (let i = 0; i < 120; i++) {
+    confParticles.push({
+      x: Math.random() * confCanvas.width,
+      y: Math.random() * -confCanvas.height * 0.5,
+      w: randInt(8, 18), h: randInt(6, 12),
+      rot: Math.random() * Math.PI * 2,
+      rotSpeed: (Math.random() - 0.5) * 0.2,
+      vx: (Math.random() - 0.5) * 3,
+      vy: randInt(2, 5),
+      color: colors[randInt(0, colors.length - 1)],
+      life: 1,
+    });
+  }
+  if (!confRunning) { confRunning = true; animConf(); }
+}
+
+function animConf() {
+  confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  let alive = false;
+  confParticles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.rot += p.rotSpeed;
+    if (p.y < confCanvas.height + 20) alive = true;
+    confCtx.save();
+    confCtx.translate(p.x, p.y);
+    confCtx.rotate(p.rot);
+    confCtx.globalAlpha = p.life;
+    confCtx.fillStyle = p.color;
+    confCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    confCtx.restore();
+  });
+  if (alive) requestAnimationFrame(animConf);
+  else { confRunning = false; confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height); }
+}
+
+// ========================= RESIZE =========================
+window.addEventListener('resize', () => {
+  confCanvas.width = window.innerWidth;
+  confCanvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>
