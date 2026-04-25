@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Грамматическое Дно 🐙</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Russo+One&display=swap');
+
+  :root {
+    --ocean-deep: #0d2137;
+    --ocean-mid: #1a3a5c;
+    --ocean-light: #2a6b8a;
+    --teal: #2A9D8F;
+    --teal-light: #4ECDC4;
+    --amber: #E9C46A;
+    --amber-dark: #d4a843;
+    --noun-color: #4A90D9;
+    --noun-light: #7AB3E8;
+    --verb-color: #57A055;
+    --verb-light: #82C580;
+    --adj-color: #9B59B6;
+    --adj-light: #BE8FD4;
+    --white: #F0F8FF;
+    --error: #E07B54;
+    --success: #6BCB77;
+    --text-dark: #1a2a3a;
+    --shadow: rgba(0,0,0,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--ocean-deep);
+    color: var(--white);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  canvas#bg {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
+  }
+
+  #app {
+    position: relative; z-index: 1;
+    width: 100%; height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+  }
+
+  .screen { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; padding: 16px; }
+  .screen.active { display: flex; }
+
+  /* HUD */
+  #hud {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: none;
+    align-items: center; justify-content: space-between;
+    padding: 10px 20px;
+    background: rgba(13,33,55,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--teal);
+  }
+  #hud.visible { display: flex; }
+
+  .hud-mascot { font-size: 1.8rem; animation: hudBob 2s ease-in-out infinite; }
+  @keyframes hudBob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+  .hud-progress { display: flex; gap: 8px; align-items: center; }
+  .pearl { width: 28px; height: 28px; border-radius: 50%; background: #3a4a5a; border: 2px solid #4a6a8a; transition: all 0.4s; font-size: 1rem; display: flex; align-items: center; justify-content: center; }
+  .pearl.earned { background: var(--amber); border-color: var(--amber-dark); box-shadow: 0 0 12px var(--amber); animation: pearlPop 0.4s ease; }
+  @keyframes pearlPop { 0%{transform:scale(0)} 60%{transform:scale(1.3)} 100%{transform:scale(1)} }
+
+  .hud-score { font-family: 'Russo One', sans-serif; font-size: 1.2rem; color: var(--amber); }
+
+  /* Legend */
+  .hud-legend { display: flex; gap: 8px; font-size: 0.65rem; }
+  .legend-item { display: flex; align-items: center; gap: 3px; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* SOUND BTN */
+  #soundBtn {
+    position: fixed; bottom: 16px; right: 16px; z-index: 200;
+    background: rgba(42,157,143,0.7); border: none; border-radius: 50%;
+    width: 44px; height: 44px; font-size: 1.3rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(4px);
+    transition: transform 0.2s;
+  }
+  #soundBtn:hover { transform: scale(1.1); }
+
+  /* CARDS & PANELS */
+  .panel {
+    background: rgba(26,58,92,0.85);
+    backdrop-filter: blur(12px);
+    border-radius: 24px;
+    border: 2px solid rgba(78,205,196,0.3);
+    padding: 24px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    max-width: 760px;
+    width: 100%;
+  }
+
+  .game-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
+    text-align: center;
+    color: var(--teal-light);
+    text-shadow: 0 0 20px rgba(78,205,196,0.5);
+    margin-bottom: 6px;
+  }
+  .game-sub { text-align: center; font-size: clamp(0.85rem,2vw,1rem); color: #8ab4cc; margin-bottom: 16px; }
+
+  .btn {
+    background: linear-gradient(135deg, var(--teal), var(--teal-light));
+    border: none; border-radius: 16px;
+    color: var(--ocean-deep); font-family: 'Nunito', sans-serif;
+    font-weight: 800; font-size: clamp(1rem, 2.5vw, 1.2rem);
+    padding: 14px 32px; cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 16px rgba(42,157,143,0.4);
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(42,157,143,0.6); }
+  .btn:active { transform: translateY(0); }
+
+  .btn-amber {
+    background: linear-gradient(135deg, var(--amber-dark), var(--amber));
+    box-shadow: 0 4px 16px rgba(233,196,106,0.4);
+    color: var(--ocean-deep);
+  }
+
+  /* PART OF SPEECH BADGES */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    border-radius: 20px; padding: 5px 14px;
+    font-weight: 800; font-size: 0.85rem;
+    border: 2px solid transparent;
+  }
+  .badge-noun { background: rgba(74,144,217,0.2); border-color: var(--noun-color); color: var(--noun-light); }
+  .badge-verb { background: rgba(87,160,85,0.2); border-color: var(--verb-color); color: var(--verb-light); }
+  .badge-adj  { background: rgba(155,89,182,0.2); border-color: var(--adj-color);  color: var(--adj-light); }
+
+  /* === START SCREEN === */
+  #startScreen {
+    gap: 20px;
+    background: radial-gradient(ellipse at center bottom, rgba(42,157,143,0.15) 0%, transparent 70%);
+  }
+
+  .mascot-big { font-size: clamp(4rem,12vw,7rem); animation: floatBig 3s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(78,205,196,0.4)); }
+  @keyframes floatBig { 0%,100%{transform:translateY(0) rotate(-3deg)} 50%{transform:translateY(-16px) rotate(3deg)} }
+
+  .start-title {
+    font-family: 'Russo One', sans-serif;
+    font-size: clamp(2rem, 7vw, 3.5rem);
+    text-align: center;
+    background: linear-gradient(135deg, var(--teal-light), var(--amber));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+    line-height: 1.1;
+  }
+
+  .badges-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+  .mission-box {
+    background: rgba(42,157,143,0.1);
+    border: 1px solid rgba(78,205,196,0.3);
+    border-radius: 16px; padding: 14px 20px;
+    font-size: clamp(0.85rem,2vw,1rem);
+    text-align: center; color: #b0d4e8;
+    max-width: 500px;
+  }
+
+  /* === GAME AREAS === */
+  #gameArea {
+    width: 100%; max-width: 800px;
+    padding-top: 70px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 14px;
+  }
+
+  .question-prompt {
+    text-align: center;
+    font-size: clamp(1rem,2.5vw,1.3rem);
+    font-weight: 700;
+    color: var(--white);
+    min-height: 2.5em;
+  }
+
+  /* GAME 1 — fish sorter */
+  .fish-lanes {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    width: 100%;
+  }
+  .fish-lane {
+    flex: 1; min-width: 90px; max-width: 200px;
+    background: rgba(13,33,55,0.7);
+    border-radius: 20px; padding: 14px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.1s;
+    cursor: pointer;
+    min-height: 120px;
+  }
+  .fish-lane:hover { transform: scale(1.03); }
+  .fish-lane.lane-noun { border-color: var(--noun-color); }
+  .fish-lane.lane-verb { border-color: var(--verb-color); }
+  .fish-lane.lane-adj  { border-color: var(--adj-color); }
+  .lane-icon { font-size: 2rem; }
+  .lane-label { font-weight: 800; font-size: 0.85rem; text-align: center; }
+  .lane-question { font-size: 0.72rem; color: #8ab4cc; text-align: center; }
+
+  .fish-word-card {
+    background: linear-gradient(135deg, rgba(42,157,143,0.3), rgba(26,58,92,0.8));
+    border: 2px solid var(--teal);
+    border-radius: 20px; padding: 18px 32px;
+    font-size: clamp(1.4rem,4vw,2rem);
+    font-weight: 900; text-align: center;
+    color: var(--white);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    min-width: 200px;
+    animation: wordAppear 0.4s ease;
+    box-shadow: 0 4px 20px rgba(42,157,143,0.3);
+  }
+  @keyframes wordAppear { from{opacity:0;transform:scale(0.7) translateY(-10px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+  /* GAME 2 — crab quiz */
+  .answer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px; width: 100%;
+  }
+  .answer-btn {
+    background: rgba(26,58,92,0.8);
+    border: 2px solid rgba(78,205,196,0.3);
+    border-radius: 16px; padding: 14px 12px;
+    color: var(--white); font-family: 'Nunito', sans-serif;
+    font-size: clamp(1rem,2.5vw,1.2rem); font-weight: 700;
+    cursor: pointer; transition: all 0.2s; text-align: center;
+    min-height: 60px;
+  }
+  .answer-btn:hover { border-color: var(--teal-light); background: rgba(42,157,143,0.2); transform: scale(1.02); }
+  .answer-btn.correct { background: rgba(107,203,119,0.3); border-color: var(--success); animation: correctPulse 0.4s ease; }
+  .answer-btn.wrong   { background: rgba(224,123,84,0.3);  border-color: var(--error);   animation: wrongShake 0.3s ease; }
+  @keyframes correctPulse { 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
+  @keyframes wrongShake   { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+  /* GAME 3 — sentence builder */
+  .word-bank {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    min-height: 60px; padding: 10px;
+    background: rgba(13,33,55,0.5); border-radius: 16px;
+    border: 1px dashed rgba(78,205,196,0.3);
+    width: 100%;
+  }
+  .word-chip {
+    padding: 8px 16px; border-radius: 12px;
+    font-weight: 800; font-size: clamp(0.9rem,2vw,1.1rem);
+    cursor: pointer; transition: all 0.2s;
+    border: 2px solid transparent;
+    user-select: none;
+  }
+  .word-chip.noun-chip { background: rgba(74,144,217,0.25); border-color: var(--noun-color); color: var(--noun-light); }
+  .word-chip.verb-chip { background: rgba(87,160,85,0.25);  border-color: var(--verb-color); color: var(--verb-light); }
+  .word-chip.adj-chip  { background: rgba(155,89,182,0.25); border-color: var(--adj-color);  color: var(--adj-light); }
+  .word-chip:hover { transform: translateY(-2px) scale(1.05); }
+  .word-chip.selected { opacity: 0.4; transform: scale(0.9); pointer-events: none; }
+
+  .sentence-slots {
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    min-height: 60px; padding: 10px;
+    background: rgba(42,157,143,0.08); border-radius: 16px;
+    border: 2px solid rgba(78,205,196,0.4);
+    width: 100%;
+  }
+  .slot {
+    padding: 8px 16px; border-radius: 12px;
+    font-weight: 800; font-size: clamp(0.9rem,2vw,1.1rem);
+    min-width: 80px; text-align: center;
+    border: 2px dashed rgba(78,205,196,0.4);
+    color: rgba(255,255,255,0.4);
+    cursor: pointer; transition: all 0.2s;
+  }
+  .slot.filled { border-style: solid; cursor: pointer; }
+  .slot.filled:hover { opacity: 0.8; }
+
+  /* GAME 4 — error hunter */
+  .sentence-display {
+    background: rgba(13,33,55,0.7);
+    border-radius: 20px; padding: 20px;
+    font-size: clamp(1.1rem,3vw,1.5rem);
+    font-weight: 700; text-align: center;
+    line-height: 2;
+    width: 100%;
+  }
+  .tagged-word {
+    display: inline-block; cursor: pointer;
+    padding: 2px 8px; border-radius: 8px;
+    margin: 2px; transition: all 0.2s;
+    border: 2px solid transparent;
+    position: relative;
+  }
+  .tagged-word .tag { font-size: 0.65rem; font-weight: 600; display: block; }
+  .tagged-word:hover { transform: scale(1.08); }
+  .tagged-word.is-error { animation: errorGlow 1.5s ease-in-out infinite; }
+  @keyframes errorGlow { 0%,100%{box-shadow:0 0 0 rgba(224,123,84,0)} 50%{box-shadow:0 0 12px rgba(224,123,84,0.6)} }
+
+  /* GAME 5 — pearl question */
+  .rule-options { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  .rule-btn {
+    background: rgba(26,58,92,0.8);
+    border: 2px solid rgba(78,205,196,0.2);
+    border-radius: 16px; padding: 14px 18px;
+    color: var(--white); font-family: 'Nunito', sans-serif;
+    font-size: clamp(0.9rem,2vw,1.05rem); font-weight: 600;
+    cursor: pointer; transition: all 0.2s; text-align: left;
+    display: flex; gap: 10px; align-items: center;
+  }
+  .rule-btn:hover { border-color: var(--teal-light); background: rgba(42,157,143,0.15); }
+  .rule-btn.correct { background: rgba(107,203,119,0.25); border-color: var(--success); }
+  .rule-btn.wrong   { background: rgba(224,123,84,0.2);   border-color: var(--error); }
+
+  /* FEEDBACK BOX */
+  .feedback-box {
+    border-radius: 16px; padding: 14px 18px;
+    font-weight: 700; font-size: clamp(0.9rem,2vw,1.05rem);
+    text-align: center; display: none;
+    animation: feedbackSlide 0.3s ease;
+    width: 100%;
+  }
+  @keyframes feedbackSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .feedback-box.success { background: rgba(107,203,119,0.2); border: 2px solid var(--success); color: #a8e6ae; display: block; }
+  .feedback-box.error   { background: rgba(224,123,84,0.2);  border: 2px solid var(--error);   color: #f0a898; display: block; }
+
+  /* TRANSITION SCREEN */
+  #transitionScreen {
+    gap: 20px; text-align: center;
+  }
+  .transition-emoji { font-size: 5rem; animation: floatBig 2s ease-in-out infinite; }
+  .transition-title { font-family: 'Russo One', sans-serif; font-size: clamp(1.5rem,5vw,2.5rem); color: var(--amber); }
+  .transition-sub { color: #8ab4cc; font-size: clamp(0.9rem,2vw,1.1rem); max-width: 400px; }
+  .stars-row { display: flex; gap: 8px; justify-content: center; font-size: 2rem; }
+
+  /* DEPTH METER */
+  .depth-meter {
+    position: fixed; right: 16px; top: 50%;
+    transform: translateY(-50%);
+    z-index: 100;
+    display: none;
+    flex-direction: column; align-items: center; gap: 4px;
+    background: rgba(13,33,55,0.7); border-radius: 12px; padding: 8px 6px;
+    border: 1px solid rgba(78,205,196,0.3);
+  }
+  .depth-meter.visible { display: flex; }
+  .depth-step { width: 12px; height: 12px; border-radius: 50%; background: #2a3a4a; border: 1px solid #4a6a8a; transition: all 0.4s; font-size: 0.6rem; display:flex; align-items:center; justify-content:center; }
+  .depth-step.done { background: var(--teal); box-shadow: 0 0 8px var(--teal); }
+  .depth-step.current { background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: depthPulse 1s ease-in-out infinite; }
+  @keyframes depthPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.3)} }
+  .depth-label { font-size: 0.55rem; color: #6a8aa0; text-align: center; width: 40px; word-break: break-all; line-height: 1.1; }
+
+  /* REPORT SCREEN */
+  #reportScreen { gap: 16px; overflow-y: auto; padding: 20px 16px; }
+  .report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap: 10px; width: 100%; max-width: 700px; }
+  .report-card {
+    background: rgba(26,58,92,0.7); border-radius: 16px; padding: 14px 10px;
+    text-align: center; border: 2px solid rgba(78,205,196,0.2);
+  }
+  .report-card .rc-icon { font-size: 1.8rem; margin-bottom: 4px; }
+  .report-card .rc-name { font-size: 0.75rem; color: #8ab4cc; margin-bottom: 4px; }
+  .report-card .rc-score { font-family: 'Russo One', sans-serif; font-size: 1.4rem; color: var(--amber); }
+  .report-card .rc-sub { font-size: 0.7rem; color: #6a8aa0; }
+  .report-rec { background: rgba(42,157,143,0.1); border: 1px solid rgba(78,205,196,0.3); border-radius: 12px; padding: 12px; font-size: 0.85rem; color: #b0d4e8; text-align: center; max-width: 700px; width: 100%; }
+
+  /* HINT BUTTON */
+  .hint-btn {
+    background: rgba(233,196,106,0.15); border: 1px solid var(--amber);
+    color: var(--amber); border-radius: 10px; padding: 6px 14px;
+    font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .hint-btn:hover { background: rgba(233,196,106,0.3); }
+
+  .hint-box {
+    background: rgba(233,196,106,0.1); border: 1px solid rgba(233,196,106,0.4);
+    border-radius: 12px; padding: 10px 14px;
+    font-size: 0.85rem; color: var(--amber);
+    display: none; text-align: center; width: 100%;
+    animation: feedbackSlide 0.3s ease;
+  }
+  .hint-box.visible { display: block; }
+
+  /* Particles overlay */
+  #particles { position: fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:50; }
+
+  /* Mobile adjustments */
+  @media(max-width: 500px) {
+    .answer-grid { grid-template-columns: 1fr; }
+    .fish-lanes { gap: 8px; }
+    .fish-lane { min-width: 75px; padding: 10px 6px; }
+    .depth-meter { display: none !important; }
+  }
+
+  .progress-bar-wrap { width: 100%; background: rgba(255,255,255,0.1); border-radius: 8px; height: 8px; overflow: hidden; }
+  .progress-bar { height: 100%; background: linear-gradient(90deg, var(--teal), var(--amber)); border-radius: 8px; transition: width 0.5s ease; }
+
+  .counter-text { font-size: 0.85rem; color: #6a8aa0; }
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+<canvas id="particles"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div class="hud-mascot">🐙</div>
+  <div class="hud-progress">
+    <div class="pearl" id="p1">🔴</div>
+    <div class="pearl" id="p2">🔴</div>
+    <div class="pearl" id="p3">🔴</div>
+    <div class="pearl" id="p4">🔴</div>
+    <div class="pearl" id="p5">🔴</div>
+  </div>
+  <div class="hud-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--noun-color)"></div><span style="font-size:0.6rem">Сущ.</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--verb-color)"></div><span style="font-size:0.6rem">Гл.</span></div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--adj-color)"></div><span style="font-size:0.6rem">Прил.</span></div>
+  </div>
+  <div class="hud-score">⭐ <span id="totalScore">0</span></div>
+</div>
+
+<!-- Depth meter -->
+<div class="depth-meter" id="depthMeter">
+  <div class="depth-label">Глубина</div>
+  <div class="depth-step" id="ds1">1</div>
+  <div class="depth-step" id="ds2">2</div>
+  <div class="depth-step" id="ds3">3</div>
+  <div class="depth-step" id="ds4">4</div>
+  <div class="depth-step" id="ds5">5</div>
+  <div class="depth-label">🏆</div>
+</div>
+
+<!-- Sound btn -->
+<button id="soundBtn" onclick="toggleSound()">🔊</button>
+
+<div id="app">
+
+  <!-- START SCREEN -->
+  <div class="screen active" id="startScreen">
+    <div class="mascot-big">🐙</div>
+    <div class="start-title">Грамматическое Дно</div>
+    <div class="badges-row">
+      <span class="badge badge-noun">🔵 Имя существительное</span>
+      <span class="badge badge-verb">🟢 Глагол</span>
+      <span class="badge badge-adj">🟣 Имя прилагательное</span>
+    </div>
+    <div class="mission-box">
+      🌊 Осьминожка Буква потеряла свои жемчужины!<br>
+      Помоги найти все 5 сокровищ, пройдя испытания морских жителей!
+    </div>
+    <button class="btn btn-amber" onclick="startGame()">🐠 Нырять!</button>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="gameScreen">
+    <div id="gameArea"></div>
+  </div>
+
+  <!-- TRANSITION SCREEN -->
+  <div class="screen" id="transitionScreen">
+    <div class="transition-emoji" id="transEmoji">🦀</div>
+    <div class="transition-title" id="transTitle">Молодец!</div>
+    <div class="stars-row" id="transStars"></div>
+    <div class="transition-sub" id="transSub">Жемчужина найдена! Следующая глубина...</div>
+    <button class="btn" id="transBtn" onclick="nextGame()">Вперёд! 🌊</button>
+  </div>
+
+  <!-- REPORT SCREEN -->
+  <div class="screen" id="reportScreen">
+    <div class="mascot-big" style="font-size:3rem">🐙</div>
+    <div class="game-title">🏆 Все жемчужины найдены!</div>
+    <div class="game-sub">Ты — настоящий Знаток частей речи!</div>
+    <div class="report-grid" id="reportGrid"></div>
+    <div class="report-rec" id="reportRec"></div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <button class="btn" onclick="showTeacherReport()">📋 Отчёт учителя</button>
+      <button class="btn btn-amber" onclick="restartGame()">🔄 Сыграть ещё</button>
+    </div>
+  </div>
+
+  <!-- TEACHER REPORT -->
+  <div class="screen" id="teacherScreen">
+    <div class="panel" style="max-height:80vh;overflow-y:auto">
+      <div class="game-title" style="font-size:1.3rem">📋 Отчёт для учителя</div>
+      <div id="teacherContent" style="margin-top:12px;font-size:0.9rem;color:#b0d4e8;line-height:1.7"></div>
+      <div style="margin-top:16px;text-align:center">
+        <button class="btn" onclick="showScreen('reportScreen')">← Назад</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// =========================================================
+// OCEAN BACKGROUND ANIMATION
+// =========================================================
+const bgCanvas = document.getElementById('bg');
+const bgCtx = bgCanvas.getContext('2d');
+let W, H;
+const bubbles = [];
+const fish = [];
+
+function resizeBg() {
+  W = bgCanvas.width = window.innerWidth;
+  H = bgCanvas.height = window.innerHeight;
+}
+resizeBg();
+window.addEventListener('resize', resizeBg);
+
+for(let i=0;i<35;i++) {
+  bubbles.push({ x:Math.random()*1000, y:Math.random()*1000, r:Math.random()*6+2, speed:Math.random()*0.4+0.2, opacity:Math.random()*0.4+0.1 });
+}
+const bgFishEmojis = ['🐟','🐠','🐡','🦑','🦐'];
+for(let i=0;i<8;i++) {
+  fish.push({ x:Math.random()*1000, y:Math.random()*600+100, speed:Math.random()*0.3+0.1, emoji:bgFishEmojis[Math.floor(Math.random()*bgFishEmojis.length)], size: Math.random()*10+14, dir: Math.random()<0.5?1:-1 });
+}
+
+let bgTime = 0;
+function drawBg() {
+  bgTime += 0.01;
+  bgCtx.clearRect(0,0,W,H);
+
+  // Deep ocean gradient
+  const grad = bgCtx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#0d2137');
+  grad.addColorStop(0.5,'#1a3a5c');
+  grad.addColorStop(1,'#0a1825');
+  bgCtx.fillStyle = grad;
+  bgCtx.fillRect(0,0,W,H);
+
+  // Light rays
+  for(let i=0;i<5;i++) {
+    const x = (W/5)*i + W/10;
+    const rg = bgCtx.createLinearGradient(x-40,0,x+40,H*0.7);
+    rg.addColorStop(0,`rgba(78,205,196,${0.04+0.02*Math.sin(bgTime+i)})`);
+    rg.addColorStop(1,'rgba(78,205,196,0)');
+    bgCtx.beginPath();
+    bgCtx.moveTo(x-50,0); bgCtx.lineTo(x+50,0);
+    bgCtx.lineTo(x+30,H*0.7); bgCtx.lineTo(x-30,H*0.7);
+    bgCtx.fillStyle = rg; bgCtx.fill();
+  }
+
+  // Bubbles
+  bubbles.forEach(b => {
+    b.y -= b.speed;
+    b.x += Math.sin(bgTime*0.5+b.x)*0.3;
+    if(b.y < -20) { b.y = H+10; b.x = Math.random()*W; }
+    bgCtx.beginPath();
+    bgCtx.arc(b.x, b.y, b.r, 0, Math.PI*2);
+    bgCtx.strokeStyle = `rgba(78,205,196,${b.opacity})`;
+    bgCtx.lineWidth = 1;
+    bgCtx.stroke();
+  });
+
+  // Seaweed
+  for(let s=0;s<6;s++) {
+    const sx = (W/6)*s + 40;
+    bgCtx.beginPath();
+    bgCtx.moveTo(sx, H);
+    for(let j=0;j<8;j++) {
+      const wy = H - j*30;
+      const wx = sx + Math.sin(bgTime*0.8 + j*0.5 + s)*15;
+      bgCtx.lineTo(wx, wy);
+    }
+    bgCtx.strokeStyle = `rgba(42,157,143,${0.25+0.05*Math.sin(bgTime+s)})`;
+    bgCtx.lineWidth = 4; bgCtx.stroke();
+  }
+
+  // Fish
+  fish.forEach(f => {
+    f.x += f.speed * f.dir;
+    if(f.x > W+50) f.x = -50;
+    if(f.x < -50) f.x = W+50;
+    bgCtx.save();
+    bgCtx.font = `${f.size}px serif`;
+    bgCtx.globalAlpha = 0.35;
+    if(f.dir < 0) { bgCtx.scale(-1,1); bgCtx.fillText(f.emoji, -f.x, f.y); }
+    else bgCtx.fillText(f.emoji, f.x, f.y);
+    bgCtx.restore();
+  });
+
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// =========================================================
+// PARTICLES
+// =========================================================
+const pCanvas = document.getElementById('particles');
+const pCtx = pCanvas.getContext('2d');
+pCanvas.width = window.innerWidth; pCanvas.height = window.innerHeight;
+window.addEventListener('resize', ()=>{ pCanvas.width=window.innerWidth; pCanvas.height=window.innerHeight; });
+let particles = [];
+
+function spawnParticles(x,y,color,count=12) {
+  for(let i=0;i<count;i++) {
+    const angle = Math.random()*Math.PI*2;
+    const speed = Math.random()*4+1;
+    particles.push({ x,y, vx:Math.cos(angle)*speed, vy:Math.sin(angle)*speed-2, alpha:1, r:Math.random()*6+3, color, life:1 });
+  }
+}
+
+function updateParticles() {
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  particles = particles.filter(p=>p.alpha>0.05);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.1;
+    p.alpha -= 0.025;
+    pCtx.globalAlpha = p.alpha;
+    pCtx.beginPath();
+    pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    pCtx.fillStyle = p.color;
+    pCtx.fill();
+  });
+  pCtx.globalAlpha = 1;
+  requestAnimationFrame(updateParticles);
+}
+updateParticles();
+
+// =========================================================
+// GAME DATA
+// =========================================================
+let currentGame = 0;
+let totalScore = 0;
+let soundOn = true;
+let gameStats = [];
+let hintLevel = 0;
+
+const partColors = { noun:'#4A90D9', verb:'#57A055', adj:'#9B59B6' };
+const partIcons  = { noun:'🔵', verb:'🟢', adj:'🟣' };
+const partNames  = { noun:'Существительное', verb:'Глагол', adj:'Прилагательное' };
+const partQuestions = { noun:'КТО? ЧТО?', verb:'ЧТО ДЕЛАЕТ?', adj:'КАКОЙ? КАКАЯ? КАКОЕ?' };
+
+// GAME 1 — words for sorting
+const g1Words = [
+  {word:'РЫБА',    part:'noun'}, {word:'ПЛЫВЁТ',  part:'verb'}, {word:'СИНИЙ',   part:'adj'},
+  {word:'ВОЛНА',   part:'noun'}, {word:'ПРЫГАЕТ', part:'verb'}, {word:'БЫСТРЫЙ', part:'adj'},
+  {word:'КРАБ',    part:'noun'}, {word:'ШУРШИТ',  part:'verb'}, {word:'ТЁПЛЫЙ',  part:'adj'},
+  {word:'МЕДУЗА',  part:'noun'}, {word:'СВЕТИТ',  part:'verb'}, {word:'МОКРЫЙ',  part:'adj'},
+  {word:'ОСЬМИНОГ',part:'noun'}, {word:'НЫРЯЕТ',  part:'verb'}, {word:'ГЛУБОКИЙ',part:'adj'},
+  {word:'КОРАЛЛ',  part:'noun'}, {word:'БЛЕСТИТ', part:'verb'}, {word:'КРАСИВЫЙ',part:'adj'},
+];
+
+// GAME 2 — crab quiz questions
+const g2Questions = [
+  { question:'Какое слово отвечает на вопрос\n«ЧТО ДЕЛАЕТ?»', correct:'КРУЖИТ', options:['КРУЖИТ','КРУЖЕВО','КРУЖОК','КРУГЛЫЙ'], correctPart:'verb', explanation:'КРУЖИТ — это глагол. Он отвечает на вопрос «что делает?»' },
+  { question:'Какое слово отвечает на вопрос\n«КТО? ЧТО?»', correct:'АКУЛА', options:['АКУЛА','АКУЛИЙ','ОХОТИТСЯ','ОГРОМНЫЙ'], correctPart:'noun', explanation:'АКУЛА — это существительное. Оно отвечает на вопрос «кто?»' },
+  { question:'Какое слово отвечает на вопрос\n«КАКОЙ? КАКАЯ?»', correct:'СОЛЁНЫЙ', options:['СОЛЁНЫЙ','СОЛЬ','СОЛИТЬ','СОЛОНКА'], correctPart:'adj', explanation:'СОЛЁНЫЙ — прилагательное. Отвечает на вопрос «какой?»' },
+  { question:'Найди ГЛАГОЛ среди слов', correct:'ПЛЕЩЕТ', options:['ПЛЕСК','ПЛЕЩЕТ','ПЛЕСКУЧИЙ','ПЛЕЩУЩИЙ'], correctPart:'verb', explanation:'ПЛЕЩЕТ — глагол. Обозначает действие и отвечает на вопрос «что делает?»' },
+  { question:'Найди ИМЯ СУЩЕСТВИТЕЛЬНОЕ', correct:'ГЛУБИНА', options:['ГЛУБОКИЙ','ГЛУБИНА','УГЛУБЛЯЕТ','ГЛУБЖЕ'], correctPart:'noun', explanation:'ГЛУБИНА — существительное. Отвечает на вопрос «что?»' },
+  { question:'Найди ИМЯ ПРИЛАГАТЕЛЬНОЕ', correct:'ПРОЗРАЧНЫЙ', options:['ПРОЗРАЧНОСТЬ','ПРОСВЕЧИВАЕТ','ПРОЗРАЧНЫЙ','ПРОЗРАЧНО'], correctPart:'adj', explanation:'ПРОЗРАЧНЫЙ — прилагательное. Описывает предмет и отвечает на вопрос «какой?»' },
+  { question:'Какое слово — это ДЕЙСТВИЕ?', correct:'НЫРЯЕТ', options:['НЫРОК','НЫРЯЕТ','НЫРЯЛЬЩИК','ГЛУБОКИЙ'], correctPart:'verb', explanation:'НЫРЯЕТ — глагол. Обозначает действие «что делает?»' },
+  { question:'Какое слово ОПИСЫВАЕТ ПРЕДМЕТ?', correct:'ХОЛОДНЫЙ', options:['ХОЛОД','ХОЛОДАЕТ','ХОЛОДНЫЙ','ПОХОЛОДАНИЕ'], correctPart:'adj', explanation:'ХОЛОДНЫЙ — прилагательное. Описывает и отвечает на вопрос «какой?»' },
+];
+
+// GAME 3 — sentence builder
+const g3Sentences = [
+  { words:[{w:'БОЛЬШАЯ',p:'adj'},{w:'РЫБА',p:'noun'},{w:'ПЛЫВЁТ',p:'verb'}], hint:'Прилагательное описывает существительное, а глагол — это действие' },
+  { words:[{w:'ОСЬМИНОГ',p:'noun'},{w:'МЕНЯЕТ',p:'verb'},{w:'ЯРКИЙ',p:'adj'},{w:'ЦВЕТ',p:'noun'}], hint:'Сначала кто? потом что делает? потом какой? и снова что?' },
+  { words:[{w:'СИНЯЯ',p:'adj'},{w:'МЕДУЗА',p:'noun'},{w:'СВЕТИТСЯ',p:'verb'}], hint:'Какая? — прилагательное, кто? — существительное, что делает? — глагол' },
+  { words:[{w:'БЫСТРЫЙ',p:'adj'},{w:'ДЕЛЬФИН',p:'noun'},{w:'ПРЫГАЕТ',p:'verb'}], hint:'Прилагательное всегда «дружит» с существительным' },
+  { words:[{w:'КРАБ',p:'noun'},{w:'ИЩЕТ',p:'verb'},{w:'ВКУСНУЮ',p:'adj'},{w:'ЕДУ',p:'noun'}], hint:'КТО + ЧТО ДЕЛАЕТ + КАКУЮ + ЧТО' },
+];
+
+// GAME 4 — error hunter
+const g4Sentences = [
+  { words:[{w:'ВЕСЁЛЫЙ',p:'adj',correct:'adj'},{w:'КИТ',p:'noun',correct:'noun'},{w:'ПЛАВАЕТ',p:'verb',correct:'verb'},{w:'ДАЛЕКО',p:'verb',correct:'noun'}], errorIdx:3, errorWord:'ДАЛЕКО', correctPart:'noun', explanation:'ДАЛЕКО — это не глагол! Это слово не отвечает на вопрос «что делает?». Здесь ошибка в подписи.' },
+  { words:[{w:'ТЁМНАЯ',p:'noun',correct:'adj'},{w:'ВОДА',p:'noun',correct:'noun'},{w:'БЛЕСТИТ',p:'verb',correct:'verb'}], errorIdx:0, errorWord:'ТЁМНАЯ', correctPart:'adj', explanation:'ТЁМНАЯ — прилагательное (какая?), а не существительное! Прилагательное описывает предмет.' },
+  { words:[{w:'МОРСКОЙ',p:'adj',correct:'adj'},{w:'КОНЁК',p:'verb',correct:'noun'},{w:'КАЧАЕТСЯ',p:'verb',correct:'verb'}], errorIdx:1, errorWord:'КОНЁК', correctPart:'noun', explanation:'КОНЁК — существительное (кто?), а не глагол! Глагол обозначает действие.' },
+  { words:[{w:'АКУЛА',p:'noun',correct:'noun'},{w:'ОСТРАЯ',p:'verb',correct:'adj'},{w:'И',p:'noun',correct:'noun'},{w:'БЫСТРАЯ',p:'adj',correct:'adj'}], errorIdx:1, errorWord:'ОСТРАЯ', correctPart:'adj', explanation:'ОСТРАЯ — прилагательное (какая?), а не глагол! Оно описывает акулу.' },
+];
+
+// GAME 5 — pearl boss questions
+const g5Questions = [
+  { word:'ПЛЕСКАТЬСЯ', part:'verb', question:'Что такое ПЛЕСКАТЬСЯ?',
+    rules:[
+      {text:'Это глагол — обозначает действие, отвечает на вопрос «что делать?»', correct:true},
+      {text:'Это существительное — обозначает предмет, отвечает на вопрос «что?»', correct:false},
+      {text:'Это прилагательное — описывает предмет, отвечает на вопрос «какой?»', correct:false},
+    ], explanation:'ПЛЕСКАТЬСЯ — глагол! Он обозначает действие. Проверяем: «что делать?» — плескаться. ✓'},
+  { word:'МОРСКОЙ', part:'adj', question:'Что такое МОРСКОЙ?',
+    rules:[
+      {text:'Это существительное — обозначает предмет, отвечает на вопрос «что?»', correct:false},
+      {text:'Это прилагательное — описывает предмет, отвечает на вопрос «какой?»', correct:true},
+      {text:'Это глагол — обозначает действие, отвечает на вопрос «что делает?»', correct:false},
+    ], explanation:'МОРСКОЙ — прилагательное! Проверяем: «какой?» — морской. Описывает предмет. ✓'},
+  { word:'ГЛУБИНА', part:'noun', question:'Что такое ГЛУБИНА?',
+    rules:[
+      {text:'Это прилагательное — описывает предмет, отвечает на вопрос «какой?»', correct:false},
+      {text:'Это глагол — обозначает действие, отвечает на вопрос «что делает?»', correct:false},
+      {text:'Это существительное — обозначает предмет или явление, отвечает на вопрос «что?»', correct:true},
+    ], explanation:'ГЛУБИНА — существительное! Проверяем: «что?» — глубина. Обозначает явление. ✓'},
+  { word:'ПРОЗРАЧНАЯ', part:'adj', question:'Что такое ПРОЗРАЧНАЯ?',
+    rules:[
+      {text:'Это прилагательное — описывает предмет, отвечает на вопрос «какая?»', correct:true},
+      {text:'Это существительное — обозначает предмет, отвечает на вопрос «что?»', correct:false},
+      {text:'Это глагол — обозначает действие, отвечает на вопрос «что делает?»', correct:false},
+    ], explanation:'ПРОЗРАЧНАЯ — прилагательное! Проверяем: «какая?» — прозрачная. Описывает предмет. ✓'},
+  { word:'ОХРАНЯЕТ', part:'verb', question:'Что такое ОХРАНЯЕТ?',
+    rules:[
+      {text:'Это существительное — обозначает предмет, отвечает на вопрос «кто?»', correct:false},
+      {text:'Это глагол — обозначает действие, отвечает на вопрос «что делает?»', correct:true},
+      {text:'Это прилагательное — описывает предмет, отвечает на вопрос «какой?»', correct:false},
+    ], explanation:'ОХРАНЯЕТ — глагол! Проверяем: «что делает?» — охраняет. Это действие. ✓'},
+];
+
+// Game metadata
+const gameMeta = [
+  { name:'Сортировщик рыб', emoji:'🐡', sub:'Помоги рыбкам найти свои гроты' },
+  { name:'Загадки Краба-профессора', emoji:'🦀', sub:'Ответь на вопросы мудрого краба' },
+  { name:'Собери предложение', emoji:'🐬', sub:'Сложи слова в правильный порядок' },
+  { name:'Охотник за ошибками', emoji:'🦈', sub:'Найди неверную подпись к слову' },
+  { name:'Жемчужный вопрос', emoji:'🐙', sub:'Объясни правило Осьминогу-хранителю' },
+];
+
+// =========================================================
+// STATE
+// =========================================================
+function initStats() {
+  gameStats = gameMeta.map((g,i)=>({ name:g.name, emoji:g.emoji, correct:0, wrong:0, hints:0, score:0, total:0 }));
+}
+
+// =========================================================
+// UI HELPERS
+// =========================================================
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function toggleSound() {
+  soundOn = !soundOn;
+  document.getElementById('soundBtn').textContent = soundOn ? '🔊' : '🔇';
+}
+
+function speak(text) {
+  if(!soundOn || !window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'ru-RU'; u.rate = 0.9;
+  window.speechSynthesis.speak(u);
+}
+
+function updateHUD() {
+  document.getElementById('totalScore').textContent = totalScore;
+  for(let i=1;i<=5;i++) {
+    const el = document.getElementById('p'+i);
+    if(i < currentGame+1) { el.textContent='🟡'; el.classList.add('earned'); }
+    else { el.textContent='⚫'; el.classList.remove('earned'); }
+  }
+}
+
+function updateDepth() {
+  for(let i=1;i<=5;i++) {
+    const el = document.getElementById('ds'+i);
+    if(i < currentGame+1) { el.className='depth-step done'; }
+    else if(i === currentGame+1) { el.className='depth-step current'; }
+    else { el.className='depth-step'; }
+  }
+}
+
+function showFeedback(area, isCorrect, text) {
+  let fb = area.querySelector('.feedback-box');
+  if(!fb) { fb = document.createElement('div'); fb.className='feedback-box'; area.appendChild(fb); }
+  fb.className = 'feedback-box ' + (isCorrect ? 'success' : 'error');
+  fb.textContent = text;
+  if(isCorrect) spawnParticles(window.innerWidth/2, window.innerHeight/2, '#6BCB77', 20);
+  else spawnParticles(window.innerWidth/2, window.innerHeight/2, '#E07B54', 10);
+}
+
+function addScore(pts) {
+  totalScore += pts;
+  updateHUD();
+}
+
+// =========================================================
+// START
+// =========================================================
+function startGame() {
+  currentGame = 0;
+  totalScore = 0;
+  initStats();
+  document.getElementById('hud').classList.add('visible');
+  document.getElementById('depthMeter').classList.add('visible');
+  updateHUD(); updateDepth();
+  showScreen('gameScreen');
+  launchGame(0);
+  speak('Привет! Я осьминожка Буква. Помоги мне найти жемчужины!');
+}
+
+function nextGame() {
+  currentGame++;
+  if(currentGame >= 5) { showReport(); return; }
+  updateHUD(); updateDepth();
+  showScreen('gameScreen');
+  launchGame(currentGame);
+}
+
+function launchGame(idx) {
+  const area = document.getElementById('gameArea');
+  area.innerHTML = '';
+  hintLevel = 0;
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.className = 'panel';
+  hdr.style.padding = '14px 20px';
+  hdr.innerHTML = `<div style="display:flex;align-items:center;gap:10px;justify-content:center">
+    <span style="font-size:1.8rem">${gameMeta[idx].emoji}</span>
+    <div>
+      <div style="font-family:'Russo One',sans-serif;font-size:clamp(1rem,3vw,1.3rem);color:var(--teal-light)">Испытание ${idx+1}: ${gameMeta[idx].name}</div>
+      <div style="font-size:0.8rem;color:#8ab4cc">${gameMeta[idx].sub}</div>
+    </div>
+  </div>`;
+  area.appendChild(hdr);
+
+  if(idx===0) buildGame1(area);
+  else if(idx===1) buildGame2(area);
+  else if(idx===2) buildGame3(area);
+  else if(idx===3) buildGame4(area);
+  else if(idx===4) buildGame5(area);
+
+  speak(`Испытание ${idx+1}. ${gameMeta[idx].sub}`);
+}
+
+// =========================================================
+// GAME 1 — FISH SORTER
+// =========================================================
+function buildGame1(area) {
+  const words = shuffle([...g1Words]).slice(0, 12);
+  let idx = 0, correct = 0, wrong = 0;
+  const stat = gameStats[0];
+  stat.total = words.length;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'panel';
+  wrap.style.gap = '14px';
+  wrap.style.display = 'flex';
+  wrap.style.flexDirection = 'column';
+  wrap.style.alignItems = 'center';
+
+  const progress = document.createElement('div');
+  progress.innerHTML = `<div class="counter-text">Слово <span id="g1cur">1</span> из ${words.length}</div>
+    <div class="progress-bar-wrap" style="width:250px;margin-top:4px"><div class="progress-bar" id="g1bar" style="width:0%"></div></div>`;
+  wrap.appendChild(progress);
+
+  const prompt = document.createElement('div');
+  prompt.className = 'question-prompt';
+  prompt.id = 'g1prompt';
+  prompt.textContent = 'К какой части речи относится слово?';
+  wrap.appendChild(prompt);
+
+  const wordCard = document.createElement('div');
+  wordCard.className = 'fish-word-card';
+  wordCard.id = 'g1word';
+  wrap.appendChild(wordCard);
+
+  const fb = document.createElement('div');
+  fb.className = 'feedback-box';
+  wrap.appendChild(fb);
+
+  const lanes = document.createElement('div');
+  lanes.className = 'fish-lanes';
+
+  const laneData = [
+    { part:'noun', icon:'🐟', label:'Существительное', q:'КТО? ЧТО?' },
+    { part:'verb', icon:'🐠', label:'Глагол', q:'ЧТО ДЕЛАЕТ?' },
+    { part:'adj',  icon:'🐡', label:'Прилагательное', q:'КАКОЙ? КАКАЯ?' },
+  ];
+
+  laneData.forEach(ld => {
+    const lane = document.createElement('div');
+    lane.className = `fish-lane lane-${ld.part}`;
+    lane.innerHTML = `<div class="lane-icon">${ld.icon}</div>
+      <div class="lane-label" style="color:var(--${ld.part}-light)">${ld.label}</div>
+      <div class="lane-question">${ld.q}</div>`;
+
+    lane.addEventListener('click', () => {
+      if(idx >= words.length) return;
+      const w = words[idx];
+      const isOk = (ld.part === w.part);
+      if(isOk) {
+        correct++; stat.correct++;
+        addScore(10);
+        fb.className = 'feedback-box success';
+        fb.textContent = `✅ Верно! «${w.word}» — ${partNames[w.part]}. ${partQuestions[w.part]}`;
+        spawnParticles(lane.getBoundingClientRect().left + lane.offsetWidth/2, lane.getBoundingClientRect().top + 30, partColors[w.part], 15);
+      } else {
+        wrong++; stat.wrong++;
+        fb.className = 'feedback-box error';
+        fb.textContent = `❌ Нет! «${w.word}» — ${partNames[w.part]}. Спроси: ${partQuestions[w.part]}`;
+        lane.style.animation = 'wrongShake 0.3s ease';
+        setTimeout(()=>lane.style.animation='', 400);
+      }
+      speak(fb.textContent);
+
+      idx++;
+      setTimeout(() => {
+        if(idx >= words.length) {
+          stat.score = correct * 10;
+          showTransition(0, correct, words.length);
+          return;
+        }
+        wordCard.className = 'fish-word-card';
+        wordCard.style.animation = 'none';
+        requestAnimationFrame(()=>{
+          wordCard.style.animation = '';
+          wordCard.textContent = words[idx].word;
+          wordCard.className = 'fish-word-card';
+        });
+        document.getElementById('g1cur').textContent = idx+1;
+        document.getElementById('g1bar').style.width = ((idx/words.length)*100)+'%';
+        fb.className = 'feedback-box';
+      }, 1600);
+    });
+    lanes.appendChild(lane);
+  });
+
+  wrap.appendChild(lanes);
+  area.appendChild(wrap);
+  wordCard.textContent = words[0].word;
+}
+
+// =========================================================
+// GAME 2 — CRAB QUIZ
+// =========================================================
+function buildGame2(area) {
+  const questions = shuffle([...g2Questions]).slice(0, 6);
+  let idx = 0;
+  const stat = gameStats[1];
+  stat.total = questions.length;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'panel';
+  wrap.style.display = 'flex'; wrap.style.flexDirection = 'column';
+  wrap.style.alignItems = 'center'; wrap.style.gap = '14px';
+
+  const progress = document.createElement('div');
+  progress.style.textAlign = 'center';
+  progress.innerHTML = `<div class="counter-text">Вопрос <span id="g2cur">1</span> из ${questions.length}</div>
+    <div class="progress-bar-wrap" style="width:250px;margin-top:4px"><div class="progress-bar" id="g2bar" style="width:0%"></div></div>`;
+  wrap.appendChild(progress);
+
+  const crab = document.createElement('div');
+  crab.style.cssText = 'font-size:2.5rem;animation:hudBob 2s ease-in-out infinite';
+  crab.textContent = '🦀';
+  wrap.appendChild(crab);
+
+  const qText = document.createElement('div');
+  qText.className = 'question-prompt';
+  qText.id = 'g2q';
+  wrap.appendChild(qText);
+
+  const hintBtn = document.createElement('button');
+  hintBtn.className = 'hint-btn';
+  hintBtn.textContent = '💡 Подсказка';
+  hintBtn.onclick = () => showHint2(wrap, questions[idx]);
+  wrap.appendChild(hintBtn);
+
+  const hintBox = document.createElement('div');
+  hintBox.className = 'hint-box';
+  hintBox.id = 'g2hint';
+  wrap.appendChild(hintBox);
+
+  const grid = document.createElement('div');
+  grid.className = 'answer-grid';
+  grid.id = 'g2grid';
+  wrap.appendChild(grid);
+
+  const fb = document.createElement('div');
+  fb.className = 'feedback-box';
+  wrap.appendChild(fb);
+
+  function showQ() {
+    const q = questions[idx];
+    qText.textContent = q.question;
+    hintBox.className = 'hint-box';
+    hintLevel = 0;
+    grid.innerHTML = '';
+    fb.className = 'feedback-box';
+
+    shuffle([...q.options]).forEach(opt => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = opt;
+      btn.onclick = () => {
+        if(btn.classList.contains('correct') || btn.classList.contains('wrong')) return;
+        const isOk = (opt === q.correct);
+        grid.querySelectorAll('.answer-btn').forEach(b => b.style.pointerEvents='none');
+
+        if(isOk) {
+          btn.classList.add('correct');
+          stat.correct++;
+          addScore(hintLevel===0?15:8);
+          fb.className = 'feedback-box success';
+          fb.textContent = `✅ ${q.explanation}`;
+          spawnParticles(btn.getBoundingClientRect().left+60, btn.getBoundingClientRect().top+30, partColors[q.correctPart], 15);
+        } else {
+          btn.classList.add('wrong');
+          stat.wrong++;
+          fb.className = 'feedback-box error';
+          fb.textContent = `❌ ${q.explanation}`;
+          grid.querySelectorAll('.answer-btn').forEach(b => { if(b.textContent===q.correct) b.classList.add('correct'); });
+        }
+        speak(fb.textContent);
+        idx++;
+        document.getElementById('g2cur').textContent = Math.min(idx+1, questions.length);
+        document.getElementById('g2bar').style.width = ((idx/questions.length)*100)+'%';
+        if(idx >= questions.length) { stat.score = stat.correct*10; setTimeout(()=>showTransition(1, stat.correct, questions.length), 1800); }
+        else setTimeout(showQ, 2000);
+      };
+      grid.appendChild(btn);
+    });
+    speak(q.question);
+  }
+  showQ();
+  area.appendChild(wrap);
+}
+
+let hintLevel2 = 0;
+function showHint2(wrap, q) {
+  hintLevel2++;
+  const hintBox = wrap.querySelector('#g2hint');
+  hintBox.classList.add('visible');
+  gameStats[1].hints++;
+  const hints = [
+    `💡 Задай вопрос к слову: ${partQuestions[q.correctPart]}`,
+    `💡 Правильный ответ — это ${partNames[q.correctPart]}.`,
+    `💡 ${q.explanation}`,
+  ];
+  hintBox.textContent = hints[Math.min(hintLevel2-1, hints.length-1)];
+  speak(hintBox.textContent);
+}
+
+// =========================================================
+// GAME 3 — SENTENCE BUILDER
+// =========================================================
+function buildGame3(area) {
+  const sentences = shuffle([...g3Sentences]).slice(0, 4);
+  let idx = 0, correct = 0;
+  const stat = gameStats[2];
+  stat.total = sentences.length;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'panel';
+  wrap.style.display = 'flex'; wrap.style.flexDirection = 'column';
+  wrap.style.alignItems = 'center'; wrap.style.gap = '14px';
+
+  const progress = document.createElement('div');
+  progress.style.textAlign = 'center';
+  progress.innerHTML = `<div class="counter-text">Предложение <span id="g3cur">1</span> из ${sentences.length}</div>
+    <div class="progress-bar-wrap" style="width:250px;margin-top:4px"><div class="progress-bar" id="g3bar" style="width:0%"></div></div>`;
+  wrap.appendChild(progress);
+
+  const dolphin = document.createElement('div');
+  dolphin.style.cssText = 'font-size:2.2rem;animation:hudBob 2s ease-in-out infinite';
+  dolphin.textContent = '🐬';
+  wrap.appendChild(dolphin);
+
+  const prompt = document.createElement('div');
+  prompt.className = 'question-prompt';
+  prompt.textContent = 'Нажимай на слова, чтобы составить предложение!';
+  wrap.appendChild(prompt);
+
+  const hintBtn = document.createElement('button');
+  hintBtn.className = 'hint-btn';
+  hintBtn.textContent = '💡 Подсказка';
+
+  const hintBox = document.createElement('div');
+  hintBox.className = 'hint-box';
+  wrap.appendChild(hintBox);
+
+  const slotsEl = document.createElement('div');
+  slotsEl.className = 'sentence-slots';
+  slotsEl.id = 'g3slots';
+  wrap.appendChild(slotsEl);
+
+  wrap.appendChild(hintBtn);
+
+  const bankEl = document.createElement('div');
+  bankEl.className = 'word-bank';
+  bankEl.id = 'g3bank';
+  wrap.appendChild(bankEl);
+
+  const checkBtn = document.createElement('button');
+  checkBtn.className = 'btn';
+  checkBtn.textContent = '✅ Проверить';
+  wrap.appendChild(checkBtn);
+
+  const fb = document.createElement('div');
+  fb.className = 'feedback-box';
+  wrap.appendChild(fb);
+
+  let selectedWords = [];
+
+  function showSentence() {
+    const s = sentences[idx];
+    selectedWords = [];
+    slotsEl.innerHTML = '<div style="color:#6a8aa0;font-size:0.9rem;align-self:center">← Сложи здесь →</div>';
+    bankEl.innerHTML = '';
+    fb.className = 'feedback-box';
+    hintBox.className = 'hint-box';
+
+    const shuffled = shuffle([...s.words]);
+    shuffled.forEach(wObj => {
+      const chip = document.createElement('div');
+      chip.className = `word-chip ${wObj.p}-chip`;
+      chip.textContent = wObj.w;
+      chip.dataset.word = wObj.w;
+      chip.dataset.part = wObj.p;
+      chip.onclick = () => {
+        if(chip.classList.contains('selected')) return;
+        chip.classList.add('selected');
+        selectedWords.push({w:wObj.w, p:wObj.p});
+
+        const slot = document.createElement('div');
+        slot.className = `slot filled ${wObj.p}-chip`;
+        slot.textContent = wObj.w;
+        slot.style.borderStyle = 'solid';
+        slot.style.color = 'var(--white)';
+
+        if(slotsEl.querySelector('div[style*="align-self"]')) slotsEl.querySelector('div[style*="align-self"]').remove();
+
+        slot.onclick = () => {
+          // Remove from selected
+          const wi = selectedWords.findIndex(x=>x.w===wObj.w);
+          if(wi>-1) selectedWords.splice(wi,1);
+          chip.classList.remove('selected');
+          slot.remove();
+          if(slotsEl.children.length===0) slotsEl.innerHTML='<div style="color:#6a8aa0;font-size:0.9rem;align-self:center">← Сложи здесь →</div>';
+        };
+        slotsEl.appendChild(slot);
+      };
+      bankEl.appendChild(chip);
+    });
+
+    hintBtn.onclick = () => {
+      hintBox.className = 'hint-box visible';
+      hintBox.textContent = '💡 ' + s.hint;
+      stat.hints++;
+      speak(s.hint);
+    };
+
+    checkBtn.onclick = () => {
+      if(selectedWords.length === 0) return;
+      const correct_order = s.words.map(w=>w.w).join(' ');
+      const user_order = selectedWords.map(w=>w.w).join(' ');
+      const isOk = correct_order === user_order;
+      if(isOk) {
+        stat.correct++; correct++;
+        addScore(15);
+        fb.className = 'feedback-box success';
+        fb.textContent = '✅ Отлично! Предложение составлено верно!';
+        spawnParticles(window.innerWidth/2, window.innerHeight/2, '#6BCB77', 20);
+      } else {
+        stat.wrong++;
+        fb.className = 'feedback-box error';
+        fb.textContent = `❌ Не совсем. Правильный порядок: ${s.words.map(w=>w.w).join(' ')}`;
+      }
+      speak(fb.textContent);
+      idx++;
+      document.getElementById('g3cur').textContent = Math.min(idx+1, sentences.length);
+      document.getElementById('g3bar').style.width = ((idx/sentences.length)*100)+'%';
+      if(idx >= sentences.length) { stat.score = stat.correct*15; setTimeout(()=>showTransition(2, stat.correct, sentences.length), 2000); }
+      else setTimeout(showSentence, 2000);
+    };
+  }
+  showSentence();
+  area.appendChild(wrap);
+}
+
+// =========================================================
+// GAME 4 — ERROR HUNTER
+// =========================================================
+function buildGame4(area) {
+  const sentences = shuffle([...g4Sentences]);
+  let idx = 0, correct = 0;
+  const stat = gameStats[3];
+  stat.total = sentences.length;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'panel';
+  wrap.style.display = 'flex'; wrap.style.flexDirection = 'column';
+  wrap.style.alignItems = 'center'; wrap.style.gap = '14px';
+
+  const progress = document.createElement('div');
+  progress.style.textAlign = 'center';
+  progress.innerHTML = `<div class="counter-text">Предложение <span id="g4cur">1</span> из ${sentences.length}</div>
+    <div class="progress-bar-wrap" style="width:250px;margin-top:4px"><div class="progress-bar" id="g4bar" style="width:0%"></div></div>`;
+  wrap.appendChild(progress);
+
+  const shark = document.createElement('div');
+  shark.style.cssText = 'font-size:2.2rem;animation:hudBob 2s ease-in-out infinite';
+  shark.textContent = '🦈';
+  wrap.appendChild(shark);
+
+  const prompt = document.createElement('div');
+  prompt.className = 'question-prompt';
+  prompt.textContent = 'Найди слово с НЕВЕРНОЙ подписью и нажми на него!';
+  wrap.appendChild(prompt);
+
+  const sentenceEl = document.createElement('div');
+  sentenceEl.className = 'sentence-display';
+  wrap.appendChild(sentenceEl);
+
+  const fb = document.createElement('div');
+  fb.className = 'feedback-box';
+  wrap.appendChild(fb);
+
+  function showSentence() {
+    const s = sentences[idx];
+    sentenceEl.innerHTML = '';
+    fb.className = 'feedback-box';
+
+    s.words.forEach((wObj, wi) => {
+      const tw = document.createElement('span');
+      tw.className = 'tagged-word';
+      const isError = (wi === s.errorIdx);
+      tw.style.background = `rgba(${isError?'224,123,84':'100,100,120'},0.15)`;
+      tw.style.borderColor = `var(--${wObj.p}-color, #4a6a8a)`;
+      tw.style.borderWidth = '2px';
+      tw.style.borderStyle = 'solid';
+      tw.innerHTML = `<span style="color:var(--white)">${wObj.w}</span><span class="tag" style="color:var(--${wObj.p}-color,#8ab4cc)">${partNames[wObj.p].slice(0,4)}.</span>`;
+      if(isError) tw.classList.add('is-error');
+
+      tw.onclick = () => {
+        if(wi === s.errorIdx) {
+          stat.correct++; correct++;
+          addScore(20);
+          fb.className = 'feedback-box success';
+          fb.textContent = `✅ Нашёл! ${s.explanation}`;
+          spawnParticles(tw.getBoundingClientRect().left+30, tw.getBoundingClientRect().top+20, '#6BCB77', 15);
+          sentenceEl.querySelectorAll('.tagged-word').forEach(t=>t.style.pointerEvents='none');
+        } else {
+          stat.wrong++;
+          fb.className = 'feedback-box error';
+          fb.textContent = `❌ Это слово подписано верно. Поищи другое!`;
+          tw.style.animation = 'wrongShake 0.3s ease';
+          setTimeout(()=>tw.style.animation='', 400);
+          return;
+        }
+        speak(fb.textContent);
+        idx++;
+        document.getElementById('g4cur').textContent = Math.min(idx+1, sentences.length);
+        document.getElementById('g4bar').style.width = ((idx/sentences.length)*100)+'%';
+        if(idx >= sentences.length) { stat.score = stat.correct*20; setTimeout(()=>showTransition(3, stat.correct, sentences.length), 2000); }
+        else setTimeout(showSentence, 2200);
+      };
+      sentenceEl.appendChild(tw);
+      if(wi < s.words.length-1) sentenceEl.appendChild(document.createTextNode(' '));
+    });
+    speak(`Найди ошибку в предложении: ${s.words.map(w=>w.w).join(' ')}`);
+  }
+  showSentence();
+  area.appendChild(wrap);
+}
+
+// =========================================================
+// GAME 5 — PEARL BOSS
+// =========================================================
+function buildGame5(area) {
+  const questions = shuffle([...g5Questions]).slice(0, 5);
+  let idx = 0, correct = 0;
+  const stat = gameStats[4];
+  stat.total = questions.length;
+
+  const wrap = document.createElement('div');
+  wrap.className = 'panel';
+  wrap.style.display = 'flex'; wrap.style.flexDirection = 'column';
+  wrap.style.alignItems = 'center'; wrap.style.gap = '14px';
+
+  const progress = document.createElement('div');
+  progress.style.textAlign = 'center';
+  progress.innerHTML = `<div class="counter-text">Вопрос <span id="g5cur">1</span> из ${questions.length}</div>
+    <div class="progress-bar-wrap" style="width:250px;margin-top:4px"><div class="progress-bar" id="g5bar" style="width:0%"></div></div>`;
+  wrap.appendChild(progress);
+
+  const boss = document.createElement('div');
+  boss.style.cssText = 'font-size:2.5rem;animation:floatBig 2s ease-in-out infinite;filter:drop-shadow(0 0 12px rgba(78,205,196,0.5))';
+  boss.textContent = '🐙';
+  wrap.appendChild(boss);
+
+  const qTitle = document.createElement('div');
+  qTitle.style.cssText = 'font-family:"Russo One",sans-serif;font-size:clamp(1rem,3vw,1.3rem);color:var(--amber);text-align:center';
+  wrap.appendChild(qTitle);
+
+  const wordDisp = document.createElement('div');
+  wordDisp.className = 'fish-word-card';
+  wordDisp.style.background = 'linear-gradient(135deg,rgba(233,196,106,0.2),rgba(26,58,92,0.8))';
+  wordDisp.style.borderColor = 'var(--amber)';
+  wrap.appendChild(wordDisp);
+
+  const rulesEl = document.createElement('div');
+  rulesEl.className = 'rule-options';
+  wrap.appendChild(rulesEl);
+
+  const fb = document.createElement('div');
+  fb.className = 'feedback-box';
+  wrap.appendChild(fb);
+
+  function showQ() {
+    const q = questions[idx];
+    qTitle.textContent = q.question;
+    wordDisp.textContent = q.word;
+    wordDisp.style.animation = 'none';
+    requestAnimationFrame(()=>wordDisp.style.animation = 'wordAppear 0.4s ease');
+    rulesEl.innerHTML = '';
+    fb.className = 'feedback-box';
+
+    shuffle([...q.rules]).forEach(rule => {
+      const btn = document.createElement('button');
+      btn.className = 'rule-btn';
+      const icon = rule.correct ? '🟢' : '🔴';
+      btn.innerHTML = `<span style="font-size:1.2rem">${rule.correct?'❔':'❔'}</span><span>${rule.text}</span>`;
+      btn.onclick = () => {
+        if(btn.classList.contains('correct') || btn.classList.contains('wrong')) return;
+        rulesEl.querySelectorAll('.rule-btn').forEach(b=>b.style.pointerEvents='none');
+        rulesEl.querySelectorAll('.rule-btn').forEach(b=>{
+          b.querySelector('span').textContent = (b===btn||[...g5Questions].find(qq=>qq.rules.some(r=>r.text===b.querySelector('span:last-child').textContent&&r.correct)))?'✅':'❌';
+        });
+
+        if(rule.correct) {
+          btn.classList.add('correct');
+          btn.querySelector('span').textContent = '✅';
+          stat.correct++; correct++;
+          addScore(20);
+          fb.className = 'feedback-box success';
+          fb.textContent = `✅ Правильно! ${q.explanation}`;
+          spawnParticles(window.innerWidth/2, window.innerHeight/3, '#E9C46A', 25);
+        } else {
+          btn.classList.add('wrong');
+          btn.querySelector('span').textContent = '❌';
+          stat.wrong++;
+          fb.className = 'feedback-box error';
+          fb.textContent = `❌ ${q.explanation}`;
+          rulesEl.querySelectorAll('.rule-btn').forEach(b=>{
+            const txt = b.querySelector('span:last-child').textContent;
+            if(q.rules.find(r=>r.text===txt&&r.correct)) { b.classList.add('correct'); b.querySelector('span').textContent='✅'; }
+          });
+        }
+        speak(fb.textContent);
+        idx++;
+        document.getElementById('g5cur').textContent = Math.min(idx+1, questions.length);
+        document.getElementById('g5bar').style.width = ((idx/questions.length)*100)+'%';
+        if(idx >= questions.length) { stat.score = stat.correct*20; setTimeout(()=>showTransition(4, stat.correct, questions.length), 2200); }
+        else setTimeout(showQ, 2200);
+      };
+      rulesEl.appendChild(btn);
+    });
+    speak(q.question + '. ' + q.word);
+  }
+  showQ();
+  area.appendChild(wrap);
+}
+
+// =========================================================
+// TRANSITIONS
+// =========================================================
+function showTransition(gameIdx, correct, total) {
+  const pct = Math.round((correct/total)*100);
+  const stars = pct >= 80 ? 3 : pct >= 50 ? 2 : 1;
+  const starsText = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+
+  document.getElementById('transEmoji').textContent = gameMeta[gameIdx].emoji;
+  document.getElementById('transTitle').textContent = stars===3 ? 'Блестяще! 🎉' : stars===2 ? 'Молодец! 👍' : 'Неплохо! 💪';
+  document.getElementById('transStars').textContent = starsText;
+
+  const msgs = [
+    ['Жемчужина сортировки найдена!','Рыбки живут в правильных гротах.','Следующее испытание ждёт тебя!'],
+    ['Краб-профессор доволен!','Ты справился с загадками!','Вперёд — к следующей глубине!'],
+    ['Предложения сложены верно!','Дельфин аплодирует!','Продолжаем приключение!'],
+    ['Ошибки пойманы!','Акула Ошибкин убегает!','Последнее испытание впереди!'],
+    ['Жемчужина босса найдена!','Ты доказал знание правил!','Сокровище открыто!'],
+  ];
+  document.getElementById('transSub').textContent = msgs[gameIdx][Math.floor(Math.random()*3)];
+
+  // Earn pearl
+  const pearl = document.getElementById('p'+(gameIdx+1));
+  pearl.textContent = '🟡';
+  pearl.classList.add('earned');
+  spawnParticles(pearl.getBoundingClientRect().left+14, pearl.getBoundingClientRect().top+14, '#E9C46A', 20);
+
+  if(gameIdx === 4) {
+    document.getElementById('transBtn').textContent = '🏆 Открыть сундук!';
+    document.getElementById('transBtn').onclick = showReport;
+  } else {
+    document.getElementById('transBtn').textContent = 'Вперёд! 🌊';
+    document.getElementById('transBtn').onclick = nextGame;
+  }
+
+  speak(document.getElementById('transTitle').textContent + '. ' + document.getElementById('transSub').textContent);
+  showScreen('transitionScreen');
+  updateDepth();
+}
+
+// =========================================================
+// REPORT
+// =========================================================
+function showReport() {
+  document.getElementById('hud').classList.remove('visible');
+  document.getElementById('depthMeter').classList.remove('visible');
+  showScreen('reportScreen');
+
+  const grid = document.getElementById('reportGrid');
+  grid.innerHTML = '';
+
+  let minAccIdx = 0, minAcc = 999;
+  gameStats.forEach((s,i) => {
+    const acc = s.total > 0 ? Math.round((s.correct/s.total)*100) : 0;
+    if(acc < minAcc) { minAcc = acc; minAccIdx = i; }
+    const card = document.createElement('div');
+    card.className = 'report-card';
+    card.innerHTML = `<div class="rc-icon">${s.emoji}</div>
+      <div class="rc-name">${s.name}</div>
+      <div class="rc-score">${acc}%</div>
+      <div class="rc-sub">${s.correct}/${s.total} верно</div>`;
+    grid.appendChild(card);
+  });
+
+  // Total card
+  const totalCard = document.createElement('div');
+  totalCard.className = 'report-card';
+  totalCard.style.borderColor = 'var(--amber)';
+  totalCard.innerHTML = `<div class="rc-icon">⭐</div>
+    <div class="rc-name">Итого</div>
+    <div class="rc-score">${totalScore}</div>
+    <div class="rc-sub">очков</div>`;
+  grid.appendChild(totalCard);
+
+  const rec = document.getElementById('reportRec');
+  rec.textContent = `📌 Рекомендация: обратите внимание на испытание «${gameStats[minAccIdx].name}» — здесь были наибольшие затруднения (${Math.round((gameStats[minAccIdx].correct/Math.max(gameStats[minAccIdx].total,1))*100)}% верно). Повторите соответствующую часть речи.`;
+
+  speak('Поздравляю! Ты собрал все жемчужины и стал Знатоком частей речи!');
+}
+
+function showTeacherReport() {
+  showScreen('teacherScreen');
+  const content = document.getElementById('teacherContent');
+  const total = gameStats.reduce((a,s)=>a+s.correct,0);
+  const totalQ = gameStats.reduce((a,s)=>a+s.total,0);
+  const totalHints = gameStats.reduce((a,s)=>a+s.hints,0);
+  const totalWrong = gameStats.reduce((a,s)=>a+s.wrong,0);
+  const pct = Math.round((total/Math.max(totalQ,1))*100);
+
+  let html = `<div style="margin-bottom:12px"><strong>📊 Общие результаты ученика</strong><br>
+  Итоговые очки: <strong style="color:var(--amber)">${totalScore}</strong><br>
+  Верных ответов: <strong>${total}</strong> из ${totalQ} (${pct}%)<br>
+  Неверных ответов: <strong>${totalWrong}</strong><br>
+  Использовано подсказок: <strong>${totalHints}</strong>
+  </div><hr style="border-color:rgba(78,205,196,0.2);margin:10px 0">
+  <div style="margin-bottom:8px"><strong>📋 Разбивка по мини-играм:</strong></div>`;
+
+  gameStats.forEach((s,i) => {
+    const acc = s.total>0 ? Math.round((s.correct/s.total)*100) : 0;
+    const color = acc>=80?'#6BCB77':acc>=50?'#E9C46A':'#E07B54';
+    html += `<div style="margin-bottom:8px;padding:8px;background:rgba(26,58,92,0.5);border-radius:8px">
+      <strong>${s.emoji} ${s.name}</strong><br>
+      <span style="color:${color}">${acc}% верно (${s.correct}/${s.total})</span>${s.hints>0?` · Подсказок: ${s.hints}`:''}
+    </div>`;
+  });
+
+  // Recommendations
+  html += `<hr style="border-color:rgba(78,205,196,0.2);margin:10px 0">
+  <div><strong>💡 Рекомендации учителю:</strong><br>`;
+  if(pct >= 80) html += '✅ Ученик уверенно владеет материалом. Можно переходить к изучению рода существительных.';
+  else if(pct >= 60) html += '⚠️ Есть незакреплённые темы. Рекомендуется дополнительная практика по слабым мини-играм.';
+  else html += '❗ Рекомендуется провести дополнительное занятие по всем трём частям речи с примерами.';
+  html += '</div>';
+
+  content.innerHTML = html;
+}
+
+function restartGame() {
+  startGame();
+}
+
+// =========================================================
+// UTILS
+// =========================================================
+function shuffle(arr) {
+  for(let i=arr.length-1;i>0;i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+// Init
+initStats();
+</script>
+</body>
+</html>
